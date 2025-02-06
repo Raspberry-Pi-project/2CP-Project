@@ -1,4 +1,6 @@
 # CSS ressources
+W3school : https://www.w3schools.com/css/default.asp
+
 bytegrad playlist : https://www.youtube.com/watch?v=xN1BkNItTRk&list=PLK5U0tyd34tBDtXeYW5hGyl8g_U3ex3wx
 
 (its a pretty long playlist so just watch you need there is a lot unecessary stuff)
