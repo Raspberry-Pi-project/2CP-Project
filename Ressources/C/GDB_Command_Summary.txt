@@ -1,4 +1,4 @@
-nnnnnnnnnnnnnnnnnnn.
+
 ### GDB Command Summary
 
 #### **Starting GDB**
