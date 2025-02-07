@@ -1,0 +1,69 @@
+nnnnnnnnnnnnnnnnnnn.
+### GDB Command Summary
+
+#### **Starting GDB**
+- gdb <program>: Start GDB with a program to debug.
+- gdb <program> <corefile>: Debug a program with a core dump file.
+- gdb: Start GDB with no program (for interactive use).
+
+#### **Running the Program**
+- run [args]: Start the program with optional arguments.
+- start: Start the program and stop at the first line of the main function.
+- continue (c): Continue running the program after a breakpoint.
+- step (s): Step into the next function call.
+- next (n): Step to the next line, skipping over function calls.
+- finish: Continue execution until the current function returns.
+- until: Run until a specific line or address is reached.
+- quit: Exit GDB.
+
+#### **Breakpoints**
+- break <line>: Set a breakpoint at a specific line number.
+- break <function>: Set a breakpoint at the beginning of a function.
+- break <file>:<line>: Set a breakpoint at a specific line in a file.
+- info breakpoints: Display all current breakpoints.
+- delete <breakpoint number>: Delete a specific breakpoint.
+- disable <breakpoint number>: Disable a breakpoint.
+- enable <breakpoint number>: Re-enable a disabled breakpoint.
+- clear: Clear the breakpoint at the current line.
+
+#### **Inspecting the Program State**
+- print <variable> (p <variable>): Print the value of a variable.
+- print <expression>: Print the value of an expression.
+- info locals: Display all local variables in the current function.
+- info args: Display the arguments of the current function.
+- info registers: Display the values in all CPU registers.
+- info stack: Display the current call stack.
+- backtrace (bt): Show the call stack (backtrace).
+- list: List the source code around the current line.
+- list <line>: List source code starting at a specific line number.
+- x/<count> <address>: Examine memory at a specific address.
+
+#### **Modifying Program State**
+- set variable <variable> = <value>: Change the value of a variable.
+- set <expression>: Change the result of an expression.
+- call <function>: Call a function with arguments during debugging.
+
+#### **Stack Manipulation**
+- frame <n>: Switch to the stack frame number n.
+- up: Move to the next higher stack frame (go up in the call stack).
+- down: Move to the next lower stack frame (go down in the call stack).
+- return <value>: Return from the current function with a specific value.
+
+#### **Watchpoints**
+- watch <variable>: Set a watchpoint that triggers when a variable is modified.
+- rwatch <variable>: Set a read watchpoint, triggering when a variable is read.
+- awatch <variable>: Set an access watchpoint, triggering when a variable is read or written.
+- info watchpoints: Show all watchpoints..
+
+#### **Signals**
+- handle <signal> <action>: Define how to handle a specific signal.
+- info signals: List all signals and their current handlers.
+
+#### **Other Commands**
+- source <file>: Source a script to run a series of GDB commands.
+- define <macro name>: Create a GDB macro (custom command).
+- undisplay <number>: Remove a specific display.
+
+#### **Useful GDB Shortcuts**
+- Ctrl + C: Interrupt the program's execution.
+- Ctrl + D: Exit GDB (same as quit).
