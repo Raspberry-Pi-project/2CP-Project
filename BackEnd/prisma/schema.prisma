@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model answers {
+  id_answer   Int       @id @default(autoincrement())
+  id_question Int
+  answer_text String    @db.Text
+  correct     Int
+  points      Float     @default(0) @db.Float
+  questions   questions @relation(fields: [id_question], references: [id_question], onDelete: Cascade, map: "answers_ibfk_1")
+
+  @@index([id_question], map: "id_question")
+}
+
+model attempts {
+  id_attempt      Int               @id @default(autoincrement())
+  id_student      Int
+  id_quiz         Int
+  score           Float             @default(0) @db.Float
+  attempt_at      DateTime          @default(now()) @db.Timestamp(0)
+  students        students          @relation(fields: [id_student], references: [id_student], onDelete: Cascade, map: "attempts_ibfk_1")
+  quizzes         quizzes           @relation(fields: [id_quiz], references: [id_quiz], onUpdate: Restrict, map: "attempts_ibfk_2")
+  student_answers student_answers[]
+
+  @@index([id_quiz], map: "id_quiz")
+  @@index([id_student], map: "id_student")
+}
+
+model groupe {
+  id_groupe    Int      @id @default(autoincrement())
+  name_groupe  String   @db.VarChar(100)
+  id_privilige Int
+  created_at   DateTime @default(now()) @db.Timestamp(0)
+}
+
+model priviliges {
+  id_privilige Int @id @default(autoincrement())
+  upload_quiz  Int
+  attempt_quiz Int
+  check_result Int
+}
+
+model questions {
+  id_question     Int               @id @default(autoincrement())
+  id_quiz         Int
+  question_text   String            @db.Text
+  question_number Int
+  question_type   String            @db.VarChar(50)
+  created_at      DateTime          @default(now()) @db.Timestamp(0)
+  answers         answers[]
+  quizzes         quizzes           @relation(fields: [id_quiz], references: [id_quiz], onDelete: Cascade, map: "questions_ibfk_1")
+  student_answers student_answers[]
+
+  @@index([id_quiz], map: "id_quiz")
+}
+
+model quizzes {
+  id_quiz     Int         @id @default(autoincrement())
+  title       String      @db.VarChar(255)
+  description String      @db.Text
+  id_teacher  Int
+  subject     String      @db.VarChar(255)
+  created_at  DateTime    @default(now()) @db.Timestamp(0)
+  attempts    attempts[]
+  questions   questions[]
+  teachers    teachers    @relation(fields: [id_teacher], references: [id_teacher], onDelete: Cascade, map: "quizzes_ibfk_1")
+
+  @@index([id_teacher], map: "id_teacher")
+}
+
+model student_answers {
+  id_student_answer   Int       @id @default(autoincrement())
+  id_attempt          Int
+  id_question         Int
+  student_answer_text String?   @db.Text
+  attempts            attempts  @relation(fields: [id_attempt], references: [id_attempt], onDelete: Cascade, map: "student_answers_ibfk_2")
+  questions           questions @relation(fields: [id_question], references: [id_question], onDelete: Cascade, map: "student_answers_ibfk_3")
+
+  @@index([id_attempt], map: "id_attempt")
+  @@index([id_question], map: "id_question")
+}
+
+model students {
+  id_student     Int        @id @default(autoincrement())
+  first_name     String     @db.VarChar(150)
+  last_name      String     @db.VarChar(150)
+  annee          Int
+  groupe_student Int
+  groupe         Int
+  email          String     @db.VarChar(150)
+  password       String     @db.VarChar(255)
+  created_at     DateTime   @default(now()) @db.Timestamp(0)
+  attempts       attempts[]
+}
+
+model teachers {
+  id_teacher Int       @id @default(autoincrement())
+  last_name  String    @db.VarChar(150)
+  first_name String    @db.VarChar(150)
+  id_groupe  Int
+  email      String    @db.VarChar(100)
+  password   String    @db.VarChar(255)
+  created_at DateTime  @default(now()) @db.Timestamp(0)
+  quizzes    quizzes[]
+}
