@@ -16,7 +16,7 @@ const getQuizzes = async (req, res) => {
         if (subject) filters.subject = { contains: subject }; //filter by subject ;
         if (for_year) filters.for_year = for_year;
         if (for_groupe) filters.for_groupe = for_groupe;
-        
+        console.log(filters);
     const quizzes = await prisma.quizzes.findMany({
       skip: (page - 1) * limit, //skip records based on page number
       take: limit, // limit number of quizzes per page
@@ -39,11 +39,11 @@ const getQuizzes = async (req, res) => {
 
 const createQuiz = async (req, res) => {
   try {
-    const { title, description, id_teacher, subject , for_year , for_groupe } = req.body;
+    const { title, description, id_teacher, subject , for_year , for_groupe  } = req.body;
     console.log(title, description, id_teacher, subject , for_year , for_groupe,req.body)
     const newQuiz = await prisma.quizzes.create({
-      data: { title, description, id_teacher, subject , for_year , for_groupe },
-    })
+      data: { title, description, id_teacher, subject , for_year , for_groupe   
+        }})
     res.json(newQuiz);
   } catch (error) {
     res.status(500).json({ error: "Error creating quiz" });
