@@ -3,6 +3,7 @@ const {
     getAllQuestions,
     getQuestionById,
     createQuestion,
+    getQuestionsByQuiz,
     updateQuestion,
     deleteQuestion,
 } = require("../controllers/questionsControllers");
@@ -11,12 +12,14 @@ const router = express.Router();
 
 router.get("/", getAllQuestions);
 
-router.get("/:id", getQuestionById);
+router.get("/quiz/:id_quiz", getQuestionById);
 
 router.post("/", createQuestion);
 
-router.put("/:id", updateQuestion);
+router.get("/quiz/:id_quiz", getQuestionsByQuiz);
 
-router.put("/:id", deleteQuestion);
+router.put("/:id_question", updateQuestion);
+
+router.put("/:id_question", deleteQuestion);
 
 module.exports = router;

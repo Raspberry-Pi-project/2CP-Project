@@ -5,6 +5,8 @@ const studentsRoutes = require("./routes/studentsRoutes");
 const questionsRoutes = require("./routes/questionsRoutes");
 const quizRoutes = require("./routes/quizRoutes");
 const studentAnswersRoutes = require("./routes/studentAnswersRoutes");
+const attemptsRoutes = require("./routes/attemptsRoutes");
+
 
 app.use(express.json());
 app.use("/teachers", teachersRoutes);
@@ -17,9 +19,14 @@ app.use("/questions", questionsRoutes);
 
 app.use("/studentAnswers", studentAnswersRoutes);
  
+
+app.use("/attempts", attemptsRoutes);
+
+
 app.get("/", (req,res) => {
     res.send("API is running...");
 });
+
 
 const PORT = 3000;
 

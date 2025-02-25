@@ -7,7 +7,7 @@ const getAvailableQuizzes = async (req, res) => {
     try {
         const quizzes = await prisma.quizzes.findMany({
             select: {
-                id: true,
+                id_quiz: true,
                 title: true,
                 subject: true,
             },
@@ -21,16 +21,22 @@ const getAvailableQuizzes = async (req, res) => {
 
 // Get Quiz Details by ID
 const getQuizDetails = async (requestAnimationFrame, res) => {
-    const { id } = req.params;
+    const { id_quiz } = req.params;
     try {
-        const quizzes = await prisma.quiz.findUnique({
-            where: { id: parseInt(id)},
+        const quiz = await prisma.quizzes.findUnique({
+            where: { id_quiz: parseInt(id_quiz)},
             include: {
                 questions: {
                     select: {
-                        id: true,
-                        text: true,
-                        options: true,
+                        id_question: true, 
+                        question_text: true,
+                        answers: {
+                            select: {
+                                id_answer: true,
+                                answer_text: true,
+                                correct: true
+                            }
+                        }
                     },
                 },
             },
@@ -46,15 +52,15 @@ const getQuizDetails = async (requestAnimationFrame, res) => {
 
 // Start Quiz 
 const startQuiz = async (req, res) => {
-    const { id } = req.params;
-    const { studentId } = req.body;
+    const { id_quiz } = req.params;
+    const { id_student } = req.body;
     
     try {
         // Check if the student has already started this quiz
         const existingAttempt = await prisma.result.findFirst({ // result or attemps ?
             where: {
-                quizId: parseInt(id),
-                studentId: parseInt(studentId),
+                id_quiz: parseInt(id_quiz),
+                id_student: parseInt(id_student),
             }
         });
 
@@ -65,10 +71,10 @@ const startQuiz = async (req, res) => {
         // Register start time 
         await prisma.result.create({
             data: {
-                studentId: parseInt(studentId),
-                quizId: parseInt(id),
+                id_student: parseInt(studentId),
+                id_quiz: parseInt(id),
                 score: 0,
-                startTime: new Date(),
+               // startTime: new Date(),
             },
         });
 
@@ -81,25 +87,31 @@ const startQuiz = async (req, res) => {
 // Submit Answers for a Quiz 
 
 const submitAnswers = async (req, res) => {
-    const { id } = req.params;
-    const { studentId,  answers } = req.body;
+    const { id_quiz } = req.params;
+    const { id_student,  answers } = req.body;
 
     try {
         // Calculate the score
         let score = 0;
+
         for (const answer of answers) {
-            const question = await prisma.questions.findUnique({
-                where: { id: answer.questionId },
+            const correctAnswer = await prisma.answers.findFirst({
+                where: { id_question: answer.questionId,
+                    correct: 1
+                },
             });
-            if (question.answer === answer.chosenAnswer) {
+
+            if (correctAnswer && correctAnswer.id_answer === answer.id_answer) {
                 score += 1;
             }
             await prisma.student_answers.create({
                 data: {
                     //id_answer: answer.questionId,
-                    questionId: answer.questionId,
-                    studentId,
-                    chosenAnswer: answer.chosenAnswer,
+                    id_attempt: answer.questionId,
+                    //studentId,
+                    //chosenAnswer: answer.chosenAnswer,
+                    id_question: answer.id_question,
+                    student_answer_text: answer.student_answer_text
                   },
             });
         }
@@ -109,12 +121,12 @@ const submitAnswers = async (req, res) => {
 
         await prisma.result.updateMany({
             where: {
-                quizId: parseInt(id),
-                studentId: parseInt(studentId),
+                id_quiz: parseInt(id_quiz),
+                id_student: parseInt(id_student),
             },
             data: {
                 score: finalScore, 
-                competedAt: new Date(),
+               // competedAt: new Date(),
 
             }
 
@@ -129,14 +141,14 @@ const submitAnswers = async (req, res) => {
 
 //  Get Results for a Quiz
 const getQuizResults = async (req, res) => {
-    const { id } = req.params;
-    const { studentId } = req.body;
+    const { id_quiz } = req.params;
+    const { id_student } = req.body;
 
     try {   
         const existingAttempt = await prisma.attempt.findFirst({
             where: {
-                quizId: parseInt(id),
-                studentId: parseInt(studentId),
+                id_quiz: parseInt(id_quiz),
+                id_student: parseInt(id_student),
            
              }
 
@@ -152,10 +164,11 @@ const getQuizResults = async (req, res) => {
 
 // Get Past Quizzes taken by Student
 const getPastQuizzes = async (req, res) => {
-    const { studentId } = req.body;
+    const { id_quiz } = req.params;
+    const { id_student } = req.body;
     try {
         const pastQuizzes = await prisma.result.findMany({
-            where: { studentId: parseInt(studentId)},
+            where: { id_student: parseInt(id_student)},
             include: {
                 quiz: {
                     select: {

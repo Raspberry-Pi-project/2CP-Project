@@ -9,9 +9,9 @@ const {
 
 const router = express.Router();
 
-router.get("/quizzes", getAvailableQuizzes);
-router.get("/quiz/:id", getQuizDetails);
-router.post("/quiz/:id/submit", submitAnswers);
+router.get("/", getAvailableQuizzes);
+router.get("/:id_quiz", getQuizDetails);
+router.post("/", submitAnswers);
 router.get("/quiz/:id/results", getQuizResults);
 router.get("/past-quizzes", getPastQuizzes);
 

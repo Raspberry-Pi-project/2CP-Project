@@ -14,10 +14,10 @@ const getAllQuestions = async (req, res) => {
 
 // Get a Specific Question by ID
 const getQuestionById = async (req, res) => {
-    const { id } = req.params;
+    const { id_question } = req.params;
     try {
         const question = await prisma.questions.findUnique({
-            where: { id_question: parseInt(id) } // Find the question with this ID
+            where: { id_question: parseInt(id_question) } // Find the question with this ID
         });
         if (!question) return res.status(404).json({ error: "Question not found" }); // Fixed variable name
         res.json(question); // Return question instead of quiz
@@ -31,6 +31,13 @@ const getQuestionById = async (req, res) => {
 const createQuestion = async (req, res) => { // Fixed typo in async
     const { id_quiz, question_text, question_number, question_type } = req.body;
     try {
+
+         // Validate required fields
+         if (!id_quiz || !question_text || !question_number || !question_type) {
+            return res.status(400).json({ error: "All fields are required" });
+        }
+
+
         // Check if the quiz exists
         const quizExists = await prisma.quizzes.findUnique({
             where: { id_quiz: parseInt(id_quiz) }
@@ -58,15 +65,38 @@ const createQuestion = async (req, res) => { // Fixed typo in async
      }
 };
 
+
+// ✅ Get All Questions for a Specific Quiz
+const getQuestionsByQuiz = async (req, res) => {
+    const { id_quiz } = req.params;
+
+    try {
+        const questions = await prisma.questions.findMany({
+            where: { id_quiz: parseInt(id_quiz) }
+        });
+
+        if (questions.length === 0) {
+            return res.status(404).json({ error: "No questions found for this quiz" });
+        }
+
+        res.json(questions);
+    } catch (error) {
+        console.error("Error fetching questions by quiz:", error);
+        res.status(500).json({ error: "Error fetching questions by quiz" });
+    }
+};
+
+
+
 // Update a Question 
 const updateQuestion = async (req, res) => {
-    const { id } = req.params;
+    const { id_question } = req.params;
     const { question_text, question_number, question_type } = req.body;
 
     try {
         // Check if the question exists 
         const questionExists = await prisma.questions.findUnique({
-            where: { id_question: parseInt(id) }
+            where: { id_question: parseInt(id_question) }
         });
 
         if (!questionExists) {
@@ -75,7 +105,7 @@ const updateQuestion = async (req, res) => {
 
         // Update the question 
         const updatedQuestion = await prisma.questions.update({
-            where: { id_question: parseInt(id) },
+            where: { id_question: parseInt(id_question) },
             data: { question_text, question_number, question_type },
         });
 
@@ -89,12 +119,12 @@ const updateQuestion = async (req, res) => {
 
 // Delete a Question
 const deleteQuestion = async (req, res) => {
-    const { id } = req.params;
+    const { id_question } = req.params;
 
     try {
         // Check if the question exists 
         const existingQuestion = await prisma.question.findUnique ({
-            where: { id_question: parseInt(id) },
+            where: { id_question: parseInt(id_question) },
         });
         
         res.json({ message: "Question deleted successfully" });
@@ -110,6 +140,7 @@ module.exports = {
     getAllQuestions,
     getQuestionById,
     createQuestion,
+    getQuestionsByQuiz,
     updateQuestion,
     deleteQuestion,
 };
