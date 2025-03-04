@@ -33,7 +33,7 @@ const prisma = new PrismaClient();
 
 const submitAnswer = async (req, res) => {
     const { id_student,id_attempt, id_question, student_answer_text } = req.body;
-  
+  console.log(id_student,id_attempt, id_question, student_answer_text)
     try {
       // Check if the attempt is valid and active
       const attempt = await prisma.attempts.findUnique({
@@ -61,15 +61,20 @@ const submitAnswer = async (req, res) => {
       if (existingAnswer) {
         return res.status(400).json({ error: "You have already submitted an answer for this question." });
       }
-  
+    
+    const data = []
+    student_answer_text.forEach(element => {
+      const attempt = {
+        id_student,
+        id_attempt,
+        id_question,
+        student_answer_text: element
+      }
+      data.push(attempt)
+    })
       // Create the new answer
-      const newAnswer = await prisma.student_answers.create({
-        data: {
-          id_student,
-          id_attempt,
-          id_question,
-          student_answer_text
-        }
+      const newAnswer = await prisma.student_answers.createMany({
+        data: data
       });
   
       res.status(201).json({ message: "Answer submitted successfully", newAnswer });

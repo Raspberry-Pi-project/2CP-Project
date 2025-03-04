@@ -3,42 +3,40 @@ const prisma = new PrismaClient();
 
 // Start a new attempt
 const startAttempt = async (req, res) => {
-    const { studentId, quizId } = req.body;
+    const { id_student, id_quiz } = req.body;
 
     try {
         // Check if the quiz exists 
-        const quiz = await prisma.quiz.findUnique({ where: { id_quiz } });
+        const quiz = await prisma.quizzes.findUnique({ where: { id_quiz } });
             if (!quiz) {
                 return res.status(404).json({ error: "Quiz not found." });
             }
 
             // Check if an active attempt already exists for this quiz by the student
-            const existingAttempt = await prisma.attempts.findFirst({
-                where: {
-                    studentId,
-                    quizId,
-                    student_answers: {
-                        none: {}
-                    }
-                }
-            });
-
-            if (existingAttempt) {
-                return res.status(400).json({ error: "You already have an active attempt for this quiz." });
+            
+            const numberAttempts = await prisma.attempts.count({
+              where: {
+                id_student,
+                id_quiz
+              }
+            })
+            if (numberAttempts >= quiz.totale_attempts) {
+              return res.status(400).json({ error: "attempt limit reached" });
+              
             }
-
+            console.log(numberAttempts)
             // Create new attempt
-            const newAttempt = await prisma.attempt.create({
+            const newAttempt = await prisma.attempts.create({
                 data: {
-                    studentId,
-                    quizId
+                    id_student,
+                    id_quiz
                 }
             });
 
             res.status(201).json({ message: "Attempt started successfuly", newAttempt });
         
         } catch (error) { 
-            console.error("Error starting attempt:", error);
+            console.error("Error starting attempt:");
             res.status(500).json({ error: "Error starting attempt" });
        }
 
