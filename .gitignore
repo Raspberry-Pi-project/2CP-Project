@@ -34,3 +34,12 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+
+
+ *
+ !Front_end_bata/
+
+!.gitignore
+
+
