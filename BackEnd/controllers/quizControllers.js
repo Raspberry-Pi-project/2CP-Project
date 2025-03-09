@@ -5,7 +5,10 @@ const prisma = new PrismaClient();
 const getQuizzes = async (req, res) => {
     
     try {
-        const { page, limit, id_quiz, title, id_teacher, created_at, subject , for_year , for_groupe } = req.body;
+
+        const { page, limit, id_quiz, title, id_teacher, created_at, subject , totale_attempts , for_year , for_groupe } = req.body;
+        
+
         //default to page 1
          // default to 10 quizzes per page
         const filters = {};
@@ -13,10 +16,11 @@ const getQuizzes = async (req, res) => {
         if (title) filters.title = { contains: title };
         if (id_teacher) filters.id_teacher = id_teacher;
         if (created_at) filters.created_at = created_at;
-        if (subject) filters.subject = { contains: subject }; //filter by subject ;
+        if (subject) filters.subject = { contains: subject, mode: "insensitive" }; //filter by subject ;
+        if (totale_attempts) filters.totale_attempts = totale_attempts;
         if (for_year) filters.for_year = for_year;
         if (for_groupe) filters.for_groupe = for_groupe;
-        console.log(filters);
+
     const quizzes = await prisma.quizzes.findMany({
       skip: (page - 1) * limit, //skip records based on page number
       take: limit, // limit number of quizzes per page
@@ -39,8 +43,8 @@ const getQuizzes = async (req, res) => {
 
 const createQuiz = async (req, res) => {
   try {
-    const { title, description, id_teacher, subject , for_year , for_groupe  } = req.body;
-    console.log(title, description, id_teacher, subject , for_year , for_groupe,req.body)
+    const { title, description, id_teacher, subject , totale_attempts , for_year , for_groupe } = req.body;
+
     const newQuiz = await prisma.quizzes.create({
       data: { title, description, id_teacher, subject , for_year , for_groupe   
         }})

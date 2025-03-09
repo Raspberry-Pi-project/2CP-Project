@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
+
 const {
   getQuizzes,
   createQuiz,
@@ -13,3 +14,4 @@ router.post("/createQuiz", createQuiz);
 router.delete("/deleteQuizzes", deleteQuizzes);
 
 module.exports = router;
+

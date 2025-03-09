@@ -1,5 +1,6 @@
 const express = require("express");
 const quizRoutes = require("./quizRoutes");
+
 const answersRoutes = require("./answersRoutes");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
