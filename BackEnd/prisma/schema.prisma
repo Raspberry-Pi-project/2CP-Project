@@ -31,20 +31,20 @@ model attempts {
   @@index([id_student], map: "id_student")
 }
 
-
 model questions {
-  id_question     Int               @id @default(autoincrement())
-  id_quiz         Int
-  duration        Int?
-  question_text   String            @db.Text
-  question_number Int
-  points          Float             @db.Float
-  question_type   String            @db.VarChar(50)
-  status          String            @default("draft") @db.VarChar(40)
-  created_at      DateTime          @default(now()) @db.Timestamp(0)
-  answers         answers[]
-  quizzes         quizzes           @relation(fields: [id_quiz], references: [id_quiz], onDelete: Cascade, map: "questions_ibfk_1")
-  student_answers student_answers[]
+  id_question         Int               @id @default(autoincrement())
+  id_quiz             Int
+  duration            Int?
+  question_text       String            @db.Text
+  question_number     Int
+  points              Float             @db.Float
+  question_type       String            @db.VarChar(50)
+  status              String            @default("draft") @db.VarChar(40)
+  created_at          DateTime          @default(now()) @db.Timestamp(0)
+  question_percentage Int
+  answers             answers[]
+  quizzes             quizzes           @relation(fields: [id_quiz], references: [id_quiz], onDelete: Cascade, map: "questions_ibfk_1")
+  student_answers     student_answers[]
 
   @@index([id_quiz], map: "id_quiz")
 }
@@ -56,6 +56,7 @@ model quizzes {
   duration          Int?
   id_teacher        Int
   subject           String              @db.VarChar(255)
+  status            String              @default("draft") @db.VarChar(100)
   score             Float               @db.Float
   image             Bytes?              @db.Blob
   for_year          Int?
@@ -66,7 +67,6 @@ model quizzes {
   published_quizzes published_quizzes[]
   questions         questions[]
   teachers          teachers            @relation(fields: [id_teacher], references: [id_teacher], onDelete: Cascade, map: "quizzes_ibfk_1")
-
 
   @@index([id_teacher], map: "id_teacher")
 }
@@ -104,8 +104,6 @@ model teachers {
   password   String    @db.VarChar(255)
   created_at DateTime  @default(now()) @db.Timestamp(0)
   quizzes    quizzes[]
-
-  @@index([id_groupe], map: "id_groupe")
 }
 
 model admins {
