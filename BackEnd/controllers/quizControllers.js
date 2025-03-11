@@ -45,11 +45,11 @@ const createQuiz = async (req, res) => {
   try {
     const { title, description, id_teacher, subject , totale_attempts , for_year , for_groupe } = req.body;
 
-<<<<<<< HEAD
-    const newQuiz = await prisma.quizzes.create({
+
+   /* const newQuiz = await prisma.quizzes.create({
       data: { title, description, id_teacher, subject , for_year , for_groupe   
-        }})
-=======
+        }}) */
+
     //Validate quiz status
     const validStatuses = ["published", "draft", "active"]; 
     const quizStatus = validStatuses.includes(status) ? status : "draft"; // By default if no valid status is provided
@@ -68,7 +68,7 @@ const createQuiz = async (req, res) => {
       },
     });
 
->>>>>>> 3959f13 (commit)
+
     res.json(newQuiz);
   } catch (error) {
     console.error("Error creating quiz:", error);
