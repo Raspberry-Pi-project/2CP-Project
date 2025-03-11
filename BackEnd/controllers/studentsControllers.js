@@ -20,7 +20,7 @@ const getAvailableQuizzes = async (req, res) => {
 
 
 // Get Quiz Details by ID
-const getQuizDetails = async (requestAnimationFrame, res) => {
+const getQuizDetails = async (req, res) => {
     const { id_quiz } = req.params;
     try {
         const quiz = await prisma.quizzes.findUnique({
@@ -185,6 +185,21 @@ const getPastQuizzes = async (req, res) => {
 };
 
 
+//Calclate the number of participants without duplicates 
+const countParticipants = async (req, res) => { 
+    try {
+        const count = await prisma.students.count({
+            distinct: ['id_student'], // Ensure unique students
+        });
+
+        res.status(200).json({ totalStudents: count });
+    }catch (error) {
+        console.error("Error counting participants:", error);
+        res.status(500).json({ error: "Error counting participants", details: error.message });
+    }
+};
+
+
 
 module.exports = {
     getAvailableQuizzes,
@@ -192,4 +207,5 @@ module.exports = {
     submitAnswers,
     getQuizResults,
     getPastQuizzes,
+    countParticipants
 };

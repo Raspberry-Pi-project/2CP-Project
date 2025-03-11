@@ -14,7 +14,7 @@ app.use("/teachers", teachersRoutes);
 
 app.use("/students", studentsRoutes);
 
-app.use("/quiz", quizRoutes);
+app.use("/quizzes", quizRoutes);
 
 app.use("/questions", questionsRoutes);
 
