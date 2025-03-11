@@ -233,6 +233,12 @@ const deleteAnswer = async (req, res) => {
             
         }
     });
+    const totalResults = await prisma.attempts.count({
+        where: {
+            id_quiz: id_quiz
+        }
+    });
+    
 
       for (const attempt of allResults) {
         const answers = await prisma.student_answers.findMany({
@@ -245,8 +251,13 @@ const deleteAnswer = async (req, res) => {
         attempt.answers = answers
       }
       
-      
-        res.json(allResults)
+      res.json({
+        page,
+        limit,
+        totalPages: Math.ceil(totalResults / limit),
+        data: allResults
+    });
+        
       
     } catch (error) {
         console.error("Error fetching answers:", error);
