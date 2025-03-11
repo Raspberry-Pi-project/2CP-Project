@@ -5,6 +5,7 @@ const {
     submitAnswers,
     getQuizResults,
     getPastQuizzes,
+    countParticipants
 } = require("../controllers/studentsControllers");
 
 const router = express.Router();
@@ -14,6 +15,7 @@ router.get("/:id_quiz", getQuizDetails);
 router.post("/", submitAnswers);
 router.get("/quiz/:id/results", getQuizResults);
 router.get("/past-quizzes", getPastQuizzes);
+router.get("/count-participants", countParticipants);
 
 module.exports = router;
 

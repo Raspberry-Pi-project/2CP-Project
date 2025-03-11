@@ -21,8 +21,8 @@ app.use("/auth", authRoutes);
 
 
 app.use("/teachers",authenticateUser, authorizeRoles("teacher" , "admin"), teachersRoutes);
-
 app.use("/students",authenticateUser, authorizeRoles("student"), studentsRoutes);
+
 
 
 
