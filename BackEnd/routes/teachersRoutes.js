@@ -1,6 +1,9 @@
 const express = require("express");
 const quizRoutes = require("./quizRoutes");
+
 const answersRoutes = require("./answersRoutes");
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
 const {
   createTeacher,
   getTeachers,
@@ -9,6 +12,7 @@ const {
   updateTeacher,
   changeTeachersGroupe,
 } = require("../controllers/teachersControllers");
+const {getAllResults} = require("../controllers/studentAnswersControllers");
 const router = express.Router();
 
 router.use(express.json());
@@ -16,12 +20,15 @@ router.use(express.json());
 router.use("/Quizzes", quizRoutes);
 router.use("/answers", answersRoutes);
 
+
 router.post("/createTeacher", createTeacher);
 router.get("/getTeachers", getTeachers);
 router.delete("/deleteTeacher", deleteTeacher);
 router.delete("/deleteTeachersGroupe", deleteTeachersGroupe);
 router.put("/updateTeacher", updateTeacher);
 router.put("/changeTeachersGroupe", changeTeachersGroupe);
+
+router.get("/getAllResults", getAllResults);
 
 
 
