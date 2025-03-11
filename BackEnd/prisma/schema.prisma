@@ -90,7 +90,7 @@ model students {
   last_name      String     @db.VarChar(150)
   annee          Int
   groupe_student Int
-  email          String     @db.VarChar(150)
+  email          String     @unique(map: "email") @db.VarChar(150)
   password       String     @db.VarChar(255)
   created_at     DateTime   @default(now()) @db.Timestamp(0)
   attempts       attempts[]
@@ -100,17 +100,17 @@ model teachers {
   id_teacher Int       @id @default(autoincrement())
   last_name  String    @db.VarChar(150)
   first_name String    @db.VarChar(150)
-  email      String    @db.VarChar(100)
+  email      String    @unique(map: "email") @db.VarChar(100)
   password   String    @db.VarChar(255)
   created_at DateTime  @default(now()) @db.Timestamp(0)
   quizzes    quizzes[]
 }
 
 model admins {
-  id_admin   Int      @id
+  id_admin   Int      @id @default(autoincrement())
   first_name String   @db.VarChar(100)
   last_name  String   @db.VarChar(100)
-  email      String   @db.VarChar(100)
+  email      String   @unique(map: "email") @db.VarChar(100)
   password   String   @db.VarChar(100)
   created_at DateTime @default(now()) @db.Timestamp(0)
 }
