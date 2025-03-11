@@ -12,6 +12,7 @@ const {
   updateTeacher,
   changeTeachersGroupe,
 } = require("../controllers/teachersControllers");
+const {getAllResults} = require("../controllers/studentAnswersControllers");
 const router = express.Router();
 
 router.use(express.json());
@@ -26,6 +27,8 @@ router.delete("/deleteTeacher", deleteTeacher);
 router.delete("/deleteTeachersGroupe", deleteTeachersGroupe);
 router.put("/updateTeacher", updateTeacher);
 router.put("/changeTeachersGroupe", changeTeachersGroupe);
+
+router.get("/getAllResults", getAllResults);
 
 
 

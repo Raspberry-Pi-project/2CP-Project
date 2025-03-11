@@ -6,7 +6,9 @@ const {
     getQuestionsByQuiz,
     updateQuestion,
     deleteQuestion,
-    getAllQuestionsWithAnswers
+    getAllQuestionsWithAnswers,
+    calculatePercentage,
+
 } = require("../controllers/questionsControllers");
 
 const router = express.Router();
@@ -24,5 +26,8 @@ router.put("/:id_question", updateQuestion);
 router.delete("/:id_question", deleteQuestion);
 
 router.get("/", getAllQuestionsWithAnswers);
+
+router.get("/calculatePercentage",calculatePercentage);
+
 
 module.exports = router;

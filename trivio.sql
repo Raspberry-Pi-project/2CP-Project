@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1
--- Généré le : lun. 03 mars 2025 à 14:18
+-- Généré le : mar. 11 mars 2025 à 10:55
 -- Version du serveur : 10.4.32-MariaDB
 -- Version de PHP : 8.2.12
 
@@ -35,6 +35,13 @@ CREATE TABLE `admins` (
   `password` varchar(100) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Déchargement des données de la table `admins`
+--
+
+INSERT INTO `admins` (`id_admin`, `first_name`, `last_name`, `email`, `password`, `created_at`) VALUES
+(1, 'Wassim', 'Belguenbour', 'test@gmail.com', '$2b$10$Zo7loWDWiwhNyTY9lKOrsOqX4lUe8cBz2NZKDgjw5lk4ydKrP.Ds.', '2025-03-11 08:09:14');
 
 -- --------------------------------------------------------
 
@@ -74,47 +81,6 @@ CREATE TABLE `attempts` (
 -- --------------------------------------------------------
 
 --
--- Structure de la table `groupe`
---
-
-CREATE TABLE `groupe` (
-  `id_groupe` int(11) NOT NULL,
-  `name_groupe` varchar(100) NOT NULL,
-  `id_privilige` int(11) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Déchargement des données de la table `groupe`
---
-
-INSERT INTO `groupe` (`id_groupe`, `name_groupe`, `id_privilige`, `created_at`) VALUES
-(1, 'testGroupe', 1, '2025-02-23 17:04:00'),
-(2, 'testGroupe2', 1, '2025-02-23 17:04:24');
-
--- --------------------------------------------------------
-
---
--- Structure de la table `priviliges`
---
-
-CREATE TABLE `priviliges` (
-  `id_privilige` int(11) NOT NULL,
-  `upload_quiz` int(1) NOT NULL,
-  `attempt_quiz` int(1) NOT NULL,
-  `check_result` int(1) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Déchargement des données de la table `priviliges`
---
-
-INSERT INTO `priviliges` (`id_privilige`, `upload_quiz`, `attempt_quiz`, `check_result`) VALUES
-(1, 1, 1, 1);
-
--- --------------------------------------------------------
-
---
 -- Structure de la table `published_quizzes`
 --
 
@@ -140,15 +106,18 @@ CREATE TABLE `questions` (
   `points` float NOT NULL,
   `question_type` varchar(50) NOT NULL,
   `status` varchar(40) NOT NULL DEFAULT 'draft',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `question_percentage` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Déchargement des données de la table `questions`
 --
 
-INSERT INTO `questions` (`id_question`, `id_quiz`, `duration`, `question_text`, `question_number`, `points`, `question_type`, `status`, `created_at`) VALUES
-(1, 9, 0, 'test qst', 2, 0, 'multiChoice', 'draft', '2025-02-23 18:47:16');
+INSERT INTO `questions` (`id_question`, `id_quiz`, `duration`, `question_text`, `question_number`, `points`, `question_type`, `status`, `created_at`, `question_percentage`) VALUES
+(1, 9, 0, 'test qst', 2, 0, 'multiChoice', 'draft', '2025-02-23 18:47:16', 50),
+(2, 9, 10, 'huhuhuh', 3, 1.5, 'multiChoice', 'published', '2025-03-09 16:11:02', 50),
+(3, 9, 10, 'oooooo', 3, 1.5, 'multiChoice', 'published', '2025-03-09 16:11:28', 0);
 
 -- --------------------------------------------------------
 
@@ -163,23 +132,25 @@ CREATE TABLE `quizzes` (
   `duration` int(11) DEFAULT NULL,
   `id_teacher` int(11) NOT NULL,
   `subject` varchar(255) NOT NULL,
+  `status` varchar(100) NOT NULL DEFAULT 'draft',
   `score` float NOT NULL,
   `image` blob DEFAULT NULL,
   `for_year` int(11) DEFAULT NULL,
   `for_groupe` int(11) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `nb_attempts` int(11) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Déchargement des données de la table `quizzes`
 --
 
-INSERT INTO `quizzes` (`id_quiz`, `title`, `description`, `duration`, `id_teacher`, `subject`, `score`, `image`, `for_year`, `for_groupe`, `created_at`) VALUES
-(9, 'test 7', 'just a test', 0, 11, 'CS', 0, NULL, 2, 9, '2025-02-23 18:46:03'),
-(10, 'test quiz', 'teeeeest', 0, 11, 'sfsd', 0, NULL, 2, 9, '2025-02-25 05:55:03'),
-(11, 'test quiz', 'teeeeest', 0, 11, 'sfsd', 0, NULL, NULL, NULL, '2025-02-25 05:55:18'),
-(12, 'test quiz', 'teeeeest', 0, 11, 'sfsd', 0, NULL, NULL, NULL, '2025-02-25 06:24:01'),
-(13, 'test quiz', 'teeeeest', 0, 11, 'sfsd', 0, NULL, NULL, NULL, '2025-02-25 06:27:52');
+INSERT INTO `quizzes` (`id_quiz`, `title`, `description`, `duration`, `id_teacher`, `subject`, `status`, `score`, `image`, `for_year`, `for_groupe`, `created_at`, `nb_attempts`) VALUES
+(9, 'test 7', 'just a test', 0, 11, 'CS', 'draft', 0, NULL, 2, 9, '2025-02-23 18:46:03', 0),
+(10, 'test quiz', 'teeeeest', 0, 11, 'sfsd', 'draft', 0, NULL, 2, 9, '2025-02-25 05:55:03', 0),
+(11, 'test quiz', 'teeeeest', 0, 11, 'sfsd', 'draft', 0, NULL, NULL, NULL, '2025-02-25 05:55:18', 0),
+(12, 'test quiz', 'teeeeest', 0, 11, 'sfsd', 'draft', 0, NULL, NULL, NULL, '2025-02-25 06:24:01', 0),
+(13, 'test quiz', 'teeeeest', 0, 11, 'sfsd', 'draft', 0, NULL, NULL, NULL, '2025-02-25 06:27:52', 0);
 
 -- --------------------------------------------------------
 
@@ -193,11 +164,18 @@ CREATE TABLE `students` (
   `last_name` varchar(150) NOT NULL,
   `annee` int(11) NOT NULL,
   `groupe_student` int(11) NOT NULL,
-  `groupe` int(11) NOT NULL,
   `email` varchar(150) NOT NULL,
   `password` varchar(255) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Déchargement des données de la table `students`
+--
+
+INSERT INTO `students` (`id_student`, `first_name`, `last_name`, `annee`, `groupe_student`, `email`, `password`, `created_at`) VALUES
+(2, 'Abdelouahab', 'Meridja', 2, 9, 'na_meridja@esi.dz', '$2b$10$K8x4NYV8Yf6aSwFcbJobQusLKhDal.S43S.vtRAyTAa0MOrM.nhU.', '2025-03-11 07:57:03'),
+(3, 'Wassim', 'Belguenbour', 2, 9, 'test2@gmail.com', '$2b$10$UIKZClF88HykBlX.6x1eJOwpeMsJrX2BhCBRK8B7EIf5ffmWCcubm', '2025-03-11 08:26:31');
 
 -- --------------------------------------------------------
 
@@ -223,7 +201,6 @@ CREATE TABLE `teachers` (
   `id_teacher` int(255) NOT NULL,
   `last_name` varchar(150) NOT NULL,
   `first_name` varchar(150) NOT NULL,
-  `id_groupe` int(11) NOT NULL,
   `email` varchar(100) NOT NULL,
   `password` varchar(255) CHARACTER SET big5 COLLATE big5_chinese_ci NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
@@ -233,8 +210,8 @@ CREATE TABLE `teachers` (
 -- Déchargement des données de la table `teachers`
 --
 
-INSERT INTO `teachers` (`id_teacher`, `last_name`, `first_name`, `id_groupe`, `email`, `password`, `created_at`) VALUES
-(11, 'Meridja', 'Abdelouahab', 2, 'na_meridja@esi.dz', 'abdou2005mero', '2025-02-19 16:29:53');
+INSERT INTO `teachers` (`id_teacher`, `last_name`, `first_name`, `email`, `password`, `created_at`) VALUES
+(11, 'Meridja', 'Abdelouahab', 'na_meridja@esi.dzz', 'abdou2005mero', '2025-02-19 16:29:53');
 
 --
 -- Index pour les tables déchargées
@@ -244,7 +221,8 @@ INSERT INTO `teachers` (`id_teacher`, `last_name`, `first_name`, `id_groupe`, `e
 -- Index pour la table `admins`
 --
 ALTER TABLE `admins`
-  ADD PRIMARY KEY (`id_admin`);
+  ADD PRIMARY KEY (`id_admin`),
+  ADD UNIQUE KEY `email` (`email`);
 
 --
 -- Index pour la table `answers`
@@ -260,19 +238,6 @@ ALTER TABLE `attempts`
   ADD PRIMARY KEY (`id_attempt`),
   ADD KEY `id_student` (`id_student`),
   ADD KEY `id_quiz` (`id_quiz`);
-
---
--- Index pour la table `groupe`
---
-ALTER TABLE `groupe`
-  ADD PRIMARY KEY (`id_groupe`),
-  ADD KEY `groupe_ibfk_1` (`id_privilige`);
-
---
--- Index pour la table `priviliges`
---
-ALTER TABLE `priviliges`
-  ADD PRIMARY KEY (`id_privilige`);
 
 --
 -- Index pour la table `published_quizzes`
@@ -299,7 +264,8 @@ ALTER TABLE `quizzes`
 -- Index pour la table `students`
 --
 ALTER TABLE `students`
-  ADD PRIMARY KEY (`id_student`);
+  ADD PRIMARY KEY (`id_student`),
+  ADD UNIQUE KEY `email` (`email`);
 
 --
 -- Index pour la table `student_answers`
@@ -314,11 +280,17 @@ ALTER TABLE `student_answers`
 --
 ALTER TABLE `teachers`
   ADD PRIMARY KEY (`id_teacher`),
-  ADD KEY `id_groupe` (`id_groupe`);
+  ADD UNIQUE KEY `email` (`email`);
 
 --
 -- AUTO_INCREMENT pour les tables déchargées
 --
+
+--
+-- AUTO_INCREMENT pour la table `admins`
+--
+ALTER TABLE `admins`
+  MODIFY `id_admin` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT pour la table `answers`
@@ -330,19 +302,7 @@ ALTER TABLE `answers`
 -- AUTO_INCREMENT pour la table `attempts`
 --
 ALTER TABLE `attempts`
-  MODIFY `id_attempt` int(255) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT pour la table `groupe`
---
-ALTER TABLE `groupe`
-  MODIFY `id_groupe` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- AUTO_INCREMENT pour la table `priviliges`
---
-ALTER TABLE `priviliges`
-  MODIFY `id_privilige` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id_attempt` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT pour la table `published_quizzes`
@@ -354,7 +314,7 @@ ALTER TABLE `published_quizzes`
 -- AUTO_INCREMENT pour la table `questions`
 --
 ALTER TABLE `questions`
-  MODIFY `id_question` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id_question` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT pour la table `quizzes`
@@ -366,13 +326,13 @@ ALTER TABLE `quizzes`
 -- AUTO_INCREMENT pour la table `students`
 --
 ALTER TABLE `students`
-  MODIFY `id_student` int(255) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_student` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT pour la table `student_answers`
 --
 ALTER TABLE `student_answers`
-  MODIFY `id_student_answer` int(255) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_student_answer` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT pour la table `teachers`
@@ -396,12 +356,6 @@ ALTER TABLE `answers`
 ALTER TABLE `attempts`
   ADD CONSTRAINT `attempts_ibfk_1` FOREIGN KEY (`id_student`) REFERENCES `students` (`id_student`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `attempts_ibfk_2` FOREIGN KEY (`id_quiz`) REFERENCES `quizzes` (`id_quiz`);
-
---
--- Contraintes pour la table `groupe`
---
-ALTER TABLE `groupe`
-  ADD CONSTRAINT `groupe_ibfk_1` FOREIGN KEY (`id_privilige`) REFERENCES `priviliges` (`id_privilige`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Contraintes pour la table `published_quizzes`
