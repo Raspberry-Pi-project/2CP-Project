@@ -4,7 +4,11 @@ const prisma = new PrismaClient();
 // Get All Questions 
 const getAllQuestions = async (req, res) => {
     try {
-        const questions = await prisma.questions.findMany();
+        const questions = await prisma.questions.findMany({
+            include: {
+                answers: true // Fetch answers for each question
+            }
+        });
         res.status(200).json(questions);
     } catch (error) {
         console.error("Error fetching questions:", error);
@@ -17,7 +21,10 @@ const getQuestionById = async (req, res) => {
     const { id_question } = req.params;
     try {
         const question = await prisma.questions.findUnique({
-            where: { id_question: parseInt(id_question) } // Find the question with this ID
+            where: { id_question: parseInt(id_question) }, // Find the question with this ID
+            include: {
+                answers: true // Fetch related answers
+            }
         });
         if (!question) return res.status(404).json({ error: "Question not found" }); // Fixed variable name
         res.json(question); // Return question instead of quiz
@@ -66,13 +73,16 @@ const createQuestion = async (req, res) => { // Fixed typo in async
 };
 
 
-// ✅ Get All Questions for a Specific Quiz
+// Get All Questions for a Specific Quiz
 const getQuestionsByQuiz = async (req, res) => {
     const { id_quiz } = req.params;
 
     try {
         const questions = await prisma.questions.findMany({
-            where: { id_quiz: parseInt(id_quiz) }
+            where: { id_quiz: parseInt(id_quiz) },
+            include: {
+                answers: true // Fetch answers along with questions    
+            }
         });
 
         if (questions.length === 0) {
@@ -123,7 +133,7 @@ const deleteQuestion = async (req, res) => {
 
     try {
         // Check if the question exists 
-        const existingQuestion = await prisma.question.findUnique ({
+        const existingQuestion = await prisma.questions.findUnique ({
             where: { id_question: parseInt(id_question) },
         });
         
@@ -131,6 +141,22 @@ const deleteQuestion = async (req, res) => {
     } catch (error) {
         console.error("Error deleting question:", error);
         res.status(500).json({ error: "Error deleting question" });
+    }
+};
+
+
+const getAllQuestionsWithAnswers = async (req, res) => {
+    try {
+        const questionsWithAnswers = await prisma.questions.findMany({
+            include: {
+                answers: true, // Join answer table with questions
+            }
+        });
+
+        res.status(200).json(questionsWithAnswers);
+    } catch (error) {
+        console.error("Error fetching questions with answers:", error);
+        res.status(500).json({ error: "Error fetching questions with answers" });
     }
 };
 
@@ -183,6 +209,7 @@ const calculatePercentage = async (req, res) => {
 
 
 
+
 // Export all controller functions 
 
 module.exports = {
@@ -192,6 +219,7 @@ module.exports = {
     getQuestionsByQuiz,
     updateQuestion,
     deleteQuestion,
+    getAllQuestionsWithAnswers,
     calculatePercentage
-    
+   
 };
