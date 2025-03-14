@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1
--- Généré le : mar. 11 mars 2025 à 10:55
+-- Généré le : ven. 14 mars 2025 à 03:55
 -- Version du serveur : 10.4.32-MariaDB
 -- Version de PHP : 8.2.12
 
@@ -74,6 +74,7 @@ CREATE TABLE `attempts` (
   `id_attempt` int(255) NOT NULL,
   `id_student` int(255) NOT NULL,
   `id_quiz` int(255) NOT NULL,
+  `corrected` int(11) NOT NULL,
   `score` float NOT NULL DEFAULT 0,
   `attempt_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -105,19 +106,18 @@ CREATE TABLE `questions` (
   `question_number` int(11) NOT NULL,
   `points` float NOT NULL,
   `question_type` varchar(50) NOT NULL,
-  `status` varchar(40) NOT NULL DEFAULT 'draft',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `question_percentage` int(11) NOT NULL
+  `question_percentage` int(11) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Déchargement des données de la table `questions`
 --
 
-INSERT INTO `questions` (`id_question`, `id_quiz`, `duration`, `question_text`, `question_number`, `points`, `question_type`, `status`, `created_at`, `question_percentage`) VALUES
-(1, 9, 0, 'test qst', 2, 0, 'multiChoice', 'draft', '2025-02-23 18:47:16', 50),
-(2, 9, 10, 'huhuhuh', 3, 1.5, 'multiChoice', 'published', '2025-03-09 16:11:02', 50),
-(3, 9, 10, 'oooooo', 3, 1.5, 'multiChoice', 'published', '2025-03-09 16:11:28', 0);
+INSERT INTO `questions` (`id_question`, `id_quiz`, `duration`, `question_text`, `question_number`, `points`, `question_type`, `created_at`, `question_percentage`) VALUES
+(1, 9, 0, 'test qst', 2, 0, 'multiChoice', '2025-02-23 18:47:16', 50),
+(2, 9, 10, 'huhuhuh', 3, 1.5, 'multiChoice', '2025-03-09 16:11:02', 50),
+(3, 9, 10, 'oooooo', 3, 1.5, 'multiChoice', '2025-03-09 16:11:28', 0);
 
 -- --------------------------------------------------------
 
@@ -130,11 +130,11 @@ CREATE TABLE `quizzes` (
   `title` varchar(255) NOT NULL,
   `description` text DEFAULT NULL,
   `duration` int(11) DEFAULT NULL,
+  `correctionType` varchar(100) NOT NULL,
   `id_teacher` int(11) NOT NULL,
   `subject` varchar(255) NOT NULL,
   `status` varchar(100) NOT NULL DEFAULT 'draft',
   `score` float NOT NULL,
-  `image` blob DEFAULT NULL,
   `for_year` int(11) DEFAULT NULL,
   `for_groupe` int(11) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -145,12 +145,12 @@ CREATE TABLE `quizzes` (
 -- Déchargement des données de la table `quizzes`
 --
 
-INSERT INTO `quizzes` (`id_quiz`, `title`, `description`, `duration`, `id_teacher`, `subject`, `status`, `score`, `image`, `for_year`, `for_groupe`, `created_at`, `nb_attempts`) VALUES
-(9, 'test 7', 'just a test', 0, 11, 'CS', 'draft', 0, NULL, 2, 9, '2025-02-23 18:46:03', 0),
-(10, 'test quiz', 'teeeeest', 0, 11, 'sfsd', 'draft', 0, NULL, 2, 9, '2025-02-25 05:55:03', 0),
-(11, 'test quiz', 'teeeeest', 0, 11, 'sfsd', 'draft', 0, NULL, NULL, NULL, '2025-02-25 05:55:18', 0),
-(12, 'test quiz', 'teeeeest', 0, 11, 'sfsd', 'draft', 0, NULL, NULL, NULL, '2025-02-25 06:24:01', 0),
-(13, 'test quiz', 'teeeeest', 0, 11, 'sfsd', 'draft', 0, NULL, NULL, NULL, '2025-02-25 06:27:52', 0);
+INSERT INTO `quizzes` (`id_quiz`, `title`, `description`, `duration`, `correctionType`, `id_teacher`, `subject`, `status`, `score`, `for_year`, `for_groupe`, `created_at`, `nb_attempts`) VALUES
+(9, 'test 7', 'just a test', 0, '', 11, 'CS', 'draft', 0, 2, 9, '2025-02-23 18:46:03', 0),
+(10, 'test quiz', 'teeeeest', 0, '', 11, 'sfsd', 'draft', 0, 2, 9, '2025-02-25 05:55:03', 0),
+(11, 'test quiz', 'teeeeest', 0, '', 11, 'sfsd', 'draft', 0, NULL, NULL, '2025-02-25 05:55:18', 0),
+(12, 'test quiz', 'teeeeest', 0, '', 11, 'sfsd', 'draft', 0, NULL, NULL, '2025-02-25 06:24:01', 0),
+(13, 'test quiz', 'teeeeest', 0, '', 11, 'sfsd', 'draft', 0, NULL, NULL, '2025-02-25 06:27:52', 0);
 
 -- --------------------------------------------------------
 
