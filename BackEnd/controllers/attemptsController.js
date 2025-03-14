@@ -24,12 +24,13 @@ const startAttempt = async (req, res) => {
               return res.status(400).json({ error: "attempt limit reached" });
               
             }
-            console.log(numberAttempts)
             // Create new attempt
             const newAttempt = await prisma.attempts.create({
                 data: {
                     id_student,
-                    id_quiz
+                    id_quiz,
+                    score: 0,
+                    corrected : 0
                 }
             });
 

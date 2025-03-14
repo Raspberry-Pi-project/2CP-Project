@@ -1,211 +1,202 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const bcrypt = require("bcryptjs");
 
-
-// Get Availlable quizzes
-const getAvailableQuizzes = async (req, res) => {
-    try {
-        const quizzes = await prisma.quizzes.findMany({
-            select: {
-                id_quiz: true,
-                title: true,
-                subject: true,
-            },
-        });
-        res.json(quizzes);
-    } catch (error) {
-        res.status(500).json({ error: "Error fetching quizzes" });
-    }
-};
-
-
-// Get Quiz Details by ID
-const getQuizDetails = async (req, res) => {
-    const { id_quiz } = req.params;
-    try {
-        const quiz = await prisma.quizzes.findUnique({
-            where: { id_quiz: parseInt(id_quiz)},
-            include: {
-                questions: {
-                    select: {
-                        id_question: true, 
-                        question_text: true,
-                        answers: {
-                            select: {
-                                id_answer: true,
-                                answer_text: true,
-                                correct: true
-                            }
-                        }
-                    },
-                },
-            },
-        });
-
-        if(!quiz) return res.status(404).json({ error: "Quiz not found"});
-        res.json(quiz);
-
-    } catch (error) {
-        res.status(500).json({ error: "Error fetching quiz details" });    }
-};
-
-
-// Start Quiz 
-const startQuiz = async (req, res) => {
-    const { id_quiz } = req.params;
-    const { id_student } = req.body;
-    
-    try {
-        // Check if the student has already started this quiz
-        const existingAttempt = await prisma.result.findFirst({ // result or attemps ?
-            where: {
-                id_quiz: parseInt(id_quiz),
-                id_student: parseInt(id_student),
-            }
-        });
-
-        if (existingAttempt) {
-            return res.status(400).json({ error: "You have already started this quiz" });
-        }
-
-        // Register start time 
-        await prisma.result.create({
-            data: {
-                id_student: parseInt(studentId),
-                id_quiz: parseInt(id),
-                score: 0,
-               // startTime: new Date(),
-            },
-        });
-
-        res.json({ message: "Quiz started successfully" });
-    } catch (error) {
-        res.status(500).json({ error: "Error starting quiz" });
-    }
-};
-
-// Submit Answers for a Quiz 
+// Submit Answers for a Quiz
 
 const submitAnswers = async (req, res) => {
-    const { id_quiz } = req.params;
-    const { id_student,  answers } = req.body;
+  const { id_attempt, answers, score } = req.body;
 
-    try {
-        // Calculate the score
-        let score = 0;
-
-        for (const answer of answers) {
-            const correctAnswer = await prisma.answers.findFirst({
-                where: { id_question: answer.questionId,
-                    correct: 1
-                },
-            });
-
-            if (correctAnswer && correctAnswer.id_answer === answer.id_answer) {
-                score += 1;
-            }
-            await prisma.student_answers.create({
-                data: {
-                    //id_answer: answer.questionId,
-                    id_attempt: answer.questionId,
-                    //studentId,
-                    //chosenAnswer: answer.chosenAnswer,
-                    id_question: answer.id_question,
-                    student_answer_text: answer.student_answer_text
-                  },
-            });
-        }
-
-        const totalQuestions = answers.length;
-        const finalScore = (score / totalQuestions) * 100;
-
-        await prisma.result.updateMany({
-            where: {
-                id_quiz: parseInt(id_quiz),
-                id_student: parseInt(id_student),
-            },
-            data: {
-                score: finalScore, 
-               // competedAt: new Date(),
-
-            }
-
-        });
-
-        res.json({ message: "Answers submitted successfully", score: finalScore });
-    } catch (error) {
-        res.status(500).json({ error: "Error submitting answers" });       
+  try {
+    for (const answer in answers) {
+      const studentAnswer = await prisma.student_answers.create({
+        data: {
+          id_attempt: id_attempt,
+          id_question: answer.id_question,
+          student_answer_text: answer.student_answer_text,
+          correct: answer.correct,
+        },
+      });
     }
-};
 
+    await prisma.attempts.update({
+      where: {
+        id_attempt,
+      },
+      data: {
+        score,
+        corrected: 1,
+      },
+    });
+
+    res.json({ message: "Answers submitted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Error submitting answers" });
+  }
+};
 
 //  Get Results for a Quiz
 const getQuizResults = async (req, res) => {
-    const { id_quiz } = req.params;
-    const { id_student } = req.body;
+  const { id_student, id_quiz } = req.body;
 
-    try {   
-        const existingAttempt = await prisma.attempt.findFirst({
-            where: {
-                id_quiz: parseInt(id_quiz),
-                id_student: parseInt(id_student),
-           
-             }
-
-        });  
-        if(!result) return res.status(404).json({ error: "Result not found"});
-        res.json(result);
-    } catch (error) {
-        res.status(500).json({ error: "Error fetching results" });
-        
-    }    
+  try {
+    const existingAttempt = await prisma.attempts.findMany({
+      where: {
+        id_quiz: id_quiz,
+        id_student: id_student,
+      },
+    });
+    if (!existingAttempt) {
+      res.status(404).json({ error: "Result not found" });
+    } else {
+      res.json(existingAttempt);
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Error fetching results" });
+  }
 };
-
 
 // Get Past Quizzes taken by Student
-const getPastQuizzes = async (req, res) => {
-    const { id_quiz } = req.params;
-    const { id_student } = req.body;
-    try {
-        const pastQuizzes = await prisma.result.findMany({
-            where: { id_student: parseInt(id_student)},
-            include: {
-                quiz: {
-                    select: {
-                        title: true,
-                        subject: true,
-                    },
-                },
-            },
-        });
-        res.json(pastQuizzes);
-    } catch (error) {
-        res.status(500).json({ error: "Error fetching past quizzes" });
-    }
+const getHistory = async (req, res) => {
+  const { id_student , page , limit } = req.body;
+  try {
+    const pastQuizzes = await prisma.attempts.findMany({
+      skip: (page - 1) * limit, //skip records based on page number
+      take: limit, // limit number of attempts per page
+      where: { id_student: id_student },
+      distinct: ["id_quiz"],
+      include: {
+        quiz: true,
+      },
+    });
+    const totale_attempts = await prisma.attempts.count({
+      where: { id_student: id_student },
+    })
+    res.json({
+      data: pastQuizzes,
+      totale_attempts
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Error fetching past quizzes" });
+  }
 };
 
+//Calclate the number of participants without duplicates
+const countParticipants = async (req, res) => {
+  try {
+    const {id_quiz} = req.body
+    const count = await prisma.attempts.count({
+        where: {
+          id_quiz
+        },
+      distinct: ["id_student"], // Ensure unique students
+    });
 
-//Calclate the number of participants without duplicates 
-const countParticipants = async (req, res) => { 
-    try {
-        const count = await prisma.students.count({
-            distinct: ['id_student'], // Ensure unique students
-        });
-
-        res.status(200).json({ totalStudents: count });
-    }catch (error) {
-        console.error("Error counting participants:", error);
-        res.status(500).json({ error: "Error counting participants", details: error.message });
-    }
+    res.status(200).json({ totalStudents: count });
+  } catch (error) {
+    console.error("Error counting participants:", error);
+    res
+      .status(500)
+      .json({ error: "Error counting participants", details: error.message });
+  }
 };
 
+const getStudents = async (req, res) => {
+  try {
+    const {
+      page,
+      limit,
+      first_name,
+      last_name,
+      email,
+      id_student,
+      annee,
+      groupe_student,
+      created_at,
+    } = req.body;
+    const filters = {};
+    if (first_name) filters.first_name = { contains: first_name };
+    if (last_name) filters.last_name = { contains: last_name };
+    if (email) filters.email = { contains: email };
+    if (id_student) filters.id_teacher = id_student;
+    if (created_at) filters.created_at = created_at;
+    if (annee) filters.annee = annee;
+    if (groupe_student) filters.groupe_student = groupe_student;
+    const students = await prisma.students.findMany({
+      skip: (page - 1) * limit, //skip records based on page number
+      take: limit, // limit number of students per page
+      where: filters,
+      select: {
+        id_student: true,
+        first_name: true,
+        last_name: true,
+        email: true,
+        annee: true,
+        groupe_student: true,
+        created_at: true,
+      },
+    });
+    const totalStudents = await prisma.students.count({
+      where: filters,
+    });
+    res.json({
+      page,
+      limit,
+      totalPages: Math.ceil(totalStudents / limit),
+      data: students,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Error getting students" });
+  }
+};
 
+const updateStudent = async (req, res) => {
+  const {
+    id_student,
+    first_name,
+    last_name,
+    email,
+    annee,
+    groupe_student,
+    password,
+  } = req.body;
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const updatedStudent = await prisma.students.update({
+      where: { id_student: id_student },
+      data: {
+        password: hashedPassword,
+        first_name,
+        last_name,
+        email,
+        annee,
+        groupe_student,
+      },
+    });
+    res.json(updatedStudent);
+  } catch (error) {
+    res.status(500).json({ error: "Error updating student" });
+  }
+};
+
+const deleteStudent = async (req, res) => {
+  const { id_student } = req.body;
+  try {
+    const deletedStudent = await prisma.students.delete({
+      where: { id_student: id_student },
+    });
+    res.json(deletedStudent);
+  } catch (error) {
+    res.status(500).json({ error: "Error deleting student" });
+  }
+};
 
 module.exports = {
-    getAvailableQuizzes,
-    getQuizDetails,
-    submitAnswers,
-    getQuizResults,
-    getPastQuizzes,
-    countParticipants
+  submitAnswers,
+  getQuizResults,
+  getHistory,
+  countParticipants,
+  getStudents,
+  updateStudent,
+  deleteStudent,
 };

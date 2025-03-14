@@ -7,6 +7,7 @@ const { authenticateUser, authorizeRoles } = require("./middleware/authMiddlewar
 const app = express();
 const teachersRoutes = require("./routes/teachersRoutes");
 const studentsRoutes = require("./routes/studentsRoutes");
+const adminsRoutes = require("./routes/adminsRoutes");
 
 // ✅ Middleware
 app.use(express.json());
@@ -19,7 +20,7 @@ app.use(cors({
 // ✅ Routes
 app.use("/auth", authRoutes);
 
-
+app.use("/admins",authenticateUser, authorizeRoles("admin"), adminsRoutes);
 app.use("/teachers",authenticateUser, authorizeRoles("teacher" , "admin"), teachersRoutes);
 app.use("/students",authenticateUser, authorizeRoles("student"), studentsRoutes);
 

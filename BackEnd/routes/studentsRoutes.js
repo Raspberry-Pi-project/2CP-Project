@@ -1,21 +1,28 @@
 const express = require("express");
 const {
-    getAvailableQuizzes,
-    getQuizDetails,
     submitAnswers,
     getQuizResults,
-    getPastQuizzes,
-    countParticipants
+    getHistory,
+    getStudents
 } = require("../controllers/studentsControllers");
+const { getQuizzes, getQuizDetails } = require("../controllers/quizControllers");
+const { startAttempt } = require("../controllers/attemptsController");
+const { logout } = require("../controllers/authControllers");
 
 const router = express.Router();
 
-router.get("/", getAvailableQuizzes);
-router.get("/:id_quiz", getQuizDetails);
-router.post("/", submitAnswers);
-router.get("/quiz/:id/results", getQuizResults);
-router.get("/past-quizzes", getPastQuizzes);
-router.get("/count-participants", countParticipants);
+router.get("/getAvailableQuizzes", getQuizzes);
+router.get("/getQuizDetails", getQuizDetails);
+
+router.post("/startAttempt",startAttempt);
+router.post("/submitAnswers", submitAnswers);
+
+
+router.get("/getQuizResults", getQuizResults);
+router.get("/history", getHistory);
+
+router.get("/profile",getStudents)
+
 
 module.exports = router;
 
