@@ -1,0 +1,33 @@
+/* Make the whole page white */
+.full-page-container {
+    width: 100vw;
+    height: 100vh;
+    background-color: white;
+    display: flex;
+    flex-direction: column; /* Makes content stack vertically */
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Fix banner alignment */
+  .full-page-container > *:first-child {
+    width: 100%;
+  }
+  
+  /* Center the logo */
+  .logo-container {
+    flex-grow: 1; /* Pushes it to the center */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+  
+  /* Limit logo size */
+  .full-page-logo {
+    max-width: 300px; /* Adjust as needed */
+    max-height: 300px;
+    width: auto;
+    height: auto;
+  }
+  
