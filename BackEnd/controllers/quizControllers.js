@@ -274,6 +274,7 @@ const getQuizDetails = async (req, res) => {
             id_question: true,
             question_text: true,
             question_type: true,
+            question_number : true,
             duration: true,
             points: true,
             question_percentage: true,

@@ -71,7 +71,6 @@ const deleteTeacher = async (req, res) => {
 
 
 module.exports = {
-  createTeacher,
   getTeachers,
   deleteTeacher,
   updateTeacher

@@ -11,9 +11,6 @@ const {register} = require("../controllers/authControllers");
 const router = require("./authRoutes");
 
 
-//create new user
-router.post("/RegisterUser", register)
-
 //Teacher routes
 router.get("/getTeachers" , getTeachers )
 router.put("/updateTeacher" , updateTeacher)

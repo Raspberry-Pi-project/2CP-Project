@@ -7,7 +7,6 @@ const {
 } = require("../controllers/studentsControllers");
 const { getQuizzes, getQuizDetails } = require("../controllers/quizControllers");
 const { startAttempt } = require("../controllers/attemptsController");
-const { logout } = require("../controllers/authControllers");
 
 const router = express.Router();
 

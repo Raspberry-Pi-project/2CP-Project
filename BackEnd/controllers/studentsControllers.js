@@ -8,7 +8,13 @@ const submitAnswers = async (req, res) => {
   const { id_attempt, answers, score } = req.body;
 
   try {
-    for (const answer in answers) {
+    for (const answer of answers) {
+      const attempt = await prisma.attempts.findUnique({
+        where: {
+          id_attempt: id_attempt,
+        },
+      })
+
       const studentAnswer = await prisma.student_answers.create({
         data: {
           id_attempt: id_attempt,
@@ -45,10 +51,16 @@ const getQuizResults = async (req, res) => {
         id_quiz: id_quiz,
         id_student: id_student,
       },
+      include : {
+        student_answers : true
+      }
     });
     if (!existingAttempt) {
       res.status(404).json({ error: "Result not found" });
     } else {
+      for (const attempt of existingAttempt) {
+        attempt.quiz = await prisma.quizzes.findUnique({ where: { id_quiz: attempt.id_quiz } });
+      }
       res.json(existingAttempt);
     }
   } catch (error) {
@@ -71,6 +83,7 @@ const getHistory = async (req, res) => {
     });
     const totale_attempts = await prisma.attempts.count({
       where: { id_student: id_student },
+      distinct:["id_quiz"]
     })
     res.json({
       data: pastQuizzes,

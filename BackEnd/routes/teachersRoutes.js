@@ -2,7 +2,7 @@ const express = require("express");
 
 const { getQuizzes , createQuiz, deleteQuiz, updateQuiz, getQuizDetails } = require("../controllers/quizControllers");
 const { getAllResults } = require("../controllers/studentAnswersControllers");
-const { getStudents, countParticipants } = require("../controllers/studentsControllers");
+const { getStudents, countParticipants, getQuizResults } = require("../controllers/studentsControllers");
 const { calculatePercentage } = require("../controllers/questionsControllers");
 const { logout } = require("../controllers/authControllers");
 const router = express.Router();
@@ -19,7 +19,7 @@ router.get("/getQuizDetails" , getQuizDetails);
 //students functions
 router.get("/getStudents" , getStudents)
 router.get("countParticipants",countParticipants)
-
+router.get("/getStudentResults", getQuizResults);
 
 
 
