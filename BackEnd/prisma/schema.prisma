@@ -21,6 +21,7 @@ model attempts {
   id_attempt      Int               @id @default(autoincrement())
   id_student      Int
   id_quiz         Int
+  corrected       Int
   score           Float             @default(0) @db.Float
   attempt_at      DateTime          @default(now()) @db.Timestamp(0)
   students        students          @relation(fields: [id_student], references: [id_student], onDelete: Cascade, map: "attempts_ibfk_1")
@@ -39,9 +40,8 @@ model questions {
   question_number     Int
   points              Float             @db.Float
   question_type       String            @db.VarChar(50)
-  status              String            @default("draft") @db.VarChar(40)
   created_at          DateTime          @default(now()) @db.Timestamp(0)
-  question_percentage Int
+  question_percentage Int               @default(0)
   answers             answers[]
   quizzes             quizzes           @relation(fields: [id_quiz], references: [id_quiz], onDelete: Cascade, map: "questions_ibfk_1")
   student_answers     student_answers[]
@@ -54,11 +54,11 @@ model quizzes {
   title             String              @db.VarChar(255)
   description       String?             @db.Text
   duration          Int?
+  correctionType    String              @db.VarChar(100)
   id_teacher        Int
   subject           String              @db.VarChar(255)
   status            String              @default("draft") @db.VarChar(100)
   score             Float               @db.Float
-  image             Bytes?              @db.Blob
   for_year          Int?
   for_groupe        Int?
   created_at        DateTime            @default(now()) @db.Timestamp(0)

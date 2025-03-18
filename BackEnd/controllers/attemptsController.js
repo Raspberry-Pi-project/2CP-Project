@@ -1,4 +1,5 @@
 const { PrismaClient } = require("@prisma/client");
+const { getQuizzes } = require("./quizControllers");
 const prisma = new PrismaClient();
 
 // Start a new attempt
@@ -24,12 +25,13 @@ const startAttempt = async (req, res) => {
               return res.status(400).json({ error: "attempt limit reached" });
               
             }
-            console.log(numberAttempts)
             // Create new attempt
             const newAttempt = await prisma.attempts.create({
                 data: {
                     id_student,
-                    id_quiz
+                    id_quiz,
+                    score: 0,
+                    corrected : 0
                 }
             });
 
@@ -41,80 +43,24 @@ const startAttempt = async (req, res) => {
        }
 
  };
-
-
-
- // Submit an Attempt 
- const submitAttempt = async (req, res) => {
-    const { id_attempt, score } = req.body;
-    try {
-        // Check if the attempt exists
-        const attempt = await prisma.attempt.findUnique({ where: { id_attempt } });
-        if (!attempt) {
-            return res.status(404).json({ error: "Attempt not found." });
-        }
-        
-        // Update the attempt with the score 
-        const submittedAttempt = await prisma.attempt.update({
-            where: { id_attempt },
-            data: {
-                score,
-                student_answers: {
-                    none: {}
-                }
-            }
-        });
-
-        res.status(200).json({ message: "Attempt submitted successfully", submittedAttempt });
-    } catch (error) {
-        console.error("Error submitting attempt:", error);
-        res.status(500).json({ error: "Error submitting attempt" });
-    }
- };
-
-
-
-
- // Get All Attempts by Student
-const getStudentAttempts = async (req, res) => {
-    const { id_student } = req.params;
-  
-    try {
-      const attempts = await prisma.attempts.findMany({
-        where: { id_student: parseInt(id_student) },
-        include: {
-          quizzes: {
-            select: { title: true }
-          }
-        }
-      });
-  
-      res.json({ data: attempts });
-    } catch (error) {
-      console.error("Error fetching student attempts:", error);
-      res.status(500).json({ error: "Error fetching student attempts" });
-    }
-  };
   
   // Get Details of a Specific Attempt
   const getAttemptById = async (req, res) => {
-    const { id_attempt } = req.params;
+    const { id_attempt } = req.body;
   
     try {
       const attempt = await prisma.attempts.findUnique({
-        where: { id_attempt: parseInt(id_attempt) },
-        include: {
-          quizzes: {
-            select: { title: true }
-          },
-          student_answers: true
-        }
+        where: { id_attempt: id_attempt },
       });
-  
+
+      
       if (!attempt) {
         return res.status(404).json({ error: "Attempt not found." });
       }
-  
+      
+      attempt.quiz = await prisma.quizzes.findUnique({ where: { id_quiz: attempt.id_quiz },
+       });
+
       res.json({ data: attempt });
     } catch (error) {
       console.error("Error fetching attempt:", error);
@@ -125,8 +71,6 @@ const getStudentAttempts = async (req, res) => {
 
   module.exports = {
     startAttempt,
-    submitAttempt,
-    getStudentAttempts,
     getAttemptById
   };
     

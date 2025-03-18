@@ -1,35 +1,30 @@
 const express = require("express");
-const quizRoutes = require("./quizRoutes");
 
-const answersRoutes = require("./answersRoutes");
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
-const {
-  createTeacher,
-  getTeachers,
-  deleteTeacher,
-  deleteTeachersGroupe,
-  updateTeacher,
-  changeTeachersGroupe,
-} = require("../controllers/teachersControllers");
-const {getAllResults} = require("../controllers/studentAnswersControllers");
+const { getQuizzes , createQuiz, deleteQuiz, updateQuiz, getQuizDetails } = require("../controllers/quizControllers");
+const { getAllResults } = require("../controllers/studentAnswersControllers");
+const { getStudents, countParticipants, getQuizResults } = require("../controllers/studentsControllers");
+const { calculatePercentage } = require("../controllers/questionsControllers");
+const { logout } = require("../controllers/authControllers");
 const router = express.Router();
 
 router.use(express.json());
 
-router.use("/Quizzes", quizRoutes);
-router.use("/answers", answersRoutes);
+//quizzes functions
+router.get("/getQuizzes" , getQuizzes)
+router.post("/createQuiz", createQuiz);
+router.put("/deleteQuiz" , deleteQuiz);
+router.put("/updateQuiz" , updateQuiz);
+router.get("/getQuizDetails" , getQuizDetails);
+
+//students functions
+router.get("/getStudents" , getStudents)
+router.get("countParticipants",countParticipants)
+router.get("/getStudentResults", getQuizResults);
 
 
-router.post("/createTeacher", createTeacher);
-router.get("/getTeachers", getTeachers);
-router.delete("/deleteTeacher", deleteTeacher);
-router.delete("/deleteTeachersGroupe", deleteTeachersGroupe);
-router.put("/updateTeacher", updateTeacher);
-router.put("/changeTeachersGroupe", changeTeachersGroupe);
 
+router.put("/calculatePercentage",calculatePercentage);
 router.get("/getAllResults", getAllResults);
-
 
 
 module.exports = router;
