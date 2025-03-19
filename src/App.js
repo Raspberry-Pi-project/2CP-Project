@@ -9,6 +9,9 @@ import SignUp from "./Pages/SignUp";
 import { Fragment } from "react";
 import BannerApp from "./components/BannerApp/bann";
 import FullPage from "./Pages/NoQuizzespage/FullPage";
+import Duration from './Pages/CreationQuiz/Duration';
+import Info from "./Pages/CreationQuiz/Info";
+
 
 export default function App() {
   return (
@@ -22,7 +25,7 @@ function MainLayout() {
   const location = useLocation();
 
   // List of pages where BannerApp should be shown instead of Navbars
-  const bannerPages = ["/NoQuizzes", "/anotherPage", "/yetAnotherPage"]; //here add the pages of the web app
+  const bannerPages = ["/NoQuizzes", "/Info", "/Duration"]; //here add the pages of the web app
 
   const showBanner = bannerPages.includes(location.pathname);
 
@@ -36,8 +39,8 @@ function MainLayout() {
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/NoQuizzes" element={<FullPage />} />
-        <Route path="/anotherPage" element={<FullPage />} />          {/* here add the new pages */}
-        <Route path="/yetAnotherPage" element={<FullPage />} />       {/* here add the new pages*/}
+        <Route path="/Info" element={<Info />} />
+        <Route path="/Duration" element={<Duration />} />
       </Routes>
 
       {/* Hide Footer on pages that use BannerApp */}

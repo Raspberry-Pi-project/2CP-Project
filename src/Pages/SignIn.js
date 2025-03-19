@@ -5,18 +5,18 @@ import  LOGO from "../photos/Design (3).png";
 
 const SignIn = () => {
   return (
-    <div className="wrapper">
-    <div className="image-container">
-    <img src={LOGO} alt="LOGO" />
+    <div className="wrapperIn">
+    <div className="image-containerIn">
+    <img className="logo" src={LOGO} alt="LOGO" />
     </div>
 
     <div className="container">
 
      
      <div className="big-box">
-     <h1>SIGN IN</h1><br/>
+     <h1 className="in1">SIGN IN</h1><br/>
        <div className="small-box">
-       <h2>Welcome Back !</h2><br/>
+       <h2 className="in2">Welcome Back !</h2><br/>
        <form>
         <label htmlFor="email">Email</label><br/>
          <input type="email" id="email" placeholder="Enter your email" required /><br/>

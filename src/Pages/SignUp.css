@@ -1,7 +1,7 @@
 body{
     background-color: #f8f9fa;
    }
-   .wrapper {
+   .wrapperUp {
     display: grid;
     grid-template-columns: 50% 50%;
     align-items: center;
@@ -11,16 +11,16 @@ body{
     border-radius: 10px;
     background-color: white;
   }
-  .image-container img {
+  .image-containerUp, .logo {
     width: 100%; /* Prevents it from taking too much space */
     height: 700px;
     
   }
-  h1{
+  .up1{
     text-align: center;
     color: #0E2A46 ;
   }
-  h3{
+  .up3{
     color: #0E2A46 ;
     text-align: center;
   }

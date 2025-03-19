@@ -3,17 +3,17 @@ import "./SignUp.css";
 import  LOGO from "../photos/Design (3).png";
 const SignUp = () => {
   return (
-    <div className="wrapper">
-    <div className="image-container">
-    <img src={LOGO} alt="LOGO" />
+    <div className="wrapperUp">
+    <div className="image-containerUp">
+    <img className="logo" src={LOGO} alt="LOGO" />
     </div>
 
     <div className="container">
      <div className="big-box">
 
-<h1>ADD TEACHER/STUDENT</h1>
+<h1 className="up1">ADD TEACHER/STUDENT</h1>
      <div className="small-box">
-       <h3>Welcome !</h3><br/>
+       <h3 className="up3">Welcome !</h3><br/>
        <form>
        <label htmlFor="Full Name ">Full Name* </label><br/>
        <input type="Full Name " id="Full Name " required /><br/>
