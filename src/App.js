@@ -1,6 +1,6 @@
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import Navbars from "./components/Nav/navbar";
 import Home from "./Pages/home";
 import Footer from "./components/foot/footer";
@@ -9,11 +9,11 @@ import SignUp from "./Pages/SignUp";
 import { Fragment } from "react";
 import BannerApp from "./components/BannerApp/bann";
 import FullPage from "./Pages/NoQuizzespage/FullPage";
-import Duration from './Pages/CreationQuiz/Duration';
+import Duration from "./Pages/CreationQuiz/Duration";
 import Info from "./Pages/CreationQuiz/Info";
+import Generating from "./Pages/CreationQuiz/generating";
 import Finalization1 from "./Pages/CreationQuiz/Finalization1";
 import Finalization2 from "./Pages/CreationQuiz/Finalization2";
-
 import { AuthProvider } from "./context/AuthProvider";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -26,15 +26,40 @@ export default function App() {
        </Router>
     </AuthProvider>
   );
-}
+} 
 
 function MainLayout() {
   const location = useLocation();
 
-  // List of pages where BannerApp should be shown instead of Navbars
-  const bannerPages = ["/NoQuizzes", "/Info", "/Duration", "/Finalization1", "/Finalization2"]; //here add the pages of the web app
+  const bannerPages = ["/noquizzes", "/info", "/duration", "/generating", "/finalization1", "/finalization2"];
 
-  const showBanner = bannerPages.includes(location.pathname);
+  const showBanner = bannerPages.includes(location.pathname.toLowerCase());
+
+
+{/*
+  return (
+    <Fragment>
+      {/* Show BannerApp on specific pages, otherwise show Navbars 
+      {showBanner ? <BannerApp /> : <Navbars />}
+  
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/signin" element={<SignIn />} />
+        <Route path="/signup" element={<SignUp />} />
+        <Route path="/NoQuizzes" element={<FullPage />} />
+        <Route path="/Info" element={<Info />} />
+        <Route path="/Duration" element={<Duration />} />
+        <Route path="/Generating" element={<Generating />} />
+        <Route path="/Finalization1" element={<Finalization1 />} />
+        <Route path="/Finalization2" element={<Finalization2 />} />
+      </Routes>
+  
+      {/* Hide Footer on pages that use BannerApp 
+      {!showBanner && <Footer />}
+    </Fragment>
+  );   */}
+
+
 
   return (
     <Fragment>
@@ -42,27 +67,19 @@ function MainLayout() {
       {showBanner ? <BannerApp /> : <Navbars />}
 
       <Routes>
-        <Route path="/" element={<Home />} />
+
+      <Route path="/" element={<Home />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
-        {/*<Route path="/NoQuizzes" element={<FullPage />} /> 
-        <Route path="/Info" element={<Info />} />
-        <Route path="/Duration" element={<Duration />} />
-        <Route path="/Finalization1" element={<Finalization1 />} />
-        <Route path="/Finalization2" element={<Finalization2 />} />  */}
 
-
-
-        {/*<Route 
+        <Route 
           path="/NoQuizzes" 
           element={
             <ProtectedRoute allowedRoles={["user", "admin"]}>
               <FullPage />
             </ProtectedRoute>
           } 
-        /> */}
-
-         <Route path="/NoQuizzes" element={<FullPage />} />
+        />
 
         <Route 
           path="/Info" 
@@ -72,6 +89,7 @@ function MainLayout() {
             </ProtectedRoute>
           } 
         />
+
         <Route 
           path="/Duration" 
           element={
@@ -80,6 +98,15 @@ function MainLayout() {
             </ProtectedRoute>
           } 
         />
+
+        <Route 
+        path="/Generating"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <Generating />
+          </ProtectedRoute>
+        }
+      />
         <Route 
           path="/Finalization1" 
           element={
@@ -96,6 +123,7 @@ function MainLayout() {
             </ProtectedRoute>
           } 
         />
+
       </Routes>
 
       {/* Hide Footer on pages that use BannerApp */}

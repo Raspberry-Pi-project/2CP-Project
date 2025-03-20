@@ -12,7 +12,7 @@ const Home = () => {
                 <h5>Free & Automated</h5>
                 <h2>Create, Share, and Track Student Quizzes —All <br></br> in One Place!</h2>
                 <p>Save Time on Assessments – Focus More on Teaching!</p>
-                <Link to="/signin" className="button">Get Started</Link>
+                <Link to="/Info" className="button">Get Started</Link>
 
             </div>
             <div className="col-md-6">
