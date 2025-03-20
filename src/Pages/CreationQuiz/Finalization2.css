@@ -18,8 +18,8 @@ margin-top: 30px;
 }
 .leftFinalization2{
    background-color: white;
-   display: block;
-   justify-items: center;
+   display: flex;
+   flex-direction: column;
    margin: auto 25px ;
    font-family: 'Inter', sans-serif;
    font-size: 20px;
@@ -44,9 +44,9 @@ margin-top: 30px;
     font-size: 25px;
     height: 130px;
 }
-#Subject, #Title, #Description ,#Image{
-    padding: 12px;
-    width: 955px;
+#Year, #Group {
+    padding: 10px;
+    width: 500px;
     margin: 10px auto;
     border-radius: 10px;
     border-width: 0.5px;
@@ -56,17 +56,49 @@ margin-top: 30px;
 
 
 .ReturnFinalization2{
-    background-color: #2FC7A1;
+    background-color: #5F6368;
     color: white;
     padding: 10px 20px;;
     border-radius: 10px;
     border-width: 0px;
     width: 100px;
-    
-    margin-left:900px ;
+    margin-left:-900px ;
     margin-bottom: 10px;
     font-family: 'Inter', sans-serif;
     
+}
+
+#Yearlabel, #Grouplabel {
+    width: 500px;
+    margin: auto ;
+    border-radius: 10px;
+    border-width: 0.5px;
+    border-color: #d1d1d1;
+    margin-bottom: -30px;
+    margin-top: 30px;
+    color: #0E2A46;
+    font-family: 'Sora', sans-serif;
+}
+
+.PublishFinalization2 , .CancelFinalization2{
+    border-color: #0E2A46;
+    padding: 10px 20px;;
+    border-radius: 10px;
+    border-width: 0.5px;
+    width: 500px;
+    margin-left: 20px;
+    margin-bottom: 10px;
+    font-family: 'Inter', sans-serif;
+}
+
+.PublishFinalization2{
+    background-color: #2FC7A1;
+    color: white;
+}
+
+.CancelFinalization2{
+    background-color: #f6f6f6;
+
 }
 
 
