@@ -11,6 +11,8 @@ import BannerApp from "./components/BannerApp/bann";
 import FullPage from "./Pages/NoQuizzespage/FullPage";
 import Duration from './Pages/CreationQuiz/Duration';
 import Info from "./Pages/CreationQuiz/Info";
+import Finalization1 from "./Pages/CreationQuiz/Finalization1";
+import Finalization2 from "./Pages/CreationQuiz/Finalization2";
 
 
 export default function App() {
@@ -25,7 +27,7 @@ function MainLayout() {
   const location = useLocation();
 
   // List of pages where BannerApp should be shown instead of Navbars
-  const bannerPages = ["/NoQuizzes", "/Info", "/Duration"]; //here add the pages of the web app
+  const bannerPages = ["/NoQuizzes", "/Info", "/Duration", "/Finalization1", "/Finalization2"]; //here add the pages of the web app
 
   const showBanner = bannerPages.includes(location.pathname);
 
@@ -41,6 +43,8 @@ function MainLayout() {
         <Route path="/NoQuizzes" element={<FullPage />} />
         <Route path="/Info" element={<Info />} />
         <Route path="/Duration" element={<Duration />} />
+        <Route path="/Finalization1" element={<Finalization1 />} />
+        <Route path="/Finalization2" element={<Finalization2 />} />
       </Routes>
 
       {/* Hide Footer on pages that use BannerApp */}

@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import LOGO from "../../photos/Design (1) 1.png";
 import "./bann.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -7,6 +8,7 @@ import { faHome, faBell, faUserCircle,faPlus } from "@fortawesome/free-solid-svg
 const Link = ({ to, children }) => <a href={to}>{children}</a>;
 
 const BannerApp = () => {
+  const navigate = useNavigate();
   return (
     <div className="banner-container">
       <div className="banner-row py-2">
@@ -21,7 +23,7 @@ const BannerApp = () => {
 
         {/* Add Button  ; To Add QUIZZES*/}
         <div className="col-md-1 col-sm-2 text-center">
-                  <button className="banner-btnnn">
+                  <button className="banner-btnnn"onClick={() => navigate("/Info")}>
             <FontAwesomeIcon icon={faPlus} />
           </button>
         </div>
