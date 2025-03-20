@@ -1,0 +1,59 @@
+.questionCard {
+    border: 1px solid #BDDBDB;
+    border-radius: 10px;
+    padding: 20px;
+    width: 250px;
+    background-color: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    margin: 10px;
+    position: relative; 
+}
+
+.questionCardHeader {
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+    margin-bottom: 20px; 
+}
+
+.editButton {
+    background-color: #0E2A46;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 3px ;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+    margin-top: 0px ; 
+}
+
+.deleteButton {
+    background-color: transparent;
+    border: none;
+    font-size: 18px;
+    color: #5F6368;
+    cursor: pointer;
+    margin-top: -10px;
+    margin-left: 150px;
+    padding: 5px;
+}
+
+.deleteButton:hover {
+    color: #FF0000; 
+}
+
+.questionCardBody {
+    text-align: center;
+}
+
+.questionText {
+    font-family: 'Inter', sans-serif;
+    font-size: 18px;
+    color: #0E2A46;
+    font-weight: 500;
+}
