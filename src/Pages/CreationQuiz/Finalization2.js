@@ -11,12 +11,16 @@ const Finalization2 = () => {
                 </div>
                 <div className="leftFinalization2">
                 <img className="imageFinalization2" src={finalization2} alt="" /><br />
-                  <label htmlFor="Year of study">YEAR OF STUDY : </label><br/>
+                  <label id="Yearlabel" htmlFor="Year of study">Year of study :</label><br/>
                   <input type="text" id="Year" placeholder="Enter the year" required /><br/>
-                  <label htmlFor="Group">Group :</label><br />
+                  <label id="Grouplabel" htmlFor="Group">Group :</label><br />
                   <input type="text" id="Group" placeholder="Enter the group" required /><br/>
-                  
-                  
+                  <button className="PublishFinalization2">
+                    Publish
+                  </button>
+                  <button className="CancelFinalization2">
+                    Cancel
+                  </button>
                   <button className="ReturnFinalization2" >
                     Return
                   </button>
