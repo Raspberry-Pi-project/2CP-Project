@@ -75,7 +75,7 @@ function MainLayout() {
         <Route 
           path="/NoQuizzes" 
           element={
-            <ProtectedRoute allowedRoles={["user", "admin"]}>
+            <ProtectedRoute allowedRoles={["teacher", "admin"]}>
               <FullPage />
             </ProtectedRoute>
           } 

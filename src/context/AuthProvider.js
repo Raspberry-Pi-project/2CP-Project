@@ -6,9 +6,9 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const storedRole = localStorage.getItem("role");
-  const [user, setUser] = useState(storedRole ? { role: storedRole } : null);
+  const [user, setUser] = useState({}/*storedRole ? { role: storedRole } : null*/);
   
-  useEffect(() => {
+  /*useEffect(() => {
     const token = Cookies.get("token"); // Read JWT from cookies
     if (token) {
       try {
@@ -19,10 +19,10 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
       }
     }
-  }, []);
+  }, []);*/
 
   return (
-    <AuthContext.Provider value={{ user }}>
+    <AuthContext.Provider value={{ user , setUser }}>
       {children}
     </AuthContext.Provider>
   );
