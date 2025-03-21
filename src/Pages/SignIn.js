@@ -4,7 +4,7 @@ import "./SignIn.css";
 import LOGO from "../photos/Design (3).png";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-
+import { useAuth } from "../context/AuthProvider";
 const SignIn = () => {
   const { setUser } = useAuth();
   const navigate = useNavigate(); // Hook for navigation
