@@ -16,14 +16,18 @@ import Finalization1 from "./Pages/CreationQuiz/Finalization1";
 import Finalization2 from "./Pages/CreationQuiz/Finalization2";
 import { AuthProvider } from "./context/AuthProvider";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { QuizProvider } from "./context/QuizProvider"; // Import the QuizProvider
+
 
 
 export default function App() {
   return (
     <AuthProvider>
+      <QuizProvider>
       <Router>
         <MainLayout />
        </Router>
+       </QuizProvider>
     </AuthProvider>
   );
 } 
@@ -84,7 +88,7 @@ function MainLayout() {
         <Route 
           path="/Info" 
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["admin", "teacher"]}>
               <Info />
             </ProtectedRoute>
           } 
@@ -93,7 +97,7 @@ function MainLayout() {
         <Route 
           path="/Duration" 
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["admin", "teacher"]}>
               <Duration />
             </ProtectedRoute>
           } 
@@ -102,7 +106,7 @@ function MainLayout() {
         <Route 
         path="/Generating"
         element={
-          <ProtectedRoute allowedRoles={["admin"]}>
+          <ProtectedRoute allowedRoles={["admin", "teacher"]}>
             <Generating />
           </ProtectedRoute>
         }
@@ -110,7 +114,7 @@ function MainLayout() {
         <Route 
           path="/Finalization1" 
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["admin", "teacher"]}>
               <Finalization1 />
             </ProtectedRoute>
           } 
@@ -118,7 +122,7 @@ function MainLayout() {
         <Route 
           path="/Finalization2" 
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["admin", "teacher"]}>
               <Finalization2 />
             </ProtectedRoute>
           } 

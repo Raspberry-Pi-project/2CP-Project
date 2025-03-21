@@ -3,21 +3,29 @@ import "./generating.css";
 import { useNavigate } from "react-router-dom";
 import { faCheck, faTrash, faClock } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useQuiz } from "../../context/QuizProvider";
+
 
 const Generating = () => {
   const navigate = useNavigate();
-  const [quizType, setQuizType] = useState("multiple-choice");
-  const [options, setOptions] = useState(["", "", ""]);
-  const [correctAnswers, setCorrectAnswers] = useState([]);
-  const [multipleCorrect, setMultipleCorrect] = useState(false);
-  const [autoGraded, setAutoGraded] = useState(true);
-  const [timer, setTimer] = useState("");
-  const [points, setPoints] = useState("");
+  const { quizData, setQuizData, teacherId, setTeacherId } = useQuiz();
+
+
+  const [quizType, setQuizType] = useState(quizData.quizType || "multiple-choice");
+  const [options, setOptions] = useState(quizData.options || ["", "", ""]);
+  const [correctAnswers, setCorrectAnswers] = useState(quizData.correctAnswers || []);
+  const [multipleCorrect, setMultipleCorrect] = useState(quizData.multipleCorrect || false);
+  const [autoGraded, setAutoGraded] = useState(quizData.autoGraded ?? true);
+  const [timer, setTimer] = useState(quizData.timer || "");
+  const [points, setPoints] = useState(quizData.points || "");
   const [currentStep, setCurrentStep] = useState(3);
-  const [question, setQuestion] = useState("");
-  const [shortAnswer, setShortAnswer] = useState("");
-  const [selectedTrueFalse, setSelectedTrueFalse] = useState("TRUE");
+  const [question, setQuestion] = useState(quizData.question || "");  
+  const [shortAnswer, setShortAnswer] = useState(quizData.shortAnswer || "");
+  const [selectedTrueFalse, setSelectedTrueFalse] = useState(quizData.selectedTrueFalse || "TRUE");
   
+   const [isDraft, setIsDraft] = useState(quizData?.isDraft || false);   
+  const [isPosted, setIsPosted] = useState(quizData?.isPosted || false); 
+
   // Refs for dropdowns
   const timerDropdownRef = useRef(null);
   const pointsDropdownRef = useRef(null);
@@ -68,13 +76,42 @@ const Generating = () => {
     }
   };
 
-  // Add event listener for clicking outside
   useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+    // Ensure the teacher ID is stored
+    if (!teacherId) {
+      const loggedTeacherId = sessionStorage.getItem("teacherId");
+      if (loggedTeacherId) {
+        setTeacherId(loggedTeacherId);
+      }
+    }
+  }, [teacherId, setTeacherId]);
+
+  const saveQuizProgress = () => {
+    setQuizData({
+      quizType,
+      question,
+      options,
+      correctAnswers,
+      multipleCorrect,
+      timer,
+      points,
+      isDraft,
+      isPosted,
+      teacherId,  
+    });
+  };
+
+  const handleNext = () => {
+    saveQuizProgress();
+    navigate("/Finalization1");
+  };
+
+  const handleReturn = () => {
+    saveQuizProgress();
+    navigate("/Duration");
+  };
+  
+
 
   // Render quiz content based on quiz type
   const renderQuizContent = () => {
