@@ -164,7 +164,7 @@ const Home = () => {
               </div>
               
               <div className="get-started-btn-container">
-                <Link to="/signin" className="get-started-btn">
+                <Link to="/signup" className="get-started-btn">
                   Get Started Now! <span className="arrow-icon">→</span>
                 </Link>
               </div>
@@ -316,7 +316,7 @@ const Home = () => {
                 Our platform offers auto-grading and detailed analytics, saving teachers valuable time. Gamified quizzes with multimedia support keep students engaged, while advanced security ensures data protection. Make high-quality learning accessible to all. Join us today and transform the way you teach!
               </p>
               <Link to="/signin" className="start-quiz-btn">
-                Start a Quiz <span className="arrow-icon">→</span>
+                Start A Quiz <span className="arrow-icon">→</span>
               </Link>
             </div>
             <div className="why-choose-image">
