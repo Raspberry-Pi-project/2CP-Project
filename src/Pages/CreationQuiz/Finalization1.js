@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import "./Finalization1.css"
 import { useNavigate } from "react-router-dom"
@@ -35,6 +34,7 @@ const Finalization1 = () => {
   const handleSaveInDraft = () => {
     // Save quiz in draft
     console.log("Saved in draft")
+    navigate("/draftquiz")
   }
 
   const handleCancel = () => {

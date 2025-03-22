@@ -102,9 +102,16 @@ const SignIn = () => {
               {/* </Link></p> */}
             </form>
             <br></br>
-            <p>
+
+
+          {/*  <p>                      // this is the correct one once you finish delet the brakcets comment and make it available
               Don't have an account? <Link to="/signup">Sign Up</Link>
+            </p>   */}
+
+            <p>   {/* this one is just to goo directly into the history page just to test and see things it is not correct ofc */}
+              Don't have an account? <Link to="/historypage">Sign Up</Link>
             </p>
+
           </div>
         </div>
       </div>

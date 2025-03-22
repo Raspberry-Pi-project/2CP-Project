@@ -17,6 +17,10 @@ import Finalization2 from "./Pages/CreationQuiz/Finalization2";
 import { AuthProvider } from "./context/AuthProvider";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { QuizProvider } from "./context/QuizProvider"; // Import the QuizProvider
+import HistoryPage from "./Pages/History/historypage";
+import QuizDetails from "./Pages/QuizDetails/quizdetails";
+import Results from "./Pages/ResultsPage/results";
+import DraftQuiz from "./Pages/DraftQuizPage/draftquiz";
 
 
 
@@ -35,34 +39,9 @@ export default function App() {
 function MainLayout() {
   const location = useLocation();
 
-  const bannerPages = ["/noquizzes", "/info", "/duration", "/generating", "/finalization1", "/finalization2"];
+  const bannerPages = ["/noquizzes", "/info", "/duration", "/generating", "/finalization1", "/finalization2", "/historypage", "/quizdetails" , "/results" , "/draftquiz"]; 
 
   const showBanner = bannerPages.includes(location.pathname.toLowerCase());
-
-
-{/*
-  return (
-    <Fragment>
-      {/* Show BannerApp on specific pages, otherwise show Navbars 
-      {showBanner ? <BannerApp /> : <Navbars />}
-  
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/signin" element={<SignIn />} />
-        <Route path="/signup" element={<SignUp />} />
-        <Route path="/NoQuizzes" element={<FullPage />} />
-        <Route path="/Info" element={<Info />} />
-        <Route path="/Duration" element={<Duration />} />
-        <Route path="/Generating" element={<Generating />} />
-        <Route path="/Finalization1" element={<Finalization1 />} />
-        <Route path="/Finalization2" element={<Finalization2 />} />
-      </Routes>
-  
-      {/* Hide Footer on pages that use BannerApp 
-      {!showBanner && <Footer />}
-    </Fragment>
-  );   */}
-
 
 
   return (
@@ -75,7 +54,20 @@ function MainLayout() {
       <Route path="/" element={<Home />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
+        <Route path="/NoQuizzes" element={<FullPage />} />
+        <Route path="/Info" element={<Info />} />
+        <Route path="/Duration" element={<Duration />} />
+        <Route path="/Generating" element={<Generating />} />
+        <Route path="/Finalization1" element={<Finalization1 />} />
+        <Route path="/Finalization2" element={<Finalization2 />} />
+        <Route path="/historypage" element={<HistoryPage />} />
+        <Route path="/quizdetails" element={<QuizDetails />} />
+        <Route path="/results" element={<Results />} />
+        <Route path="/draftquiz" element={<DraftQuiz />} />
 
+
+
+{/*}
         <Route 
           path="/NoQuizzes" 
           element={
@@ -126,7 +118,12 @@ function MainLayout() {
               <Finalization2 />
             </ProtectedRoute>
           } 
-        />
+        />  
+        
+        
+        // ADD HERE THE OTHER 4 PAGES THAT I ADDED
+        
+        */}
 
       </Routes>
 

@@ -14,7 +14,7 @@ const BannerApp = () => {
       <div className="banner-row py-2">
         {/* Home Button */}
         <div className="col-md-1 col-sm-2 text-center">
-          <Link to="/">
+          <Link to="/noquizzes">
             <button className="banner-btn">
               <FontAwesomeIcon icon={faHome} />
             </button>
