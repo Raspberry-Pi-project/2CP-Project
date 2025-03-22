@@ -1,44 +1,48 @@
-
-import { useEffect, useState } from "react"
-import "./Duration.css"
-import { useNavigate } from "react-router-dom"
-import { useQuiz } from "../../context/QuizProvider" 
-
+import { useEffect, useState } from "react";
+import "./Duration.css";
+import { useNavigate } from "react-router-dom";
+import { useQuiz } from "../../context/QuizProvider";
 
 const Duration = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const { quizData, setQuizData } = useQuiz();
 
-  const [attempts, setAttempts] = useState(quizData.attempts || "")
-  const [duration, setDuration] = useState(quizData.duration || "")
-  const [score, setScore] = useState(quizData.score || "")
-  const [currentStep, setCurrentStep] = useState(2)
-  const [showAttemptsDropdown, setShowAttemptsDropdown] = useState(false)
-  const [showDurationDropdown, setShowDurationDropdown] = useState(false)
+  const [nb_attempts, setNbAttempts] = useState(quizData.nb_attempts || 1);
+  const [duration, setDuration] = useState(quizData.duration || "No time limit");
+  const [score, setScore] = useState(quizData.score || 0);
+  const [currentStep, setCurrentStep] = useState(2);
+  const [showAttemptsDropdown, setShowAttemptsDropdown] = useState(false);
+  const [showDurationDropdown, setShowDurationDropdown] = useState(false);
 
   // Options for dropdowns
-  const attemptsOptions = ["1", "2", "3", "Unlimited"]
-  const durationOptions = ["5 minutes","10 minutes","15 minutes","20 minutes", "30 minutes", "45 minutes", "1 hour", "No time limit"]
-
+  const attemptsOptions = ["1", "2", "3", "Unlimited"];
+  const durationOptions = [
+    "5 minutes",
+    "10 minutes",
+    "15 minutes",
+    "20 minutes",
+    "30 minutes",
+    "45 minutes",
+    "1 hour",
+    "No time limit",
+  ];
 
   useEffect(() => {
-    setQuizData({ ...quizData, attempts, duration, score });
-  }, [attempts, duration, score]);
-
+    setQuizData({ ...quizData, nb_attempts, duration, score });
+  }, [nb_attempts, duration, score]);
 
   const handleReturn = () => {
-    setQuizData({ ...quizData, attempts, duration, score }); 
-    navigate("/Info")
-  }
+    setQuizData({ ...quizData, nb_attempts, duration, score });
+    navigate("/Info");
+  };
 
   const handleNext = () => {
-    setQuizData({ ...quizData, attempts, duration, score }); 
-    navigate("/generating")
-  }
+    setQuizData({ ...quizData, nb_attempts, duration, score });
+    navigate("/generating");
+  };
 
   return (
     <div className="quiz-generator-container">
-
       {/* Main Content */}
       <div className="main-content">
         {/* Sidebar */}
@@ -53,7 +57,9 @@ const Duration = () => {
             {[1, 2, 3, 4, 5].map((step) => (
               <div
                 key={step}
-                className={`step ${currentStep === step ? "active" : ""} ${currentStep > step ? "completed" : ""}`}
+                className={`step ${currentStep === step ? "active" : ""} ${
+                  currentStep > step ? "completed" : ""
+                }`}
               >
                 {step}
               </div>
@@ -65,8 +71,13 @@ const Duration = () => {
             <div className="form-group">
               <label>number of Attempts :</label>
               <div className="dropdown-container">
-                <div className="dropdown-field" onClick={() => setShowAttemptsDropdown(!showAttemptsDropdown)}>
-                  <span>{attempts || "enter the number of possible attempts"}</span>
+                <div
+                  className="dropdown-field"
+                  onClick={() => setShowAttemptsDropdown(!showAttemptsDropdown)}
+                >
+                  <span>
+                    {attempts || "enter the number of possible attempts"}
+                  </span>
                   <span className="dropdown-arrow">▼</span>
                 </div>
                 {showAttemptsDropdown && (
@@ -76,8 +87,12 @@ const Duration = () => {
                         key={index}
                         className="dropdown-option"
                         onClick={() => {
-                          setAttempts(option)
-                          setShowAttemptsDropdown(false)
+                          if (option === "Unlimited") {
+                            setNbAttempts(-1);
+                          } else {
+                            setNbAttempts(parseInt(option));
+                          }
+                          setShowAttemptsDropdown(false);
                         }}
                       >
                         {option}
@@ -91,7 +106,10 @@ const Duration = () => {
             <div className="form-group">
               <label>Duration :</label>
               <div className="dropdown-container">
-                <div className="dropdown-field" onClick={() => setShowDurationDropdown(!showDurationDropdown)}>
+                <div
+                  className="dropdown-field"
+                  onClick={() => setShowDurationDropdown(!showDurationDropdown)}
+                >
                   <span>{duration || "Enter the General Duration"}</span>
                   <span className="dropdown-arrow">▼</span>
                 </div>
@@ -102,8 +120,36 @@ const Duration = () => {
                         key={index}
                         className="dropdown-option"
                         onClick={() => {
-                          setDuration(option)
-                          setShowDurationDropdown(false)
+                          switch (option) {
+                            case "1 hour":
+                              setDuration(60);
+                              break;
+                            case "45 minutes":
+                              setDuration(45);
+                              break;
+                            case "30 minutes":
+                              setDuration(30);
+                              break;
+                            case "20 minutes":
+                              setDuration(20);
+                              break;
+                            case "15 minutes":
+                              setDuration(15);
+                              break;
+                            case "10 minutes":
+                              setDuration(10);
+                              break;
+                            case "5 minutes":
+                              setDuration(5);
+                              break;
+                            case "No time limit":
+                              setDuration(-1);
+                              break;
+                            default:
+                              setDuration(-1);
+                              break;  
+                          }
+                          setShowDurationDropdown(false);
                         }}
                       >
                         {option}
@@ -114,12 +160,14 @@ const Duration = () => {
               </div>
             </div>
 
-            <div className="form-note">you can set the duration of each question later .</div>
+            <div className="form-note">
+              you can set the duration of each question later .
+            </div>
 
             <div className="form-group">
               <label>Score:</label>
               <input
-                type="text"
+                type="number"
                 placeholder="enter the total score"
                 value={score}
                 onChange={(e) => setScore(e.target.value)}
@@ -130,18 +178,17 @@ const Duration = () => {
 
           {/* Navigation */}
           <div className="navigation-buttons">
-          <button className="return-btn" onClick={() => navigate("/Info")}>
-                Return
-          </button>
-          <button className="next-btn" onClick={() => navigate("/generating")}>
-                Next
-              </button>
+            <button className="return-btn" onClick={handleReturn}>
+              Return
+            </button>
+            <button className="next-btn" onClick={handleNext}>
+              Next
+            </button>
           </div>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
 export default Duration;
-
