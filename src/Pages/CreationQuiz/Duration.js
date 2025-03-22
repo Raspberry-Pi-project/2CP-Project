@@ -8,7 +8,9 @@ const Duration = () => {
   const { quizData, setQuizData } = useQuiz();
 
   const [nb_attempts, setNbAttempts] = useState(quizData.nb_attempts || 1);
-  const [duration, setDuration] = useState(quizData.duration || "No time limit");
+  const [duration, setDuration] = useState(
+    quizData.duration || "No time limit"
+  );
   const [score, setScore] = useState(quizData.score || 0);
   const [currentStep, setCurrentStep] = useState(2);
   const [showAttemptsDropdown, setShowAttemptsDropdown] = useState(false);
@@ -29,6 +31,7 @@ const Duration = () => {
 
   useEffect(() => {
     setQuizData({ ...quizData, nb_attempts, duration, score });
+    console.log(quizData);
   }, [nb_attempts, duration, score]);
 
   const handleReturn = () => {
@@ -76,7 +79,7 @@ const Duration = () => {
                   onClick={() => setShowAttemptsDropdown(!showAttemptsDropdown)}
                 >
                   <span>
-                    {attempts || "enter the number of possible attempts"}
+                    {nb_attempts || "enter the number of possible attempts"}
                   </span>
                   <span className="dropdown-arrow">▼</span>
                 </div>
@@ -147,7 +150,7 @@ const Duration = () => {
                               break;
                             default:
                               setDuration(-1);
-                              break;  
+                              break;
                           }
                           setShowDurationDropdown(false);
                         }}
