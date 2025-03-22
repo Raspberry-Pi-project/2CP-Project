@@ -15,7 +15,7 @@ const Finalization2 = () => {
   function handlePublish() {
     // Publish quiz
     console.log("Quiz published")
-    // Navigate to dashboard or confirmation page
+    // Navigate to dashboard or confirmation page orr as needed i do not know wch hbin dyro ki npubliyiwh 
     navigate("/dashboard")
   }
   const handleCancel = () => {

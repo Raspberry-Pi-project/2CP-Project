@@ -1,17 +1,13 @@
-
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import "./Duration.css"
 import { useNavigate } from "react-router-dom"
-import { useQuiz } from "../../context/QuizProvider" 
 
 
 const Duration = () => {
   const navigate = useNavigate()
-  const { quizData, setQuizData } = useQuiz();
-
-  const [attempts, setAttempts] = useState(quizData.attempts || "")
-  const [duration, setDuration] = useState(quizData.duration || "")
-  const [score, setScore] = useState(quizData.score || "")
+  const [attempts, setAttempts] = useState("")
+  const [duration, setDuration] = useState("")
+  const [score, setScore] = useState("")
   const [currentStep, setCurrentStep] = useState(2)
   const [showAttemptsDropdown, setShowAttemptsDropdown] = useState(false)
   const [showDurationDropdown, setShowDurationDropdown] = useState(false)
@@ -20,19 +16,11 @@ const Duration = () => {
   const attemptsOptions = ["1", "2", "3", "Unlimited"]
   const durationOptions = ["5 minutes","10 minutes","15 minutes","20 minutes", "30 minutes", "45 minutes", "1 hour", "No time limit"]
 
-
-  useEffect(() => {
-    setQuizData({ ...quizData, attempts, duration, score });
-  }, [attempts, duration, score]);
-
-
   const handleReturn = () => {
-    setQuizData({ ...quizData, attempts, duration, score }); 
     navigate("/Info")
   }
 
   const handleNext = () => {
-    setQuizData({ ...quizData, attempts, duration, score }); 
     navigate("/generating")
   }
 

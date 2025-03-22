@@ -1,80 +1,24 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import "./Info.css";
 import { useNavigate } from "react-router-dom";
-import { useQuiz } from "../../context/QuizProvider"; // Import useQuiz
-
 
 const Infos = () => {
   const navigate = useNavigate();
-  const { quizData, setQuizData } = useQuiz();
-  const defaultQuizData = quizData || { subject: "", title: "", description: "", image: null };
-  
-  const [subject, setSubject] = useState(defaultQuizData.subject || "");
-  const [title, setTitle] = useState(defaultQuizData.title || "");
-  const [description, setDescription] = useState(defaultQuizData.description || "");
-  const [image, setImage] = useState(defaultQuizData.image || null);
+  const [subject, setSubject] = useState("");
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [image, setImage] = useState(null);
   const [currentStep, setCurrentStep] = useState(1);
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-
- //  Ensure state updates when navigating back
-   useEffect(() => {
-     setQuizData({ subject, title, description, image });
-    }, [subject, title, description, image]);
-
 
   const handleImageUpload = (e) => {
     if (e.target.files && e.target.files[0]) {
-      const imageUrl = URL.createObjectURL(e.target.files[0]); // ✅ Define imageUrl here
-      setImage(imageUrl);
-      setQuizData({ ...quizData, image: imageUrl });
+      setImage(URL.createObjectURL(e.target.files[0]));
     }
   };
 
-  const handleNext = async () => {
-
-    // Save entered data before navigating
-    setQuizData({ subject, title, description, image });
-
-    //console.log("Navigating to Duration Page with data:", { title, description });
-   
-    
-   navigate("/duration");
-
-   const id_teacher = localStorage.getItem("id_teacher"); // Get id_teacher from localStorage
-   if (!id_teacher) {
-     setError("Teacher ID is missing. Please log in again.");
-     setLoading(false);
-     return;
-   }
-
-   const formData = new FormData();
-   formData.append("subject", subject);
-   formData.append("title", title);
-   formData.append("id_teacher", id_teacher); // TO CHECK IF WE NEED IT
-   formData.append("description", description);
-   formData.append("image", image);
-
-   try {
-     const response = await fetch("http://localhost:3000/quiz", {
-       method: "POST",
-       body: formData, // No need to manually set headers for multipart/form-data
-     });
-
-     if (!response.ok) {
-       throw new Error("Failed to create quiz");
-     }
-
-     setSuccessMessage("Quiz created successfully!");
-     //setTimeout(() => navigate("/duration"), 1500);
-     navigate("/duration");
-   } catch (error) {
-     setError("Error creating quiz. Please try again.");
-   } finally {
-     setLoading(false);
-   }
- };
+  const handleNext = () => {
+    navigate("/duration");
+  };
 
   return (
     <div className="quiz-generator-container">
