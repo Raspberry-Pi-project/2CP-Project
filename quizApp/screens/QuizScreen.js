@@ -17,11 +17,9 @@ const { width, height } = Dimensions.get("window");
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 export default function QuizScreen({ navigation, route }) {
-  // Safe defaults for quiz data
   const { quiz = { questions: [] } } = route.params || {};
   const questions = quiz.questions || [];
   
-  // State management
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [score, setScore] = useState(0);
@@ -29,16 +27,25 @@ export default function QuizScreen({ navigation, route }) {
   const [answers, setAnswers] = useState(Array(questions.length).fill(null));
   const [timeLeft, setTimeLeft] = useState(15);
   
-  // Animation refs
   const progressAnim = useRef(new Animated.Value(0)).current;
   const questionAnim = useRef(new Animated.Value(0)).current;
   const timerProgress = useRef(new Animated.Value(1)).current;
   const timerOpacity = useRef(new Animated.Value(1)).current;
 
-  // Timer configuration
   const timerRadius = 25;
   const timerStroke = 4;
   const timerCircumference = 2 * Math.PI * timerRadius;
+
+  useEffect(() => {
+    if (showSummary) {
+      navigation.navigate('QuizScore', {
+        score: score,
+        totalQuestions: questions.length,
+        questions: questions,
+        answers: answers
+      });
+    }
+  }, [showSummary]);
 
   useEffect(() => {
     Animated.parallel([
@@ -64,7 +71,6 @@ export default function QuizScreen({ navigation, route }) {
         }
         const newTime = prev - 1;
         
-        // Update timer animations
         Animated.timing(timerProgress, {
           toValue: newTime / 15,
           duration: 1000,
@@ -133,7 +139,6 @@ export default function QuizScreen({ navigation, route }) {
       {!showSummary ? (
         <View style={styles.contentContainer}>
           <View style={styles.questionBox}>
-            {/* Animated Timer Circle */}
             <Animated.View style={[styles.timerContainer, { opacity: timerOpacity }]}>
               <Svg
                 width={timerRadius * 2 + timerStroke}
@@ -159,12 +164,10 @@ export default function QuizScreen({ navigation, route }) {
               </Text>
             </Animated.View>
 
-            {/* Question Counter */}
             <Animated.Text style={[styles.questionCounter, { opacity: questionAnim }]}>
               Question {currentQuestion + 1}/{questions.length}
             </Animated.Text>
 
-            {/* Question Content */}
             <View style={styles.questionContent}>
               <Text style={styles.questionText}>
                 {questions[currentQuestion]?.text || "Loading question..."}
@@ -175,7 +178,6 @@ export default function QuizScreen({ navigation, route }) {
             </View>
           </View>
 
-          {/* Answer Options */}
           <View style={styles.optionsContainer}>
             {questions[currentQuestion]?.options?.map((option, index) => (
               <TouchableOpacity
@@ -189,7 +191,6 @@ export default function QuizScreen({ navigation, route }) {
             ))}
           </View>
 
-          {/* Next Button */}
           <TouchableOpacity
             style={[styles.nextButton, selectedAnswer === null && styles.disabledButton]}
             onPress={handleNext}
@@ -200,12 +201,7 @@ export default function QuizScreen({ navigation, route }) {
             </Text>
           </TouchableOpacity>
         </View>
-      ) : (
-        <View style={styles.summaryContainer}>
-          <Text style={styles.summaryTitle}>Quiz Complete!</Text>
-          <Text style={styles.summaryScore}>Score: {score}/{questions.length}</Text>
-        </View>
-      )}
+      ) : null}
     </SafeAreaView>
   );
 }

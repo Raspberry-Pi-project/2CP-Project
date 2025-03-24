@@ -5,6 +5,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Toaster } from 'sonner-native';
 import HomeScreen from "./screens/HomeScreen";
 import QuizScreen from "./screens/QuizScreen";
+import QuizScoreScreen from "./screens/QuizScoreScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -17,6 +18,7 @@ function RootStack() {
     >
       <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="Quiz" component={QuizScreen} />
+      <Stack.Screen name="QuizScore" component={QuizScoreScreen} />
     </Stack.Navigator>
   );
 }
