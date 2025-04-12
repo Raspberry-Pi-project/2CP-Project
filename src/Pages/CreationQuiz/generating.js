@@ -1,23 +1,42 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import "./generating.css";
 import { useNavigate } from "react-router-dom";
 import { faCheck, faTrash, faClock } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
+import { useQuiz } from "../../context/QuizProvider";
+
 const Generating = () => {
   const navigate = useNavigate();
-  const [quizType, setQuizType] = useState("multiple-choice");
-  const [options, setOptions] = useState(["", "", ""]);
-  const [correctAnswers, setCorrectAnswers] = useState([]);
-  const [multipleCorrect, setMultipleCorrect] = useState(false);
-  const [autoGraded, setAutoGraded] = useState(true);
-  const [timer, setTimer] = useState("");
-  const [points, setPoints] = useState("");
+  const { quizData, setQuizData } = useQuiz();
+  setQuizData({ ...quizData, questions: [] });
+
+  const [quizType, setQuizType] = useState(
+    quizData.quizType || "multiple-choice"
+  );
+  const [options, setOptions] = useState(quizData.options || ["", "", ""]);
+  const [correctAnswers, setCorrectAnswers] = useState(
+    quizData.correctAnswers || []
+  );
+  const [multipleCorrect, setMultipleCorrect] = useState(
+    quizData.multipleCorrect || false
+  );
+  const [autoGraded, setAutoGraded] = useState(quizData.autoGraded ?? true);
+  const [timer, setTimer] = useState(quizData.timer || "");
+  const [points, setPoints] = useState(quizData.points || "");
   const [currentStep, setCurrentStep] = useState(3);
-  const [question, setQuestion] = useState("");
-  const [shortAnswer, setShortAnswer] = useState("");
-  const [selectedTrueFalse, setSelectedTrueFalse] = useState("TRUE");
+  const [question, setQuestion] = useState(quizData.question || "");
+  const [shortAnswer, setShortAnswer] = useState(quizData.shortAnswer || "");
+  const [selectedTrueFalse, setSelectedTrueFalse] = useState(
+    quizData.selectedTrueFalse || "TRUE"
+  );
+
+  const [isDraft, setIsDraft] = useState(quizData?.isDraft || false);
+  const [isPosted, setIsPosted] = useState(quizData?.isPosted || false);
+
+
   
+
   // Refs for dropdowns
   const timerDropdownRef = useRef(null);
   const pointsDropdownRef = useRef(null);
@@ -25,8 +44,14 @@ const Generating = () => {
   const [showPointsDropdown, setShowPointsDropdown] = useState(false);
 
   // Timer options
-  const timerOptions = ["No Timer", "30 seconds", "1 minute", "2 minutes", "5 minutes"];
-  
+  const timerOptions = [
+    "No Timer",
+    "30 seconds",
+    "1 minute",
+    "2 minutes",
+    "5 minutes",
+  ];
+
   // Points options
   const pointsOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
@@ -60,12 +85,53 @@ const Generating = () => {
 
   // Handle clicking outside of dropdowns
   const handleClickOutside = (event) => {
-    if (timerDropdownRef.current && !timerDropdownRef.current.contains(event.target)) {
+    if (
+      timerDropdownRef.current &&
+      !timerDropdownRef.current.contains(event.target)
+    ) {
       setShowTimerDropdown(false);
     }
-    if (pointsDropdownRef.current && !pointsDropdownRef.current.contains(event.target)) {
+    if (
+      pointsDropdownRef.current &&
+      !pointsDropdownRef.current.contains(event.target)
+    ) {
       setShowPointsDropdown(false);
     }
+  };
+
+
+  const saveQuizProgress = () => {
+    const currentQuestion = {
+      type: quizType,
+      question_text: question,
+      question_number: quizData.questions.length + 1,
+      duration: timer,
+      points: points,
+      question_type: quizType,
+    };
+
+    setQuizData({
+      ...quizData,
+      questions: [...(quizData.questions || []), currentQuestion],
+
+      correctAnswers,
+      multipleCorrect,
+      timer,
+      points,
+      isDraft,
+      isPosted,
+    });
+  };
+
+  const handleNext = () => {
+    saveQuizProgress();
+    console.log("Current quiz data:", quizData);
+    navigate("/Finalization1");
+  };
+
+  const handleReturn = () => {
+    saveQuizProgress();
+    navigate("/Duration");
   };
 
   // Add event listener for clicking outside
@@ -76,6 +142,7 @@ const Generating = () => {
     };
   }, []);
 
+
   // Render quiz content based on quiz type
   const renderQuizContent = () => {
     switch (quizType) {
@@ -84,9 +151,9 @@ const Generating = () => {
           <>
             {/* Question Input */}
             <div className="question-container">
-              <input 
-                type="text" 
-                placeholder="Type Question HERE .." 
+              <input
+                type="text"
+                placeholder="Type Question HERE .."
                 className="question-input"
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
@@ -98,13 +165,18 @@ const Generating = () => {
               {options.map((option, index) => (
                 <div key={index} className="option-container">
                   <div className="option-icons">
-                    <button 
-                      className={`check-btn ${correctAnswers.includes(index) ? "selected" : ""}`} 
+                    <button
+                      className={`check-btn ${
+                        correctAnswers.includes(index) ? "selected" : ""
+                      }`}
                       onClick={() => toggleCorrect(index)}
                     >
                       <FontAwesomeIcon icon={faCheck} />
                     </button>
-                    <button className="delete-btn" onClick={() => deleteOption(index)}>
+                    <button
+                      className="delete-btn"
+                      onClick={() => deleteOption(index)}
+                    >
                       <FontAwesomeIcon icon={faTrash} />
                     </button>
                   </div>
@@ -125,14 +197,18 @@ const Generating = () => {
             {/* Quiz Settings */}
             <div className="quiz-settings">
               <div className="answer-type-container">
-                <button 
-                  className={`answer-type-btn ${!multipleCorrect ? "active" : ""}`} 
+                <button
+                  className={`answer-type-btn ${
+                    !multipleCorrect ? "active" : ""
+                  }`}
                   onClick={() => setMultipleCorrect(false)}
                 >
                   Single correct answer
                 </button>
-                <button 
-                  className={`answer-type-btn ${multipleCorrect ? "active" : ""}`} 
+                <button
+                  className={`answer-type-btn ${
+                    multipleCorrect ? "active" : ""
+                  }`}
                   onClick={() => setMultipleCorrect(true)}
                 >
                   Multiple correct answer
@@ -146,9 +222,9 @@ const Generating = () => {
           <>
             {/* Question Input */}
             <div className="question-container">
-              <input 
-                type="text" 
-                placeholder="Type Question HERE .." 
+              <input
+                type="text"
+                placeholder="Type Question HERE .."
                 className="question-input"
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
@@ -157,14 +233,18 @@ const Generating = () => {
 
             {/* True/False Options */}
             <div className="true-false-container">
-              <button 
-                className={`true-false-btn ${selectedTrueFalse === "TRUE" ? "active" : ""}`}
+              <button
+                className={`true-false-btn ${
+                  selectedTrueFalse === "TRUE" ? "active" : ""
+                }`}
                 onClick={() => setSelectedTrueFalse("TRUE")}
               >
                 TRUE
               </button>
-              <button 
-                className={`true-false-btn ${selectedTrueFalse === "FALSE" ? "active" : ""}`}
+              <button
+                className={`true-false-btn ${
+                  selectedTrueFalse === "FALSE" ? "active" : ""
+                }`}
                 onClick={() => setSelectedTrueFalse("FALSE")}
               >
                 FALSE
@@ -177,9 +257,9 @@ const Generating = () => {
           <>
             {/* Question Input */}
             <div className="question-container">
-              <input 
-                type="text" 
-                placeholder="Type Question HERE .." 
+              <input
+                type="text"
+                placeholder="Type Question HERE .."
                 className="question-input"
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
@@ -188,7 +268,7 @@ const Generating = () => {
 
             {/* Short Answer Input */}
             <div className="short-answer-container">
-              <textarea 
+              <textarea
                 placeholder="Type Here ..."
                 className="short-answer-input"
                 value={shortAnswer}
@@ -204,7 +284,6 @@ const Generating = () => {
 
   return (
     <div className="quiz-generator-container">
-
       {/* Main Content */}
       <div className="main-content">
         {/* Sidebar */}
@@ -217,9 +296,11 @@ const Generating = () => {
           {/* Step Indicator */}
           <div className="step-indicator">
             {[1, 2, 3, 4, 5].map((step) => (
-              <div 
-                key={step} 
-                className={`step ${currentStep === step ? 'active' : ''} ${currentStep > step ? 'completed' : ''}`}
+              <div
+                key={step}
+                className={`step ${currentStep === step ? "active" : ""} ${
+                  currentStep > step ? "completed" : ""
+                }`}
               >
                 {step}
               </div>
@@ -228,20 +309,26 @@ const Generating = () => {
 
           {/* Quiz Type Selection */}
           <div className="quiz-type-selection">
-            <button 
-              className={`quiz-type-btn ${quizType === "multiple-choice" ? "active" : ""}`} 
+            <button
+              className={`quiz-type-btn ${
+                quizType === "multiple-choice" ? "active" : ""
+              }`}
               onClick={() => setQuizType("multiple-choice")}
             >
               Multiple Choice
             </button>
-            <button 
-              className={`quiz-type-btn ${quizType === "true-false" ? "active" : ""}`} 
+            <button
+              className={`quiz-type-btn ${
+                quizType === "true-false" ? "active" : ""
+              }`}
               onClick={() => setQuizType("true-false")}
             >
               TRUE/FALSE
             </button>
-            <button 
-              className={`quiz-type-btn ${quizType === "short-answer" ? "active" : ""}`} 
+            <button
+              className={`quiz-type-btn ${
+                quizType === "short-answer" ? "active" : ""
+              }`}
               onClick={() => setQuizType("short-answer")}
             >
               Short Answer
@@ -257,7 +344,7 @@ const Generating = () => {
               <div className="timer-container" ref={timerDropdownRef}>
                 <FontAwesomeIcon icon={faClock} className="timer-icon" />
                 <div className="dropdown">
-                  <button 
+                  <button
                     className="dropdown-btn"
                     onClick={() => setShowTimerDropdown(!showTimerDropdown)}
                   >
@@ -267,8 +354,8 @@ const Generating = () => {
                   {showTimerDropdown && (
                     <div className="dropdown-content">
                       {timerOptions.map((option, index) => (
-                        <div 
-                          key={index} 
+                        <div
+                          key={index}
                           className="dropdown-item"
                           onClick={() => {
                             setTimer(option);
@@ -285,7 +372,7 @@ const Generating = () => {
 
               <div className="points-container" ref={pointsDropdownRef}>
                 <div className="dropdown">
-                  <button 
+                  <button
                     className="dropdown-btn"
                     onClick={() => setShowPointsDropdown(!showPointsDropdown)}
                   >
@@ -295,8 +382,8 @@ const Generating = () => {
                   {showPointsDropdown && (
                     <div className="dropdown-content">
                       {pointsOptions.map((option, index) => (
-                        <div 
-                          key={index} 
+                        <div
+                          key={index}
                           className="dropdown-item"
                           onClick={() => {
                             setPoints(option);
@@ -312,15 +399,24 @@ const Generating = () => {
               </div>
 
               <div className="grading-toggle">
-                <ToggleSwitch isOn={autoGraded} handleToggle={() => setAutoGraded(!autoGraded)} />
+                <ToggleSwitch
+                  isOn={autoGraded}
+                  handleToggle={() => setAutoGraded(!autoGraded)}
+                />
               </div>
             </div>
-            
+
             <div className="navigation-buttons">
-              <button className="return-btn" onClick={() => navigate("/Duration")}>
+              <button
+                className="return-btn"
+                onClick={() => navigate("/Duration")}
+              >
                 Return
               </button>
-              <button className="next-btn" onClick={() => navigate("/Finalization1")}>
+              <button
+                className="next-btn"
+                onClick={() => navigate("/Finalization1")}
+              >
                 Next
               </button>
             </div>
@@ -336,14 +432,10 @@ const ToggleSwitch = ({ isOn, handleToggle }) => {
   return (
     <div className="toggle-container" onClick={handleToggle}>
       <div className={`toggle-switch ${isOn ? "active" : ""}`}>
-        <button 
-          className={`toggle-option ${isOn ? "selected" : ""}`}
-        >
+        <button className={`toggle-option ${isOn ? "selected" : ""}`}>
           AutoGraded
         </button>
-        <button
-          className={`toggle-option ${!isOn ? "selected" : ""}`}
-        >
+        <button className={`toggle-option ${!isOn ? "selected" : ""}`}>
           Manually
         </button>
       </div>
