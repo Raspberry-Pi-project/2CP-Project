@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import "./Duration.css";
 import { useNavigate } from "react-router-dom";
@@ -43,6 +44,7 @@ const Duration = () => {
     setQuizData({ ...quizData, nb_attempts, duration, score });
     navigate("/generating");
   };
+
 
   return (
     <div className="quiz-generator-container">

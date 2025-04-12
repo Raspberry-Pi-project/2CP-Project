@@ -1,0 +1,269 @@
+/* Main Layout */
+.quiz-details-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5;
+  }
+  
+  /* Quiz Details Content */
+  .quiz-details-content {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  
+  /* Quiz Header */
+  .quiz-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 30px;
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+  
+  .quiz-header-left {
+    display: flex;
+    gap: 20px;
+  }
+  
+  .quiz-image {
+    width: 150px;
+    height: 100px;
+    overflow: hidden;
+    border-radius: 5px;
+  }
+  
+  .quiz-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .quiz-header-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  
+  .quiz-title {
+    margin: 0 0 10px 0;
+    font-size: 24px;
+  }
+  
+  .quiz-meta {
+    display: flex;
+    gap: 20px;
+  }
+  
+  .quiz-meta-item {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .meta-label {
+    font-size: 12px;
+    color: #666;
+  }
+  
+  .meta-value {
+    font-size: 16px;
+    font-weight: 500;
+  }
+  
+  .quiz-header-actions {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .edit-quiz-btn {
+    padding: 10px 15px;
+    background-color: #f0f0f0;
+    border: none;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+  }
+  
+  .edit-quiz-btn:hover {
+    background-color: #e0e0e0;
+  }
+  
+  /* Quiz Tabs */
+  .quiz-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .quiz-tab {
+    padding: 10px 20px;
+    background-color: #f0f0f0;
+    border: none;
+    border-radius: 5px 5px 0 0;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  
+  .quiz-tab.active {
+    background-color: white;
+    border-bottom: 2px solid #7b68ee;
+  }
+  
+  /* Tab Content */
+  .tab-content {
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+  
+  /* Quiz Info Tab */
+  .quiz-details-info {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+  }
+  
+  .info-section {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .info-section h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #333;
+  }
+  
+  .questions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .question-item {
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .question-number {
+    font-weight: 600;
+    margin-right: 10px;
+  }
+  
+  .question-text {
+    font-size: 16px;
+  }
+  
+  .question-meta {
+    display: flex;
+    gap: 15px;
+    margin-top: 5px;
+  }
+  
+  .question-type,
+  .question-points,
+  .question-time {
+    font-size: 12px;
+    color: #666;
+    background-color: #f0f0f0;
+    padding: 3px 8px;
+    border-radius: 10px;
+  }
+  
+  .add-questionn-btn {
+    padding: 10px ;
+    padding-left: 500px;
+    background-color: #4cd3a5;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    margin-top: 15px;
+    margin-left: 0px !important;
+
+  }
+  
+  /* Sessions Tab */
+  .quiz-details-sessions {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .new-session-btn {
+    align-self: flex-start;
+    padding: 10px 15px;
+    padding-left: 500px;
+    background-color: #4cd3a5;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+  }
+  
+  .sessions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .session-item {
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .session-info {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+  }
+  
+  .session-date {
+    font-weight: 500;
+  }
+  
+  .session-participants,
+  .session-score {
+    color: #666;
+    font-size: 14px;
+  }
+  
+  .view-results-btn {
+    padding: 8px 15px;
+    background-color: #7b68ee;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  

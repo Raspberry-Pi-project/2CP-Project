@@ -3,6 +3,7 @@ import "./generating.css";
 import { useNavigate } from "react-router-dom";
 import { faCheck, faTrash, faClock } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
 import { useQuiz } from "../../context/QuizProvider";
 
 const Generating = () => {
@@ -32,6 +33,9 @@ const Generating = () => {
 
   const [isDraft, setIsDraft] = useState(quizData?.isDraft || false);
   const [isPosted, setIsPosted] = useState(quizData?.isPosted || false);
+
+
+  
 
   // Refs for dropdowns
   const timerDropdownRef = useRef(null);
@@ -95,6 +99,7 @@ const Generating = () => {
     }
   };
 
+
   const saveQuizProgress = () => {
     const currentQuestion = {
       type: quizType,
@@ -128,6 +133,15 @@ const Generating = () => {
     saveQuizProgress();
     navigate("/Duration");
   };
+
+  // Add event listener for clicking outside
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
 
   // Render quiz content based on quiz type
   const renderQuizContent = () => {

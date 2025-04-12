@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import "./Info.css";
 import { useNavigate } from "react-router-dom";
+
 import { useQuiz } from "../../context/QuizProvider"; // Import useQuiz
 
 const Infos = () => {
@@ -29,19 +30,20 @@ const Infos = () => {
     console.log(quizData);
   }, [subject, title, description, image]);
 
+
   const handleImageUpload = (e) => {
     if (e.target.files && e.target.files[0]) {
-      const imageUrl = URL.createObjectURL(e.target.files[0]); // ✅ Define imageUrl here
-      setImage(imageUrl);
-      setQuizData({ ...quizData, image: imageUrl });
+      setImage(URL.createObjectURL(e.target.files[0]));
     }
   };
+
 
   const handleNext = async () => {
     // Save entered data before navigating
     setQuizData({ subject, title, description, image });
 
     //console.log("Navigating to Duration Page with data:", { title, description });
+
     navigate("/duration");
   };
 
