@@ -84,7 +84,17 @@ const login = async (req, res) => {
         sameSite: "Strict",
     });
 
-    res.json({ role, userId: user.id, message: "Login successful" });
+    switch (role) {
+        case "student":
+            res.json({ role, userId: user.id_student, message: "Login successful" });
+            break;
+        case "teacher":
+            res.json({ role, userId: user.id_teacher, message: "Login successful" });
+            break;
+        case "admin":
+            res.json({ role, userId: user.id_admin, message: "Login successful" });
+            break;
+    }
 };
 
 // ✅ Logout User by Clearing Cookie
