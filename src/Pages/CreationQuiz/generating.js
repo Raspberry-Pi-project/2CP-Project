@@ -3,21 +3,22 @@ import "./generating.css";
 import { useNavigate } from "react-router-dom";
 import { faCheck, faTrash, faClock } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useQuiz } from "../../context/QuizProvider";
 
 const Generating = () => {
   const navigate = useNavigate();
-  const [quizType, setQuizType] = useState("multiple-choice");
-  const [options, setOptions] = useState(["", "", ""]);
-  const [correctAnswers, setCorrectAnswers] = useState([]);
-  const [multipleCorrect, setMultipleCorrect] = useState(false);
-  const [autoGraded, setAutoGraded] = useState(true);
-  const [timer, setTimer] = useState("");
-  const [points, setPoints] = useState("");
+  const { quizData, setQuizData } = useQuiz();
+
+  // Initialize state with values from quizData
+  const [questions, setQuestions] = useState(quizData.questions || []);
+  const [question_type, setQuestionType] = useState("multiple-choice");
+  const [question_text, setQuestionText] = useState("");
+  const [question_duration, setQuestionDuration] = useState(0);
+  const [question_points, setQuestionPoints] = useState(1);
+  const [answers, setAnswers] = useState([{ answer_text: "", correct: 0 }]);
   const [currentStep, setCurrentStep] = useState(3);
-  const [question, setQuestion] = useState("");
-  const [shortAnswer, setShortAnswer] = useState("");
-  const [selectedTrueFalse, setSelectedTrueFalse] = useState("TRUE");
-  
+  const [error, setError] = useState(null);
+
   // Refs for dropdowns
   const timerDropdownRef = useRef(null);
   const pointsDropdownRef = useRef(null);
@@ -25,47 +26,118 @@ const Generating = () => {
   const [showPointsDropdown, setShowPointsDropdown] = useState(false);
 
   // Timer options
-  const timerOptions = ["No Timer", "30 seconds", "1 minute", "2 minutes", "5 minutes"];
-  
+  const timerOptions = [
+    "No Timer",
+    "30 seconds",
+    "1 minute",
+    "2 minutes",
+    "5 minutes",
+  ];
+
   // Points options
   const pointsOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-  const addOption = () => {
-    setOptions([...options, ""]);
+  const addAnswer = () => {
+    setAnswers([...answers, { answer_text: "", correct: 0 }]);
   };
 
-  const updateOption = (index, value) => {
-    const newOptions = [...options];
-    newOptions[index] = value;
-    setOptions(newOptions);
+  const updateAnswer = (index, value) => {
+    const newAnswers = [...answers];
+    newAnswers[index].answer_text = value;
+    setAnswers(newAnswers);
   };
 
-  const deleteOption = (index) => {
-    const newOptions = options.filter((_, i) => i !== index);
-    setOptions(newOptions);
-    setCorrectAnswers(correctAnswers.filter((i) => i !== index));
+  const deleteAnswer = (index) => {
+    const newAnswers = answers.filter((_, i) => i !== index);
+    setAnswers(newAnswers);
   };
 
   const toggleCorrect = (index) => {
-    if (multipleCorrect) {
-      if (correctAnswers.includes(index)) {
-        setCorrectAnswers(correctAnswers.filter((i) => i !== index));
-      } else {
-        setCorrectAnswers([...correctAnswers, index]);
-      }
+    const newAnswers = [...answers];
+    if (newAnswers[index].correct === 0) {
+      newAnswers[index].correct = 1;
     } else {
-      setCorrectAnswers([index]);
+      newAnswers[index].correct = 0;
     }
+    setAnswers(newAnswers);
   };
 
   // Handle clicking outside of dropdowns
   const handleClickOutside = (event) => {
-    if (timerDropdownRef.current && !timerDropdownRef.current.contains(event.target)) {
+    if (
+      timerDropdownRef.current &&
+      !timerDropdownRef.current.contains(event.target)
+    ) {
       setShowTimerDropdown(false);
     }
-    if (pointsDropdownRef.current && !pointsDropdownRef.current.contains(event.target)) {
+    if (
+      pointsDropdownRef.current &&
+      !pointsDropdownRef.current.contains(event.target)
+    ) {
       setShowPointsDropdown(false);
     }
+  };
+
+  const saveQuestion = () => {
+    // Validate question
+    if (!question_text) {
+      setError("Question text is required");
+      return;
+    }
+
+    if (answers.length < 2) {
+      setError("At least two answers are required");
+      return;
+    }
+
+    if (!answers.some((answer) => answer.correct)) {
+      setError("At least one correct answer is required");
+      return;
+    }
+
+    // Create new question object
+    const newQuestion = {
+      question_text,
+      question_number: questions.length + 1,
+      question_type,
+      duration: question_duration,
+      points: question_points,
+      answers: answers.map((answer) => ({
+        answer_text: answer.answer_text,
+        correct: answer.correct,
+      })),
+    };
+
+    // Update questions array
+    const updatedQuestions = [...questions, newQuestion];
+    setQuestions(updatedQuestions);
+
+    // Update quizData
+    setQuizData({
+      ...quizData,
+      questions: updatedQuestions,
+    });
+
+    // Reset form
+    setQuestionText("");
+    setQuestionDuration(0);
+    setQuestionPoints(1);
+    setAnswers([{ answer_text: "", correct: 0 }]);
+    setError(null);
+  };
+
+  const handleNext = () => {
+    // Validate that at least one question has been added
+    if (questions.length === 0) {
+      setError("At least one question is required");
+      return;
+    }
+    console.log("questions", questions);
+    navigate("/finalization1");
+  };
+
+  const handleReturn = () => {
+    navigate("/duration");
   };
 
   // Add event listener for clicking outside
@@ -78,66 +150,53 @@ const Generating = () => {
 
   // Render quiz content based on quiz type
   const renderQuizContent = () => {
-    switch (quizType) {
+    switch (question_type) {
       case "multiple-choice":
         return (
           <>
             {/* Question Input */}
             <div className="question-container">
-              <input 
-                type="text" 
-                placeholder="Type Question HERE .." 
+              <input
+                type="text"
+                placeholder="Type Question HERE .."
                 className="question-input"
-                value={question}
-                onChange={(e) => setQuestion(e.target.value)}
+                value={question_text}
+                onChange={(e) => setQuestionText(e.target.value)}
               />
             </div>
 
             {/* Answer Options */}
             <div className="options-grid">
-              {options.map((option, index) => (
+              {answers.map((answer, index) => (
                 <div key={index} className="option-container">
                   <div className="option-icons">
-                    <button 
-                      className={`check-btn ${correctAnswers.includes(index) ? "selected" : ""}`} 
+                    <button
+                      className={`check-btn ${
+                        answer.correct ? "selected" : ""
+                      }`}
                       onClick={() => toggleCorrect(index)}
                     >
                       <FontAwesomeIcon icon={faCheck} />
                     </button>
-                    <button className="delete-btn" onClick={() => deleteOption(index)}>
+                    <button
+                      className="delete-btn"
+                      onClick={() => deleteAnswer(index)}
+                    >
                       <FontAwesomeIcon icon={faTrash} />
                     </button>
                   </div>
                   <input
                     type="text"
                     placeholder="Type Answer"
-                    value={option}
-                    onChange={(e) => updateOption(index, e.target.value)}
+                    value={answer.answer_text}
+                    onChange={(e) => updateAnswer(index, e.target.value)}
                     className="option-input"
                   />
                 </div>
               ))}
-              <button className="add-option-btn" onClick={addOption}>
+              <button className="add-option-btn" onClick={addAnswer}>
                 <span className="plus-icon">+</span>
               </button>
-            </div>
-
-            {/* Quiz Settings */}
-            <div className="quiz-settings">
-              <div className="answer-type-container">
-                <button 
-                  className={`answer-type-btn ${!multipleCorrect ? "active" : ""}`} 
-                  onClick={() => setMultipleCorrect(false)}
-                >
-                  Single correct answer
-                </button>
-                <button 
-                  className={`answer-type-btn ${multipleCorrect ? "active" : ""}`} 
-                  onClick={() => setMultipleCorrect(true)}
-                >
-                  Multiple correct answer
-                </button>
-              </div>
             </div>
           </>
         );
@@ -146,26 +205,40 @@ const Generating = () => {
           <>
             {/* Question Input */}
             <div className="question-container">
-              <input 
-                type="text" 
-                placeholder="Type Question HERE .." 
+              <input
+                type="text"
+                placeholder="Type Question HERE .."
                 className="question-input"
-                value={question}
-                onChange={(e) => setQuestion(e.target.value)}
+                value={question_text}
+                onChange={(e) => setQuestionText(e.target.value)}
               />
             </div>
 
             {/* True/False Options */}
             <div className="true-false-container">
-              <button 
-                className={`true-false-btn ${selectedTrueFalse === "TRUE" ? "active" : ""}`}
-                onClick={() => setSelectedTrueFalse("TRUE")}
+              <button
+                className={`true-false-btn ${
+                  answers[0]?.correct ? "active" : ""
+                }`}
+                onClick={() => {
+                  setAnswers([
+                    { answer_text: "TRUE", correct: 1 },
+                    { answer_text: "FALSE", correct: 0 },
+                  ]);
+                }}
               >
                 TRUE
               </button>
-              <button 
-                className={`true-false-btn ${selectedTrueFalse === "FALSE" ? "active" : ""}`}
-                onClick={() => setSelectedTrueFalse("FALSE")}
+              <button
+                className={`true-false-btn ${
+                  answers[1]?.correct ? "active" : ""
+                }`}
+                onClick={() => {
+                  setAnswers([
+                    { answer_text: "TRUE", correct: 0 },
+                    { answer_text: "FALSE", correct: 1 },
+                  ]);
+                }}
               >
                 FALSE
               </button>
@@ -177,22 +250,24 @@ const Generating = () => {
           <>
             {/* Question Input */}
             <div className="question-container">
-              <input 
-                type="text" 
-                placeholder="Type Question HERE .." 
+              <input
+                type="text"
+                placeholder="Type Question HERE .."
                 className="question-input"
-                value={question}
-                onChange={(e) => setQuestion(e.target.value)}
+                value={question_text}
+                onChange={(e) => setQuestionText(e.target.value)}
               />
             </div>
 
             {/* Short Answer Input */}
             <div className="short-answer-container">
-              <textarea 
-                placeholder="Type Here ..."
+              <textarea
+                placeholder="Type the correct answer here..."
                 className="short-answer-input"
-                value={shortAnswer}
-                onChange={(e) => setShortAnswer(e.target.value)}
+                value={answers[0]?.answer_text || ""}
+                onChange={(e) => {
+                  setAnswers([{ answer_text: e.target.value, correct: 1 }]);
+                }}
               />
             </div>
           </>
@@ -204,7 +279,6 @@ const Generating = () => {
 
   return (
     <div className="quiz-generator-container">
-
       {/* Main Content */}
       <div className="main-content">
         {/* Sidebar */}
@@ -217,9 +291,11 @@ const Generating = () => {
           {/* Step Indicator */}
           <div className="step-indicator">
             {[1, 2, 3, 4, 5].map((step) => (
-              <div 
-                key={step} 
-                className={`step ${currentStep === step ? 'active' : ''} ${currentStep > step ? 'completed' : ''}`}
+              <div
+                key={step}
+                className={`step ${currentStep === step ? "active" : ""} ${
+                  currentStep > step ? "completed" : ""
+                }`}
               >
                 {step}
               </div>
@@ -228,21 +304,27 @@ const Generating = () => {
 
           {/* Quiz Type Selection */}
           <div className="quiz-type-selection">
-            <button 
-              className={`quiz-type-btn ${quizType === "multiple-choice" ? "active" : ""}`} 
-              onClick={() => setQuizType("multiple-choice")}
+            <button
+              className={`quiz-type-btn ${
+                question_type === "multiple-choice" ? "active" : ""
+              }`}
+              onClick={() => setQuestionType("multiple-choice")}
             >
               Multiple Choice
             </button>
-            <button 
-              className={`quiz-type-btn ${quizType === "true-false" ? "active" : ""}`} 
-              onClick={() => setQuizType("true-false")}
+            <button
+              className={`quiz-type-btn ${
+                question_type === "true-false" ? "active" : ""
+              }`}
+              onClick={() => setQuestionType("true-false")}
             >
               TRUE/FALSE
             </button>
-            <button 
-              className={`quiz-type-btn ${quizType === "short-answer" ? "active" : ""}`} 
-              onClick={() => setQuizType("short-answer")}
+            <button
+              className={`quiz-type-btn ${
+                question_type === "short-answer" ? "active" : ""
+              }`}
+              onClick={() => setQuestionType("short-answer")}
             >
               Short Answer
             </button>
@@ -252,26 +334,47 @@ const Generating = () => {
           {renderQuizContent()}
 
           {/* Common Controls */}
-          <div className="common-controls">
+          <div className="question-controls">
             <div className="timer-points-container">
               <div className="timer-container" ref={timerDropdownRef}>
                 <FontAwesomeIcon icon={faClock} className="timer-icon" />
                 <div className="dropdown">
-                  <button 
+                  <button
                     className="dropdown-btn"
                     onClick={() => setShowTimerDropdown(!showTimerDropdown)}
                   >
-                    {timer || "Timer"}
+                    {question_duration === 0
+                      ? "No Timer"
+                      : `${question_duration} seconds`}
                     <span className="dropdown-arrow">▼</span>
                   </button>
                   {showTimerDropdown && (
                     <div className="dropdown-content">
                       {timerOptions.map((option, index) => (
-                        <div 
-                          key={index} 
+                        <div
+                          key={index}
                           className="dropdown-item"
                           onClick={() => {
-                            setTimer(option);
+                            switch (option) {
+                              case "No Timer":
+                                setQuestionDuration(0);
+                                break;
+                              case "30 seconds":
+                                setQuestionDuration(30);
+                                break;
+                              case "1 minute":
+                                setQuestionDuration(60);
+                                break;
+                              case "2 minutes":
+                                setQuestionDuration(120);
+                                break;
+                              case "5 minutes":
+                                setQuestionDuration(300);
+                                break;
+                              default:
+                                setQuestionDuration(0);
+                                break;
+                            }
                             setShowTimerDropdown(false);
                           }}
                         >
@@ -285,21 +388,22 @@ const Generating = () => {
 
               <div className="points-container" ref={pointsDropdownRef}>
                 <div className="dropdown">
-                  <button 
+                  <button
                     className="dropdown-btn"
                     onClick={() => setShowPointsDropdown(!showPointsDropdown)}
                   >
-                    {points ? `${points} Points` : "Points"}
+                    {question_points}{" "}
+                    {question_points === 1 ? "Point" : "Points"}
                     <span className="dropdown-arrow">▼</span>
                   </button>
                   {showPointsDropdown && (
                     <div className="dropdown-content">
                       {pointsOptions.map((option, index) => (
-                        <div 
-                          key={index} 
+                        <div
+                          key={index}
                           className="dropdown-item"
                           onClick={() => {
-                            setPoints(option);
+                            setQuestionPoints(option);
                             setShowPointsDropdown(false);
                           }}
                         >
@@ -310,42 +414,28 @@ const Generating = () => {
                   )}
                 </div>
               </div>
-
-              <div className="grading-toggle">
-                <ToggleSwitch isOn={autoGraded} handleToggle={() => setAutoGraded(!autoGraded)} />
-              </div>
-            </div>
-            
-            <div className="navigation-buttons">
-              <button className="return-btn" onClick={() => navigate("/Duration")}>
-                Return
-              </button>
-              <button className="next-btn" onClick={() => navigate("/Finalization1")}>
-                Next
-              </button>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
-// Toggle Switch Component
-const ToggleSwitch = ({ isOn, handleToggle }) => {
-  return (
-    <div className="toggle-container" onClick={handleToggle}>
-      <div className={`toggle-switch ${isOn ? "active" : ""}`}>
-        <button 
-          className={`toggle-option ${isOn ? "selected" : ""}`}
-        >
-          AutoGraded
-        </button>
-        <button
-          className={`toggle-option ${!isOn ? "selected" : ""}`}
-        >
-          Manually
-        </button>
+          {error && <div className="error-message">{error}</div>}
+
+          {/* Question Actions */}
+          <div className="question-actions">
+            <button className="save-question-btn" onClick={saveQuestion}>
+              Save Question
+            </button>
+          </div>
+
+          {/* Navigation */}
+          <div className="navigation-buttons">
+            <button className="return-btn" onClick={handleReturn}>
+              Return
+            </button>
+            <button className="next-btn" onClick={handleNext}>
+              Next
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
