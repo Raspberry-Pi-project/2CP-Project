@@ -11,12 +11,13 @@ import {
   Animated,
   FlatList,
   Alert,
-   Easing,
+  Easing,
 } from "react-native"
 import Icon from "react-native-vector-icons/Feather"
 import { LinearGradient } from "expo-linear-gradient"
 import Svg, { Circle, Path } from "react-native-svg"
 import { QUIZ_DATA } from "../data/quizData"
+import QuizBackground from "../components/QuizBackground"
 
 const { width, height } = Dimensions.get("window")
 const AnimatedCircle = Animated.createAnimatedComponent(Circle)
@@ -134,16 +135,16 @@ export default function QuizletScreen2({ navigation, route }) {
 
       // Animate options with staggered effect
       Animated.stagger(
-  100,
-  optionsAnim.map((anim) =>
-    Animated.timing(anim, {
-      toValue: 1,
-      duration: 300,
-      easing: Easing.out(Easing.back(1.5)), // Use imported Easing
-      useNativeDriver: true,
-    }),
-  ),
-).start();
+        100,
+        optionsAnim.map((anim) =>
+          Animated.timing(anim, {
+            toValue: 1,
+            duration: 300,
+            easing: Easing.out(Easing.back(1.5)),
+            useNativeDriver: true,
+          }),
+        ),
+      ).start()
     } else {
       // Fade in list view
       Animated.timing(fadeAnim, {
@@ -200,6 +201,40 @@ export default function QuizletScreen2({ navigation, route }) {
     })
   }
 
+  // Progress bar component
+  const ProgressBar = () => {
+    const progressAnim = useRef(new Animated.Value(0)).current
+    
+    useEffect(() => {
+      Animated.timing(progressAnim, {
+        toValue: (currentQuestion + 1) / physicsQuiz.questions.length,
+        duration: 500,
+        useNativeDriver: false,
+      }).start()
+    }, [currentQuestion])
+
+    return (
+      <View style={styles.progressContainer}>
+        <View style={styles.progressBackground}>
+          <Animated.View
+            style={[
+              styles.progressFill,
+              {
+                width: progressAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ["0%", "100%"],
+                }),
+              },
+            ]}
+          />
+        </View>
+        <Text style={styles.progressText}>
+          {currentQuestion + 1}/{physicsQuiz.questions.length}
+        </Text>
+      </View>
+    )
+  }
+
   // Question item component for the list view
   const renderQuestionItem = ({ item, index }) => {
     const questionNumber = index + 1
@@ -251,11 +286,15 @@ export default function QuizletScreen2({ navigation, route }) {
     return (
       <Animated.View style={[styles.listContainer, { opacity: fadeAnim }]}>
         <View style={styles.headerContent}>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate("Home")}>
-            <Icon name="home" size={24} color="white" />
+          <TouchableOpacity 
+            style={styles.quizNavButton} 
+            onPress={() => navigation.navigate("QuizSelection")}
+          >
+            <Icon name="grid" size={24} color="white" />
           </TouchableOpacity>
 
-          {/* Timer */}
+          <ProgressBar />
+
           <Animated.View style={[styles.timerContainer, { transform: [{ scale: pulseAnim }] }]}>
             <Svg width={60} height={60} viewBox="0 0 60 60">
               <Circle cx="30" cy="30" r="25" stroke="rgba(255,255,255,0.3)" strokeWidth="5" fill="transparent" />
@@ -299,6 +338,7 @@ export default function QuizletScreen2({ navigation, route }) {
             end={{ x: 1, y: 0 }}
           >
             <Text style={styles.checkResultsText}>Check Results</Text>
+            <Icon name="arrow-right" size={20} color="white" style={{ marginLeft: 8 }} />
           </LinearGradient>
         </TouchableOpacity>
       </Animated.View>
@@ -452,7 +492,7 @@ export default function QuizletScreen2({ navigation, route }) {
             }}
             disabled={currentQuestion === 0}
           >
-            <Text style={styles.navButtonText}>previous</Text>
+            <Text style={styles.navButtonText}>Previous</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -468,7 +508,7 @@ export default function QuizletScreen2({ navigation, route }) {
               }
             }}
           >
-            <Text style={styles.navButtonText}>Next</Text>
+            <Text style={styles.navButtonText}>Submit</Text>
           </TouchableOpacity>
         </View>
       </Animated.View>
@@ -478,7 +518,7 @@ export default function QuizletScreen2({ navigation, route }) {
   return (
     <SafeAreaView style={styles.container}>
       <LinearGradient colors={["#A42FC1", "#8B27A3"]} style={StyleSheet.absoluteFill} />
-
+      <QuizBackground />
       {currentView === "list" ? renderListView() : renderQuestionView()}
     </SafeAreaView>
   )
@@ -487,7 +527,7 @@ export default function QuizletScreen2({ navigation, route }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#A42FC1",
+    backgroundColor: "#ffffff",
   },
   // List View Styles
   listContainer: {
@@ -508,11 +548,45 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  quizNavButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  progressContainer: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    marginHorizontal: 15,
+  },
+  progressBackground: {
+    flex: 1,
+    height: 8,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: 4,
+    marginRight: 10,
+    overflow: "hidden",
+  },
+  progressFill: {
+    height: "100%",
+    backgroundColor: "white",
+    borderRadius: 4,
+  },
+  progressText: {
+    color: "white",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
   timerContainer: {
     width: 60,
     height: 60,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: 30,
   },
   timerText: {
     position: "absolute",
@@ -534,18 +608,20 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   questionsListContent: {
-    paddingBottom: 100, // Space for the button
+    paddingBottom: 100,
   },
   questionListItem: {
     backgroundColor: "white",
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 10,
+    borderRadius: 25,
+    padding: 18,
+    marginBottom: 15,
+    borderWidth: 2,
+    borderColor: "#E1E1E1",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowRadius: 8,
+    elevation: 5,
   },
   correctItem: {
     borderLeftWidth: 5,
@@ -589,12 +665,12 @@ const styles = StyleSheet.create({
   checkResultsButton: {
     position: "absolute",
     bottom: 20,
-    left: 20,
-    right: 20,
+    left: "20%",
+    right: "20%",
     borderRadius: 25,
     overflow: "hidden",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 5,
@@ -602,6 +678,8 @@ const styles = StyleSheet.create({
   checkResultsGradient: {
     paddingVertical: 16,
     alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
   },
   checkResultsText: {
     color: "white",
@@ -668,13 +746,13 @@ const styles = StyleSheet.create({
   },
   questionCard: {
     backgroundColor: "white",
-    borderRadius: 15,
-    padding: 20,
+    borderRadius: 20,
+    padding: 25,
     marginBottom: 20,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 8,
     elevation: 3,
   },
   questionText: {
@@ -690,12 +768,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: "white",
-    borderWidth: 1,
-    borderColor: "#A42FC1",
+    borderWidth: 2,
+    borderColor: "#E1E1E1",
     borderRadius: 25,
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    marginBottom: 10,
+    padding: 18,
+    marginBottom: 15,
   },
   selectedOption: {
     backgroundColor: "rgba(164, 47, 193, 0.05)",
@@ -730,16 +807,16 @@ const styles = StyleSheet.create({
   },
   navButton: {
     width: "48%",
-    paddingVertical: 15,
+    paddingVertical: 16,
     borderRadius: 25,
     alignItems: "center",
     justifyContent: "center",
-  },
-  prevButton: {
-    backgroundColor: "#A42FC1",
-  },
-  nextButton: {
-    backgroundColor: "#A42FC1",
+    backgroundColor: "#7B5CFF",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
   },
   navButtonText: {
     color: "white",
