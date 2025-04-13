@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import "./Finalization1.css";
 import { useNavigate } from "react-router-dom";
@@ -5,6 +6,7 @@ import { faTrash, faPlus, faEdit } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useQuiz } from "../../context/QuizProvider";
 import axios from "axios";
+
 
 
 const Finalization1 = () => {
@@ -237,3 +239,4 @@ const Finalization1 = () => {
 };
 
 export default Finalization1;
+
