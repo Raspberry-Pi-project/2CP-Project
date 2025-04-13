@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1
--- Généré le : ven. 14 mars 2025 à 03:55
+-- Généré le : dim. 13 avr. 2025 à 19:57
 -- Version du serveur : 10.4.32-MariaDB
 -- Version de PHP : 8.2.12
 
@@ -41,7 +41,8 @@ CREATE TABLE `admins` (
 --
 
 INSERT INTO `admins` (`id_admin`, `first_name`, `last_name`, `email`, `password`, `created_at`) VALUES
-(1, 'Wassim', 'Belguenbour', 'test@gmail.com', '$2b$10$Zo7loWDWiwhNyTY9lKOrsOqX4lUe8cBz2NZKDgjw5lk4ydKrP.Ds.', '2025-03-11 08:09:14');
+(1, 'Wassim', 'Belguenbour', 'test@gmail.com', '$2b$10$Zo7loWDWiwhNyTY9lKOrsOqX4lUe8cBz2NZKDgjw5lk4ydKrP.Ds.', '2025-03-11 08:09:14'),
+(2, 'Abdelouahab', 'Meridja', 'test3@gmail.com', '$2b$10$XZx0n0EKyPpbWnjMlFLOz.TPpHbjNKs4VM2b00MBQ/6P4LroLv1Ji', '2025-03-22 10:00:46');
 
 -- --------------------------------------------------------
 
@@ -62,7 +63,17 @@ CREATE TABLE `answers` (
 
 INSERT INTO `answers` (`id_answer`, `id_question`, `answer_text`, `correct`) VALUES
 (2, 1, 'uhuhjhjgjhghj', 1),
-(3, 1, 'kokokokok', 0);
+(3, 1, 'kokokokok', 0),
+(4, 4, 'ahs', 1),
+(5, 4, 'adbyd', 0),
+(6, 5, 'TRUE', 1),
+(7, 5, 'FALSE', 0),
+(8, 6, 'TRUE', 1),
+(9, 6, 'FALSE', 0),
+(10, 7, 'TRUE', 0),
+(11, 7, 'FALSE', 1),
+(12, 8, 'TRUE', 0),
+(13, 8, 'FALSE', 1);
 
 -- --------------------------------------------------------
 
@@ -117,7 +128,12 @@ CREATE TABLE `questions` (
 INSERT INTO `questions` (`id_question`, `id_quiz`, `duration`, `question_text`, `question_number`, `points`, `question_type`, `created_at`, `question_percentage`) VALUES
 (1, 9, 0, 'test qst', 2, 0, 'multiChoice', '2025-02-23 18:47:16', 50),
 (2, 9, 10, 'huhuhuh', 3, 1.5, 'multiChoice', '2025-03-09 16:11:02', 50),
-(3, 9, 10, 'oooooo', 3, 1.5, 'multiChoice', '2025-03-09 16:11:28', 0);
+(3, 9, 10, 'oooooo', 3, 1.5, 'multiChoice', '2025-03-09 16:11:28', 0),
+(4, 14, 0, 'vsgqs', 1, 1, 'multiple-choice', '2025-04-13 12:22:52', 0),
+(5, 15, 30, 'water', 1, 2, 'true-false', '2025-04-13 15:02:01', 0),
+(6, 16, 30, 'water', 1, 2, 'true-false', '2025-04-13 15:05:35', 0),
+(7, 16, 0, 'ddzd', 2, 1, 'true-false', '2025-04-13 15:05:35', 0),
+(8, 17, 0, 'a', 1, 1, 'true-false', '2025-04-13 15:35:57', 0);
 
 -- --------------------------------------------------------
 
@@ -138,19 +154,24 @@ CREATE TABLE `quizzes` (
   `for_year` int(11) DEFAULT NULL,
   `for_groupe` int(11) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `nb_attempts` int(11) NOT NULL DEFAULT 1
+  `nb_attempts` int(11) NOT NULL DEFAULT 1,
+  `image` blob DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Déchargement des données de la table `quizzes`
 --
 
-INSERT INTO `quizzes` (`id_quiz`, `title`, `description`, `duration`, `correctionType`, `id_teacher`, `subject`, `status`, `score`, `for_year`, `for_groupe`, `created_at`, `nb_attempts`) VALUES
-(9, 'test 7', 'just a test', 0, '', 11, 'CS', 'draft', 0, 2, 9, '2025-02-23 18:46:03', 0),
-(10, 'test quiz', 'teeeeest', 0, '', 11, 'sfsd', 'draft', 0, 2, 9, '2025-02-25 05:55:03', 0),
-(11, 'test quiz', 'teeeeest', 0, '', 11, 'sfsd', 'draft', 0, NULL, NULL, '2025-02-25 05:55:18', 0),
-(12, 'test quiz', 'teeeeest', 0, '', 11, 'sfsd', 'draft', 0, NULL, NULL, '2025-02-25 06:24:01', 0),
-(13, 'test quiz', 'teeeeest', 0, '', 11, 'sfsd', 'draft', 0, NULL, NULL, '2025-02-25 06:27:52', 0);
+INSERT INTO `quizzes` (`id_quiz`, `title`, `description`, `duration`, `correctionType`, `id_teacher`, `subject`, `status`, `score`, `for_year`, `for_groupe`, `created_at`, `nb_attempts`, `image`) VALUES
+(9, 'test 7', 'just a test', 0, '', 11, 'CS', 'draft', 0, 2, 9, '2025-02-23 18:46:03', 0, ''),
+(10, 'test quiz', 'teeeeest', 0, '', 11, 'sfsd', 'draft', 0, 2, 9, '2025-02-25 05:55:03', 0, ''),
+(11, 'test quiz', 'teeeeest', 0, '', 11, 'sfsd', 'draft', 0, NULL, NULL, '2025-02-25 05:55:18', 0, ''),
+(12, 'test quiz', 'teeeeest', 0, '', 11, 'sfsd', 'draft', 0, NULL, NULL, '2025-02-25 06:24:01', 0, ''),
+(13, 'test quiz', 'teeeeest', 0, '', 11, 'sfsd', 'draft', 0, NULL, NULL, '2025-02-25 06:27:52', 0, ''),
+(14, 'hhu', 'h', 30, 'auto', 12, 'gyg', 'draft', 100, 7, 2, '2025-04-13 12:22:52', 1, ''),
+(15, 'c', 'a', 30, 'auto', 12, 'ad', 'draft', 100, 4, 2, '2025-04-13 15:02:01', 1, ''),
+(16, 'c', 'a', 30, 'auto', 12, 'ad', 'draft', 100, 4, 2, '2025-04-13 15:05:35', 1, ''),
+(17, 's', 's', 30, 'auto', 12, 'a', 'published', 100, 4, 2, '2025-04-13 15:35:57', 1, '');
 
 -- --------------------------------------------------------
 
@@ -211,7 +232,8 @@ CREATE TABLE `teachers` (
 --
 
 INSERT INTO `teachers` (`id_teacher`, `last_name`, `first_name`, `email`, `password`, `created_at`) VALUES
-(11, 'Meridja', 'Abdelouahab', 'na_meridja@esi.dzz', 'abdou2005mero', '2025-02-19 16:29:53');
+(11, 'Meridja', 'Abdelouahab', 'na_meridja@esi.dzz', 'abdou2005mero', '2025-02-19 16:29:53'),
+(12, 'Meridja', 'Abdelouahab', 'test4@gmail.com', '$2b$10$1Vl4dcJqJTawN70GVIjKJuTk4kMl2aBR0WMOqgnahUBFfL7WU.GDC', '2025-03-22 10:13:24');
 
 --
 -- Index pour les tables déchargées
@@ -290,13 +312,13 @@ ALTER TABLE `teachers`
 -- AUTO_INCREMENT pour la table `admins`
 --
 ALTER TABLE `admins`
-  MODIFY `id_admin` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id_admin` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT pour la table `answers`
 --
 ALTER TABLE `answers`
-  MODIFY `id_answer` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id_answer` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT pour la table `attempts`
@@ -314,13 +336,13 @@ ALTER TABLE `published_quizzes`
 -- AUTO_INCREMENT pour la table `questions`
 --
 ALTER TABLE `questions`
-  MODIFY `id_question` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id_question` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT pour la table `quizzes`
 --
 ALTER TABLE `quizzes`
-  MODIFY `id_quiz` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id_quiz` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT pour la table `students`
@@ -338,7 +360,7 @@ ALTER TABLE `student_answers`
 -- AUTO_INCREMENT pour la table `teachers`
 --
 ALTER TABLE `teachers`
-  MODIFY `id_teacher` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id_teacher` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- Contraintes pour les tables déchargées
