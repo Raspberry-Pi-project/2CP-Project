@@ -1,48 +1,26 @@
 import { createContext, useState, useEffect, useContext } from "react";
-
+import { useAuth } from "./AuthProvider";
 export const QuizContext = createContext();
 
-
 export const QuizProvider = ({ children }) => {
-  // Function to retrieve stored quiz data safely
-  const getStoredQuizData = () => {
-    try {
-      const storedData = localStorage.getItem("quizData");
-      return storedData ? JSON.parse(storedData) : { subject: "", title: "", description: "", image: null };
-    } catch (error) {
-      console.error("Error parsing quizData from localStorage:", error);
-      return { subject: "", title: "", description: "", image: null };
-    }
-  };
+  const { user } = useAuth();
+  const teacherId = user.id;
 
-  //const [quizData, setQuizData] = useState(getStoredQuizData());
-
-  const [quizData, setQuizData] = useState(() => {
-    // Load saved quiz from local storage (session-based)
-    return JSON.parse(sessionStorage.getItem("quizData")) || null;
+  // Initialize quiz data with the structure matching Prisma schema
+  const [quizData, setQuizData] = useState({
+    id_teacher: teacherId,
+    title: "",
+    description: "",
+    subject: "",
+    nb_attempts: 1,
+    duration: 30, // Default 30 minutes
+    correctionType: "auto", // Default to auto-graded
+    score: 100, // Default score
+    for_year: "", // To be filled by user
+    for_groupe: "", // To be filled by user
+    status: "draft", // Default to draft
+    questions: [], // Array to hold questions
   });
-
-  const [teacherId, setTeacherId] = useState(() => {
-    return sessionStorage.getItem("teacherId") || null;
-  });
-
-  // Save quiz data to local storage whenever it changes
-  
-  useEffect(() => {
-    if (teacherId) {
-      sessionStorage.setItem("teacherId", teacherId);
-    }
-  }, [teacherId]);
-
-  const clearQuizDataOnLogout = () => {
-    if (quizData && !quizData.isDraft && !quizData.isPosted) {
-      sessionStorage.removeItem("quizData");
-      sessionStorage.removeItem("teacherId");
-      setQuizData(null);
-      setTeacherId(null);
-    }
-  };
-
 
   return (
     <QuizContext.Provider value={{ quizData, setQuizData }}>
@@ -52,11 +30,9 @@ export const QuizProvider = ({ children }) => {
 };
 
 export const useQuiz = () => {
-    const context = useContext(QuizContext);
-    if (!context) {
-      throw new Error("useQuiz must be used within a QuizProvider");
-    }
-    return context;
-  };
-  
-  //export { QuizProvider };
+  const context = useContext(QuizContext);
+  if (!context) {
+    throw new Error("useQuiz must be used within a QuizProvider");
+  }
+  return context;
+};

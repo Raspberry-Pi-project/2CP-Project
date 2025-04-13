@@ -1,0 +1,52 @@
+.navProfile {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 16px;
+    height: 60px;
+}
+
+.navLeft {
+    margin-top: 0;
+}
+
+.navLogo {
+    width: 200px;
+    height: 100px;
+    object-fit: contain;
+}
+
+.navRight {
+    display: flex;
+    gap: 8px;
+}
+
+.addUser {
+    width: 200px;
+    height: 40px;
+    border-radius: 5px;
+    background-color: #7768e5;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 0px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logout {
+    height: 40px;
+    width: 120px;
+    border-radius: 5px;
+    background-color: #fa5655;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 0px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

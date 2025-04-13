@@ -15,12 +15,19 @@ import Generating from "./Pages/CreationQuiz/generating";
 import Finalization1 from "./Pages/CreationQuiz/Finalization1";
 import Finalization2 from "./Pages/CreationQuiz/Finalization2";
 import { AuthProvider } from "./context/AuthProvider";
-import ProtectedRoute from "./components/ProtectedRoute";
 import { QuizProvider } from "./context/QuizProvider"; // Import the QuizProvider
 import HistoryPage from "./Pages/History/historypage";
 import QuizDetails from "./Pages/QuizDetails/quizdetails";
 import Results from "./Pages/ResultsPage/results";
 import DraftQuiz from "./Pages/DraftQuizPage/draftquiz";
+import AdminDash from './Pages/Profile/AdminDash';
+import TeacherDash from './Pages/Profile/TeacherDash';
+import AdminTeacher from './Pages/Profile/AdminTeacher';
+import AdminStudent from './Pages/Profile/AdminStudent';
+import TeacherStudent from './Pages/Profile/TeacherStudents';
+import TeacherStudentProfile from './Pages/Profile/TeacherStudentProfile';
+import TeacherProfile from './Pages/Profile/TeacherProfile';
+import StudentProfile from './Pages/Profile/StudentProfile';
 
 
 
@@ -39,15 +46,40 @@ export default function App() {
 function MainLayout() {
   const location = useLocation();
 
-  const bannerPages = ["/noquizzes", "/info", "/duration", "/generating", "/finalization1", "/finalization2", "/historypage", "/quizdetails" , "/results" , "/draftquiz"]; 
+  // Define routes where the banner and navbar should not be shown
+  const noBannerOrNavbarPages = [
+    "/admindash",
+    "/teacherdash",
+    "/adminteacher",
+    "/adminstudent",
+    "/teacherstudents",
+    "/teacherstudentprofile",
+    "/teacherprofile",
+    "/studentprofile",
+  ];
 
+   // Define routes where only the banner should be shown
+   const bannerPages = [
+    "/noquizzes",
+    "/info",
+    "/duration",
+    "/generating",
+    "/finalization1",
+    "/finalization2",
+    "/historypage",
+    "/quizdetails",
+    "/results",
+    "/draftquiz",
+  ];
+
+  const isNoBannerOrNavbar = noBannerOrNavbarPages.includes(location.pathname.toLowerCase());
   const showBanner = bannerPages.includes(location.pathname.toLowerCase());
 
 
   return (
     <Fragment>
-      {/* Show BannerApp on specific pages, otherwise show Navbars */}
-      {showBanner ? <BannerApp /> : <Navbars />}
+      {/* Conditionally render BannerApp or Navbars */}
+      {!isNoBannerOrNavbar && (showBanner ? <BannerApp /> : <Navbars />)}
 
       <Routes>
 
@@ -64,6 +96,14 @@ function MainLayout() {
         <Route path="/quizdetails" element={<QuizDetails />} />
         <Route path="/results" element={<Results />} />
         <Route path="/draftquiz" element={<DraftQuiz />} />
+        <Route path="/AdminDash" element={<AdminDash />} /> {/* Admin will now include NavProfile */}
+        <Route path="/TeacherDash" element={<TeacherDash />} />
+        <Route path="/AdminTeacher" element={<AdminTeacher/>} />
+        <Route path="AdminStudent" element={<AdminStudent/>}/>
+        <Route path="TeacherStudents" element={<TeacherStudent/>}/>
+        <Route path="TeacherStudentProfile" element={<TeacherStudentProfile/>}/>
+        <Route path="/TeacherProfile" element={<TeacherProfile/>}/>
+        <Route path="/StudentProfile" element={<StudentProfile/>}/>
 
 
 
@@ -127,8 +167,9 @@ function MainLayout() {
 
       </Routes>
 
-      {/* Hide Footer on pages that use BannerApp */}
-      {!showBanner && <Footer />}
+      
+      {/* Conditionally render Footer */}
+      {!isNoBannerOrNavbar && !showBanner && <Footer />}
     </Fragment>
   );
 }
