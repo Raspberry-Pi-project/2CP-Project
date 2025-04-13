@@ -6,7 +6,7 @@ import { useAuth } from "../../context/AuthProvider";
 const Infos = () => {
   const navigate = useNavigate();
   const { quizData, setQuizData } = useQuiz();
-  const { user  } = useAuth();
+  const { user } = useAuth();
   // Initialize state with values from quizData
   const [subject, setSubject] = useState(quizData.subject || "");
   const [title, setTitle] = useState(quizData.title || "");
@@ -24,15 +24,23 @@ const Infos = () => {
   useEffect(() => {
     setQuizData({
       ...quizData,
-      id_teacher : user.id,
+      id_teacher: user.id,
       subject,
       title,
       description,
-      for_year : parseInt(for_year),
-      for_groupe : parseInt(for_groupe),
+      for_year: parseInt(for_year),
+      for_groupe: parseInt(for_groupe),
     });
-  }, [subject, title, description, for_year, for_groupe , user]);
+  }, [subject, title, description, for_year, for_groupe, user]);
 
+  const handleImageUpload = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const imageUrl = URL.createObjectURL(e.target.files[0]); // ✅ Define imageUrl here
+      setImage(imageUrl);
+      setQuizData({ ...quizData, image: imageUrl });
+    }
+  };
+  
   const handleNext = async () => {
     // Validate required fields
     if (!title || !subject) {
@@ -47,8 +55,8 @@ const Infos = () => {
       subject,
       title,
       description,
-      for_year : parseInt(for_year),
-      for_groupe : parseInt(for_groupe),
+      for_year: parseInt(for_year),
+      for_groupe: parseInt(for_groupe),
     });
     console.log("quizData", quizData);
     navigate("/duration");
@@ -121,7 +129,7 @@ const Infos = () => {
                 {image ? (
                   <div className="image-preview">
                     <img src={image || "/placeholder.svg"} alt="Quiz" />
-                    <button 
+                    <button
                       className="remove-image-btn"
                       onClick={() => setImage(null)}
                     >
@@ -130,21 +138,17 @@ const Infos = () => {
                   </div>
                 ) : (
                   <label className="image-upload-label">
-                    <input 
-                      type="file" 
-                      accept="image/*" 
+                    <input
+                      type="file"
+                      accept="image/*"
                       onChange={handleImageUpload}
-                      style={{ display: 'none' }}
+                      style={{ display: "none" }}
                     />
-                    <div className="upload-placeholder">
-                      Add one +
-                    </div>
+                    <div className="upload-placeholder">Add one +</div>
                   </label>
                 )}
               </div>
             </div>
-
-            
 
             {error && <div className="error-message">{error}</div>}
           </div>
