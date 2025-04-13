@@ -13,6 +13,8 @@ const Infos = () => {
   const [description, setDescription] = useState(quizData.description || "");
   const [for_year, setForYear] = useState(quizData.for_year || "");
   const [for_groupe, setForGroupe] = useState(quizData.for_groupe || "");
+  const [image, setImage] = useState(quizData.image || null);
+
   const [currentStep, setCurrentStep] = useState(1);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
