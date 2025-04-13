@@ -10,7 +10,7 @@ const router = express.Router();
 router.use(express.json());
 
 //quizzes functions
-router.get("/getQuizzes" , getQuizzes)
+router.post("/getQuizzes" , getQuizzes)
 router.post("/createQuiz", createQuiz);
 router.put("/deleteQuiz" , deleteQuiz);
 router.put("/updateQuiz" , updateQuiz);

@@ -39,7 +39,13 @@ const getQuizzes = async (req, res) => {
     const totalQuizzes = await prisma.quizzes.count({
       where: filters,
     });
-
+    for (quiz of quizzes){
+      const totalQuestions = await prisma.questions.count({
+        where: { id_quiz: quiz.id_quiz },
+      });
+      quiz.totalQuestions = totalQuestions;  
+    }
+    console.log(quizzes);
     res.json({
       page,
       limit,
@@ -95,7 +101,7 @@ const createQuiz = async (req, res) => {
               })),
             },
           })),
-        }
+        },
       },
       include: {
         questions: {
@@ -103,9 +109,8 @@ const createQuiz = async (req, res) => {
             answers: true,
           },
         },
-      }
+      },
     });
-    
 
     res.json({ newQuiz });
   } catch (error) {
@@ -173,7 +178,7 @@ const updateQuiz = async (req, res) => {
           if (question.updated === true) {
             updatedQuestion = await prisma.questions.upsert({
               where: {
-                id_question: question.id_question 
+                id_question: question.id_question,
               },
               update: {
                 duration: question.duration,
@@ -208,7 +213,7 @@ const updateQuiz = async (req, res) => {
               if (answer.deleted === false && answer.updated === true) {
                 await prisma.answers.upsert({
                   where: {
-                    id_answer: answer.id_answer  
+                    id_answer: answer.id_answer,
                   },
                   update: {
                     answer_text: answer.answer_text,
@@ -274,7 +279,7 @@ const getQuizDetails = async (req, res) => {
             id_question: true,
             question_text: true,
             question_type: true,
-            question_number : true,
+            question_number: true,
             duration: true,
             points: true,
             question_percentage: true,

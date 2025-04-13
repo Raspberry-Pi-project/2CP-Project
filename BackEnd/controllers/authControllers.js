@@ -60,11 +60,12 @@ const login = async (req, res) => {
     
     let user;
     if (role === "student") {
-
+        
         user = await prisma.students.findUnique({ where: { email } });
         
     } else if (role === "teacher") {
         user = await prisma.teachers.findUnique({ where: { email } });
+        
     } else if (role === "admin") {
         user = await prisma.admins.findUnique({ where: { email } });
     } else {
@@ -95,6 +96,7 @@ const login = async (req, res) => {
             res.json({ role, userId: user.id_admin, message: "Login successful" });
             break;
     }
+    console.log(res.json);
 };
 
 // ✅ Logout User by Clearing Cookie
