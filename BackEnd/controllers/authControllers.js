@@ -60,11 +60,12 @@ const login = async (req, res) => {
     
     let user;
     if (role === "student") {
-
+        
         user = await prisma.students.findUnique({ where: { email } });
         
     } else if (role === "teacher") {
         user = await prisma.teachers.findUnique({ where: { email } });
+        
     } else if (role === "admin") {
         user = await prisma.admins.findUnique({ where: { email } });
     } else {
@@ -84,7 +85,18 @@ const login = async (req, res) => {
         sameSite: "Strict",
     });
 
-    res.json({ role, userId: user.id, message: "Login successful" });
+    switch (role) {
+        case "student":
+            res.json({ role, userId: user.id_student, message: "Login successful" });
+            break;
+        case "teacher":
+            res.json({ role, userId: user.id_teacher, message: "Login successful" });
+            break;
+        case "admin":
+            res.json({ role, userId: user.id_admin, message: "Login successful" });
+            break;
+    }
+    console.log(res.json);
 };
 
 // ✅ Logout User by Clearing Cookie
