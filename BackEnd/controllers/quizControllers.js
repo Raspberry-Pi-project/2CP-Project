@@ -16,6 +16,7 @@ const getQuizzes = async (req, res) => {
       for_year,
       for_groupe,
       correctionType,
+      
     } = req.body;
 
     //default to page 1
@@ -30,6 +31,7 @@ const getQuizzes = async (req, res) => {
     if (status) filters.status = status;
     if (for_year) filters.for_year = for_year;
     if (for_groupe) filters.for_groupe = for_groupe;
+    
 
     const quizzes = await prisma.quizzes.findMany({
       skip: (page - 1) * limit, //skip records based on page number
@@ -72,10 +74,12 @@ const createQuiz = async (req, res) => {
       for_groupe,
       status,
       questions,
+      image
     } = req.body;
 
     const newQuiz = await prisma.quizzes.create({
       data: {
+        image,
         title,
         description,
         id_teacher,
@@ -122,6 +126,7 @@ const createQuiz = async (req, res) => {
 const updateQuiz = async (req, res) => {
   try {
     const {
+      image,
       id_quiz,
       title,
       description,
@@ -143,6 +148,7 @@ const updateQuiz = async (req, res) => {
         id_quiz: id_quiz,
       },
       data: {
+        image,
         title,
         description,
         id_teacher,
