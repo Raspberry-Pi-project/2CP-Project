@@ -11,6 +11,7 @@ import {
   Animated,
   FlatList,
   Alert,
+   Easing,
 } from "react-native"
 import Icon from "react-native-vector-icons/Feather"
 import { LinearGradient } from "expo-linear-gradient"
@@ -133,16 +134,16 @@ export default function QuizletScreen2({ navigation, route }) {
 
       // Animate options with staggered effect
       Animated.stagger(
-        100,
-        optionsAnim.map((anim) =>
-          Animated.timing(anim, {
-            toValue: 1,
-            duration: 300,
-            easing: Animated.Easing.out(Animated.Easing.back(1.5)),
-            useNativeDriver: true,
-          }),
-        ),
-      ).start()
+  100,
+  optionsAnim.map((anim) =>
+    Animated.timing(anim, {
+      toValue: 1,
+      duration: 300,
+      easing: Easing.out(Easing.back(1.5)), // Use imported Easing
+      useNativeDriver: true,
+    }),
+  ),
+).start();
     } else {
       // Fade in list view
       Animated.timing(fadeAnim, {
