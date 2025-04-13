@@ -113,6 +113,34 @@ const Infos = () => {
                 rows="4"
               />
             </div>
+            <div className="form-group">
+              <label>Image :</label>
+              <div className="image-upload-container">
+                {image ? (
+                  <div className="image-preview">
+                    <img src={image || "/placeholder.svg"} alt="Quiz" />
+                    <button 
+                      className="remove-image-btn"
+                      onClick={() => setImage(null)}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ) : (
+                  <label className="image-upload-label">
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={handleImageUpload}
+                      style={{ display: 'none' }}
+                    />
+                    <div className="upload-placeholder">
+                      Add one +
+                    </div>
+                  </label>
+                )}
+              </div>
+            </div>
 
             
 
