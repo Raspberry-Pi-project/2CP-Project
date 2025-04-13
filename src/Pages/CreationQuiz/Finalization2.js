@@ -53,7 +53,7 @@ const Finalization2 = () => {
               <label>YEAR OF STUDY :</label>
               <input
                 type="text"
-                placeholder="enter the total score"
+                placeholder="enter the year of study"
                 value={yearOfStudy}
                 onChange={(e) => setYearOfStudy(e.target.value)}
                 className="form-input"
@@ -64,7 +64,7 @@ const Finalization2 = () => {
               <label>GROUPE :</label>
               <input
                 type="text"
-                placeholder="enter the total score"
+                placeholder="enter the group"
                 value={group}
                 onChange={(e) => setGroup(e.target.value)}
                 className="form-input"
