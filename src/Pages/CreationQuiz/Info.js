@@ -114,27 +114,7 @@ const Infos = () => {
               />
             </div>
 
-            <div className="form-group">
-              <label>For Year:</label>
-              <input
-                type="text"
-                placeholder="Enter target year (e.g., 2023-2024)"
-                value={for_year}
-                onChange={(e) => setForYear(e.target.value)}
-                className="form-input"
-              />
-            </div>
-
-            <div className="form-group">
-              <label>For Group:</label>
-              <input
-                type="text"
-                placeholder="Enter target group"
-                value={for_groupe}
-                onChange={(e) => setForGroupe(e.target.value)}
-                className="form-input"
-              />
-            </div>
+            
 
             {error && <div className="error-message">{error}</div>}
           </div>
