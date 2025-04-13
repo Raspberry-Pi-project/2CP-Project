@@ -13,6 +13,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   StatusBar,
+  Image,
 } from "react-native"
 import { colors } from "../constants/colors"
 import Svg, { Path } from "react-native-svg"
@@ -62,10 +63,15 @@ export default function LoginScreen({ navigation }) {
               <View style={styles.placeholder} />
             </View>
 
+          
             {/* Logo */}
-            <View style={styles.logoContainer}>
-              <Text style={styles.logoText}>TRIVIO</Text>
-            </View>
+<View style={styles.logoContainer}>
+  <Image
+    source={require('../assets/logo.png')} // Update path to your image
+    style={styles.logoImage}
+    resizeMode="contain"
+  />
+</View>
 
             {/* Form */}
             <View style={styles.formContainer}>
@@ -169,6 +175,16 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333",
   },
+  // Replace the logoText style with these:
+logoContainer: {
+  alignItems: "center",
+  marginBottom: 40,
+  height: 74, // Match image height
+},
+logoImage: {
+  width: 274, // Image width from dimensions
+  height: 74, // Image height from dimensions
+},
   formContainer: {
     width: "100%",
   },
