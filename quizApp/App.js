@@ -1,43 +1,42 @@
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { StyleSheet } from 'react-native';
-import { SafeAreaProvider } from "react-native-safe-area-context";
-import { Toaster } from 'sonner-native';
-import HomeScreen from "./screens/HomeScreen";
-import QuizScreen from "./screens/QuizScreen";
-import QuizScoreScreen from "./screens/QuizScoreScreen";
+import { NavigationContainer } from "@react-navigation/native"
+import { createNativeStackNavigator } from "@react-navigation/native-stack"
+import { StatusBar } from "expo-status-bar"
+import { SafeAreaProvider } from "react-native-safe-area-context"
+import FirstScreen from "./screens/FirstScreen"
+import LoginScreen from "./screens/LoginScreen"
+import HomeScreen from "./screens/HomeScreen"
+import QuizletScreen from "./screens/QuizletScreen"
+import QuizletScreen2 from "./screens/QuizletScreen2"
+import QuizScreen from "./screens/QuizScreen"
+import QuizScoreScreen from "./screens/QuizScoreScreen"
+import ProfileScreen from "./screens/ProfileScreen"
+import { LogBox } from "react-native"
 
-const Stack = createNativeStackNavigator();
+// Ignore specific warnings that might be causing issues
+LogBox.ignoreLogs([
+  "Animated: `useNativeDriver` was not specified",
+  "VirtualizedLists should never be nested",
+  "Can't perform a React state update on an unmounted component",
+])
 
-function RootStack() {
+const Stack = createNativeStackNavigator()
+
+export default function App() {
   return (
-    <Stack.Navigator 
-      screenOptions={{
-        headerShown: false
-      }}
-    >
-      <Stack.Screen name="Home" component={HomeScreen} />
-      <Stack.Screen name="Quiz" component={QuizScreen} />
-      <Stack.Screen name="QuizScore" component={QuizScoreScreen} />
-    </Stack.Navigator>
-  );
-}
-
-function App() {
-  return (
-    <SafeAreaProvider style={styles.container}>
-      <Toaster />
+    <SafeAreaProvider>
       <NavigationContainer>
-        <RootStack />
+        <StatusBar style="light" />
+        <Stack.Navigator initialRouteName="First" screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="First" component={FirstScreen} />
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Home" component={HomeScreen} />
+          <Stack.Screen name="Quizlet" component={QuizletScreen} />
+          <Stack.Screen name="Quizlet2" component={QuizletScreen2} />
+          <Stack.Screen name="Quiz" component={QuizScreen} />
+          <Stack.Screen name="QuizScore" component={QuizScoreScreen} />
+          <Stack.Screen name="Profile" component={ProfileScreen} />
+        </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>
-  );
+  )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1
-  }
-});
-
-export default App;

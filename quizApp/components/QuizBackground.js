@@ -1,93 +1,125 @@
-import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Animated } from 'react-native';
+"use client"
 
-const Bubble = ({ style }) => {
-  const animation = useRef(new Animated.Value(0)).current;
+import { useEffect, useRef } from "react"
+import { StyleSheet, Animated, Easing, Dimensions, View } from "react-native"
 
-  useEffect(() => {
-    const animate = () => {
-      Animated.sequence([
-        Animated.timing(animation, {
-          toValue: 1,
-          duration: 3000 + Math.random() * 2000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(animation, {
-          toValue: 0,
-          duration: 3000 + Math.random() * 2000,
-          useNativeDriver: true,
-        }),
-      ]).start(() => animate());
-    };
-    animate();
-  }, []);
-
-  return (
-    <Animated.View
-      style={[
-        styles.bubble,
-        style,
-        {
-          opacity: animation.interpolate({
-            inputRange: [0, 0.5, 1],
-            outputRange: [0.2, 0.4, 0.2],
-          }),
-          transform: [
-            {
-              scale: animation.interpolate({
-                inputRange: [0, 0.5, 1],
-                outputRange: [0.8, 1.2, 0.8],
-              }),
-            },
-          ],
-        },
-      ]}
-    />
-  );
-};
+const { width, height } = Dimensions.get("window")
 
 const QuizBackground = () => {
+  // Create multiple animated values for different bubbles
+  const bubbles = [
+    {
+      ref: useRef(new Animated.Value(0)).current,
+      size: 120,
+      position: { top: "5%", left: "10%" },
+      opacity: 0.3,
+      duration: 15000,
+    },
+    {
+      ref: useRef(new Animated.Value(0)).current,
+      size: 80,
+      position: { top: "20%", right: "5%" },
+      opacity: 0.2,
+      duration: 18000,
+    },
+    {
+      ref: useRef(new Animated.Value(0)).current,
+      size: 150,
+      position: { bottom: "40%", left: "0%" },
+      opacity: 0.15,
+      duration: 20000,
+    },
+    {
+      ref: useRef(new Animated.Value(0)).current,
+      size: 100,
+      position: { bottom: "10%", right: "15%" },
+      opacity: 0.25,
+      duration: 25000,
+    },
+    {
+      ref: useRef(new Animated.Value(0)).current,
+      size: 60,
+      position: { top: "40%", left: "30%" },
+      opacity: 0.2,
+      duration: 22000,
+    },
+  ]
+
+  useEffect(() => {
+    // Start animations for all bubbles
+    bubbles.forEach((bubble) => {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(bubble.ref, {
+            toValue: 1,
+            duration: bubble.duration,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(bubble.ref, {
+            toValue: 0,
+            duration: bubble.duration,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ]),
+      ).start()
+    })
+
+    return () => {
+      // Clean up animations
+      bubbles.forEach((bubble) => {
+        bubble.ref.stopAnimation()
+      })
+    }
+  }, [])
+
   return (
-    <View style={styles.container}>
-      <View style={styles.purpleFrame}>
-        <Bubble style={{ top: '5%', left: '10%', width: 40, height: 40 }} />
-        <Bubble style={{ top: '15%', right: '15%', width: 60, height: 60 }} />
-        <Bubble style={{ top: '25%', left: '25%', width: 45, height: 45 }} />
-        <Bubble style={{ top: '10%', right: '30%', width: 35, height: 35 }} />
-        <Bubble style={{ top: '30%', left: '60%', width: 50, height: 50 }} />
-        <Bubble style={{ top: '20%', left: '40%', width: 30, height: 30 }} />
-        <Bubble style={{ top: '8%', left: '75%', width: 25, height: 25 }} />
-        <Bubble style={{ top: '35%', right: '45%', width: 40, height: 40 }} />
-        <Bubble style={{ top: '40%', left: '20%', width: 35, height: 35 }} />
-        <Bubble style={{ top: '45%', right: '10%', width: 45, height: 45 }} />
-        <Bubble style={{ top: '50%', left: '5%', width: 30, height: 30 }} />
-        
-      </View>
+    <View style={StyleSheet.absoluteFill}>
+      {bubbles.map((bubble, index) => (
+        <Animated.View
+          key={index}
+          style={[
+            styles.bubble,
+            {
+              ...bubble.position,
+              width: bubble.size,
+              height: bubble.size,
+              opacity: bubble.opacity,
+              transform: [
+                {
+                  translateY: bubble.ref.interpolate({
+                    inputRange: [0, 0.5, 1],
+                    outputRange: [0, index % 2 === 0 ? 15 : -15, 0],
+                  }),
+                },
+                {
+                  translateX: bubble.ref.interpolate({
+                    inputRange: [0, 0.5, 1],
+                    outputRange: [0, index % 3 === 0 ? 10 : -10, 0],
+                  }),
+                },
+                {
+                  scale: bubble.ref.interpolate({
+                    inputRange: [0, 0.5, 1],
+                    outputRange: [1, 1.05, 1],
+                  }),
+                },
+              ],
+            },
+          ]}
+        />
+      ))}
     </View>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
-  container: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'white',
-  },
-  purpleFrame: {
-    backgroundColor: '#A42FC1',
-    height: '45%',
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    overflow: 'hidden',
-  },
   bubble: {
-    position: 'absolute',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 100,
+    position: "absolute",
+    borderRadius: 999,
+    backgroundColor: "#C16AD5",
   },
-});
+})
 
-export default QuizBackground;
+export default QuizBackground

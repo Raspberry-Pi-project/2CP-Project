@@ -1,337 +1,590 @@
-import React, { useState, useEffect, useRef } from "react";
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  SafeAreaView, 
-  Dimensions, 
-  Animated 
-} from "react-native";
-import { colors } from "../constants/colors";
-import Icon from "react-native-vector-icons/Feather";
-import QuizBackground from '../components/QuizBackground';
-import Svg, { Circle } from 'react-native-svg';
+"use client"
 
-const { width, height } = Dimensions.get("window");
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+import { useEffect, useRef } from "react"
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  SafeAreaView,
+  Dimensions,
+  Animated,
+  FlatList,
+  Platform,
+} from "react-native"
+import Icon from "react-native-vector-icons/Feather"
+import { LinearGradient } from "expo-linear-gradient"
+import Svg, { Circle, Path, Defs, LinearGradient as SvgLinearGradient, Stop } from "react-native-svg"
 
-export default function QuizScreen({ navigation, route }) {
-  const { quiz = { questions: [] } } = route.params || {};
-  const questions = quiz.questions || [];
-  
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [score, setScore] = useState(0);
-  const [showSummary, setShowSummary] = useState(false);
-  const [answers, setAnswers] = useState(Array(questions.length).fill(null));
-  const [timeLeft, setTimeLeft] = useState(15);
-  
-  const progressAnim = useRef(new Animated.Value(0)).current;
-  const questionAnim = useRef(new Animated.Value(0)).current;
-  const timerProgress = useRef(new Animated.Value(1)).current;
-  const timerOpacity = useRef(new Animated.Value(1)).current;
+const { width, height } = Dimensions.get("window")
+const AnimatedCircle = Animated.createAnimatedComponent(Circle)
+const AnimatedSvg = Animated.createAnimatedComponent(Svg)
 
-  const timerRadius = 25;
-  const timerStroke = 4;
-  const timerCircumference = 2 * Math.PI * timerRadius;
+// Sample quiz data with 20 questions
+const SAMPLE_QUIZ_DATA = {
+  score: 18,
+  total: 20,
+  correctCount: 18,
+  incorrectCount: 2,
+  questions: [
+    { id: 1, text: "What is the past tense of 'eat'?", isCorrect: true },
+    { id: 2, text: "Which sentence is grammatically correct?", isCorrect: true },
+    { id: 3, text: "Choose the correct preposition: 'She arrived ___ the airport.'", isCorrect: true },
+    { id: 4, text: "What is the value of x in the equation 2x + 5 = 13?", isCorrect: false },
+    { id: 5, text: "Which of these is not a prime number?", isCorrect: false },
+    { id: 6, text: "What is 25% of 80?", isCorrect: true },
+    { id: 7, text: "If a = 3 and b = 5, what is a² + b²?", isCorrect: true },
+    { id: 8, text: "What is the square root of 144?", isCorrect: true },
+    { id: 9, text: "Which planet is known as the Red Planet?", isCorrect: true },
+    { id: 10, text: "What is the chemical symbol for water?", isCorrect: true },
+    { id: 11, text: "What is the largest organ in the human body?", isCorrect: true },
+    { id: 12, text: "How many students in your class ___ from Korea?", isCorrect: true },
+    { id: 13, text: "Select the correct form of the verb.", isCorrect: true },
+    { id: 14, text: "What is the capital of France?", isCorrect: true },
+    { id: 15, text: "Who wrote 'Romeo and Juliet'?", isCorrect: true },
+    { id: 16, text: "What is the formula for water?", isCorrect: true },
+    { id: 17, text: "What is the largest continent?", isCorrect: true },
+    { id: 18, text: "How many sides does a hexagon have?", isCorrect: true },
+    { id: 19, text: "What is the main component of the sun?", isCorrect: false },
+    { id: 20, text: "Which element has the chemical symbol 'Au'?", isCorrect: true },
+  ],
+}
+
+// Floating bubbles background component
+const FloatingBubbles = () => {
+  // Create multiple animated values for different bubbles
+  const bubbles = [
+    {
+      ref: useRef(new Animated.Value(0)).current,
+      size: 80,
+      position: { top: 20, left: 30 },
+      opacity: 0.2,
+    },
+    {
+      ref: useRef(new Animated.Value(0)).current,
+      size: 60,
+      position: { top: 80, right: 20 },
+      opacity: 0.15,
+    },
+    {
+      ref: useRef(new Animated.Value(0)).current,
+      size: 100,
+      position: { top: 150, left: 0 },
+      opacity: 0.1,
+    },
+  ]
 
   useEffect(() => {
-    if (showSummary) {
-      navigation.navigate('QuizScore', {
-        score: score,
-        totalQuestions: questions.length,
-        questions: questions,
-        answers: answers
-      });
-    }
-  }, [showSummary]);
+    // Start animations for all bubbles
+    bubbles.forEach((bubble, index) => {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(bubble.ref, {
+            toValue: 1,
+            duration: 3000 + index * 1000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(bubble.ref, {
+            toValue: 0,
+            duration: 3000 + index * 1000,
+            useNativeDriver: true,
+          }),
+        ]),
+      ).start()
+    })
 
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(progressAnim, {
-        toValue: (currentQuestion + 1) / questions.length,
-        duration: 300,
-        useNativeDriver: false,
-      }),
-      Animated.timing(questionAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
+    return () => {
+      // Clean up animations
+      bubbles.forEach((bubble) => {
+        bubble.ref.stopAnimation()
       })
-    ]).start();
-  }, [currentQuestion]);
+    }
+  }, [])
+
+  return (
+    <View style={StyleSheet.absoluteFill}>
+      {bubbles.map((bubble, index) => (
+        <Animated.View
+          key={index}
+          style={[
+            styles.bubble,
+            {
+              ...bubble.position,
+              width: bubble.size,
+              height: bubble.size,
+              opacity: bubble.opacity,
+              transform: [
+                {
+                  translateY: bubble.ref.interpolate({
+                    inputRange: [0, 0.5, 1],
+                    outputRange: [0, index % 2 === 0 ? 15 : -15, 0],
+                  }),
+                },
+                {
+                  translateX: bubble.ref.interpolate({
+                    inputRange: [0, 0.5, 1],
+                    outputRange: [0, index % 3 === 0 ? 10 : -10, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
+        />
+      ))}
+    </View>
+  )
+}
+
+// Animated score circle component
+const ScoreCircle = ({ score, total }) => {
+  const animatedValue = useRef(new Animated.Value(0)).current
+  const pulseAnim = useRef(new Animated.Value(1)).current
+  const rotateAnim = useRef(new Animated.Value(0)).current
 
   useEffect(() => {
-    const timerInterval = setInterval(() => {
-      setTimeLeft(prev => {
-        if(prev <= 0) {
-          handleNext();
-          return 0;
-        }
-        const newTime = prev - 1;
-        
-        Animated.timing(timerProgress, {
-          toValue: newTime / 15,
+    // Animate the score
+    Animated.timing(animatedValue, {
+      toValue: score / total,
+      duration: 1500,
+      useNativeDriver: false,
+    }).start()
+
+    // Pulse animation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.05,
           duration: 1000,
           useNativeDriver: true,
-        }).start();
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ]),
+    ).start()
 
-        if(newTime === 0) {
-          Animated.timing(timerOpacity, {
-            toValue: 0,
-            duration: 500,
-            useNativeDriver: true,
-          }).start();
-        }
-        
-        return newTime;
-      });
-    }, 1000);
+    // Subtle rotation animation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(rotateAnim, {
+          toValue: 1,
+          duration: 10000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(rotateAnim, {
+          toValue: 0,
+          duration: 10000,
+          useNativeDriver: true,
+        }),
+      ]),
+    ).start()
 
-    return () => clearInterval(timerInterval);
-  }, [currentQuestion]);
-
-  const handleAnswer = (index) => {
-    setSelectedAnswer(index);
-    const newAnswers = [...answers];
-    newAnswers[currentQuestion] = index;
-    setAnswers(newAnswers);
-    
-    if(index === questions[currentQuestion]?.correctAnswer) {
-      setScore(prev => prev + 1);
+    return () => {
+      animatedValue.stopAnimation()
+      pulseAnim.stopAnimation()
+      rotateAnim.stopAnimation()
     }
-  };
+  }, [score, total])
 
-  const handleNext = () => {
-    if(currentQuestion < questions.length - 1) {
-      setCurrentQuestion(prev => prev + 1);
-      setSelectedAnswer(null);
-      setTimeLeft(15);
-      questionAnim.setValue(0);
-      timerProgress.setValue(1);
-      timerOpacity.setValue(1);
-    } else {
-      setShowSummary(true);
+  const circumference = 2 * Math.PI * 40
+  const strokeDashoffset = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [circumference, 0],
+  })
+
+  return (
+    <Animated.View
+      style={[
+        styles.scoreCircleContainer,
+        {
+          transform: [
+            { scale: pulseAnim },
+            {
+              rotate: rotateAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: ["-3deg", "3deg"],
+              }),
+            },
+          ],
+        },
+      ]}
+    >
+      <AnimatedSvg height="120" width="120" viewBox="0 0 100 100">
+        <Defs>
+          <SvgLinearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <Stop offset="0%" stopColor="#7B5CFF" />
+            <Stop offset="100%" stopColor="#A42FC1" />
+          </SvgLinearGradient>
+        </Defs>
+        <Circle cx="50" cy="50" r="40" stroke="rgba(255,255,255,0.3)" strokeWidth="8" fill="white" />
+        <AnimatedCircle
+          cx="50"
+          cy="50"
+          r="40"
+          stroke="url(#scoreGradient)"
+          strokeWidth="8"
+          fill="transparent"
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          transform="rotate(-90, 50, 50)"
+        />
+      </AnimatedSvg>
+      <View style={styles.scoreTextContainer}>
+        <Text style={styles.scoreLabel}>score</Text>
+        <Text style={styles.scoreValue}>{score}/20</Text>
+      </View>
+    </Animated.View>
+  )
+}
+
+// Question item component with animations
+const QuestionItem = ({ question, index, isCorrect, onPress, animationDelay }) => {
+  const scaleAnim = useRef(new Animated.Value(0)).current
+  const bounceAnim = useRef(new Animated.Value(1)).current
+
+  useEffect(() => {
+    // Entrance animation with delay based on index
+    Animated.timing(scaleAnim, {
+      toValue: 1,
+      duration: 500,
+      delay: animationDelay + index * 100,
+      useNativeDriver: true,
+    }).start()
+
+    return () => {
+      scaleAnim.stopAnimation()
+      bounceAnim.stopAnimation()
     }
-  };
+  }, [])
 
-  const getAnswerStyle = (index) => {
-    if(selectedAnswer === null) return styles.option;
-    const isCorrect = index === questions[currentQuestion]?.correctAnswer;
-    
-    return [
-      styles.option,
-      isCorrect ? styles.correctOption : styles.incorrectOption,
-      selectedAnswer === index && !isCorrect && styles.incorrectOption
-    ];
-  };
+  const handlePress = () => {
+    // Bounce animation on press
+    Animated.sequence([
+      Animated.timing(bounceAnim, {
+        toValue: 0.95,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.spring(bounceAnim, {
+        toValue: 1,
+        friction: 4,
+        useNativeDriver: true,
+      }),
+    ]).start()
+
+    onPress && onPress(question)
+  }
+
+  // Determine border color based on correct/incorrect
+  const borderColor = isCorrect === true ? "#4ADE80" : isCorrect === false ? "#FF5252" : "#7B5CFF"
+
+  return (
+    <Animated.View
+      style={{
+        opacity: scaleAnim,
+        transform: [
+          { scale: Animated.multiply(scaleAnim, bounceAnim) },
+          {
+            translateY: scaleAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [50, 0],
+            }),
+          },
+        ],
+      }}
+    >
+      <TouchableOpacity style={[styles.questionItem, { borderColor }]} onPress={handlePress} activeOpacity={0.8}>
+        <Text style={styles.questionText}>{question.text}</Text>
+        {isCorrect !== null && (
+          <View style={[styles.statusIcon, { backgroundColor: isCorrect ? "#4ADE80" : "#FF5252" }]}>
+            {isCorrect ? (
+              <Svg width="16" height="16" viewBox="0 0 24 24">
+                <Path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="white" />
+              </Svg>
+            ) : (
+              <Svg width="16" height="16" viewBox="0 0 24 24">
+                <Path
+                  d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"
+                  fill="white"
+                />
+              </Svg>
+            )}
+          </View>
+        )}
+      </TouchableOpacity>
+    </Animated.View>
+  )
+}
+
+export default function QuizScreen({ navigation, route }) {
+  // Get quiz results from route params or use sample data
+  const quizResults = route.params?.quizResults || SAMPLE_QUIZ_DATA
+
+  // Ensure score is out of 20
+  const normalizedScore = {
+    ...quizResults,
+    total: 20,
+    score: Math.min(quizResults.score, 20), // Ensure score doesn't exceed 20
+  }
+
+  // Animation refs
+  const headerAnim = useRef(new Animated.Value(0)).current
+  const contentAnim = useRef(new Animated.Value(0)).current
+
+  useEffect(() => {
+    // Animate header and content with sequence
+    Animated.stagger(300, [
+      Animated.timing(headerAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.timing(contentAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+    ]).start()
+
+    return () => {
+      headerAnim.stopAnimation()
+      contentAnim.stopAnimation()
+    }
+  }, [])
+
+  const handleQuestionPress = (question) => {
+    // Could navigate to question details or show a modal
+    console.log("Question pressed:", question)
+  }
 
   return (
     <SafeAreaView style={styles.container}>
-      <QuizBackground />
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Icon name="arrow-left" size={24} color="white" />
-        </TouchableOpacity>
-      </View>
+      {/* Purple header section with gradient */}
+      <Animated.View
+        style={[
+          styles.headerContainer,
+          {
+            opacity: headerAnim,
+            transform: [
+              {
+                translateY: headerAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [-50, 0],
+                }),
+              },
+            ],
+          },
+        ]}
+      >
+        <LinearGradient
+          colors={["#A42FC1", "#7B5CFF"]}
+          style={styles.headerGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <FloatingBubbles />
 
-      {!showSummary ? (
-        <View style={styles.contentContainer}>
-          <View style={styles.questionBox}>
-            <Animated.View style={[styles.timerContainer, { opacity: timerOpacity }]}>
-              <Svg
-                width={timerRadius * 2 + timerStroke}
-                height={timerRadius * 2 + timerStroke}
-              >
-                <AnimatedCircle
-                  cx={timerRadius + timerStroke/2}
-                  cy={timerRadius + timerStroke/2}
-                  r={timerRadius}
-                  stroke="#7B5CFF"
-                  strokeWidth={timerStroke}
-                  fill="transparent"
-                  strokeDasharray={timerCircumference}
-                  strokeDashoffset={timerProgress.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [timerCircumference, 0]
-                  })}
-                  strokeLinecap="round"
-                />
-              </Svg>
-              <Text style={[styles.timerText, timeLeft < 11 && styles.timerTextRed]}>
-                {timeLeft}s
-              </Text>
-            </Animated.View>
+          <View style={styles.headerContent}>
+            {/* Back button */}
+            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+              <Icon name="arrow-left" size={24} color="white" />
+            </TouchableOpacity>
 
-            <Animated.Text style={[styles.questionCounter, { opacity: questionAnim }]}>
-              Question {currentQuestion + 1}/{questions.length}
-            </Animated.Text>
+            {/* Score indicators */}
+            <View style={styles.scoreIndicators}>
+              <View style={styles.indicatorContainer}>
+                <Text style={styles.indicatorValue}>{normalizedScore.correctCount}</Text>
+                <View style={styles.indicatorBar}>
+                  <View
+                    style={[
+                      styles.indicatorFill,
+                      {
+                        backgroundColor: "#4ADE80",
+                        width: `${(normalizedScore.correctCount / 20) * 100}%`,
+                      },
+                    ]}
+                  />
+                </View>
+              </View>
 
-            <View style={styles.questionContent}>
-              <Text style={styles.questionText}>
-                {questions[currentQuestion]?.text || "Loading question..."}
-              </Text>
-              <Text style={styles.remainingText}>
-                {questions.length - currentQuestion - 1} questions remaining
-              </Text>
+              <ScoreCircle score={normalizedScore.score} total={20} />
+
+              <View style={styles.indicatorContainer}>
+                <Text style={[styles.indicatorValue, { color: "#FF5252" }]}>
+                  {normalizedScore.incorrectCount < 10 ? "0" : ""}
+                  {normalizedScore.incorrectCount}
+                </Text>
+                <View style={styles.indicatorBar}>
+                  <View
+                    style={[
+                      styles.indicatorFill,
+                      {
+                        backgroundColor: "#FF5252",
+                        width: `${(normalizedScore.incorrectCount / 20) * 100}%`,
+                      },
+                    ]}
+                  />
+                </View>
+              </View>
             </View>
           </View>
+        </LinearGradient>
+      </Animated.View>
 
-          <View style={styles.optionsContainer}>
-            {questions[currentQuestion]?.options?.map((option, index) => (
-              <TouchableOpacity
-                key={index}
-                style={getAnswerStyle(index)}
-                onPress={() => handleAnswer(index)}
-                disabled={selectedAnswer !== null}
-              >
-                <Text style={styles.optionText}>{option}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <TouchableOpacity
-            style={[styles.nextButton, selectedAnswer === null && styles.disabledButton]}
-            onPress={handleNext}
-            disabled={selectedAnswer === null}
-          >
-            <Text style={styles.nextButtonText}>
-              {currentQuestion === questions.length - 1 ? "Finish" : "Next"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      ) : null}
+      {/* Questions list */}
+      <Animated.View
+        style={[
+          styles.contentContainer,
+          {
+            opacity: contentAnim,
+            transform: [
+              {
+                translateY: contentAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [100, 0],
+                }),
+              },
+            ],
+          },
+        ]}
+      >
+        <FlatList
+          data={normalizedScore.questions}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item, index }) => (
+            <QuestionItem
+              question={item}
+              index={index}
+              isCorrect={item.isCorrect}
+              onPress={handleQuestionPress}
+              animationDelay={500} // Start after main animations
+            />
+          )}
+          contentContainerStyle={styles.questionsContainer}
+          showsVerticalScrollIndicator={false}
+        />
+      </Animated.View>
     </SafeAreaView>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#A42FC1"
+    backgroundColor: "#F8F9FA",
   },
-  header: {
-    flexDirection: "row",
+  headerContainer: {
+    height: height * 0.35, // Take up about 1/3 of the screen
+    overflow: "hidden",
+  },
+  headerGradient: {
+    flex: 1,
+    paddingTop: Platform.OS === "ios" ? 50 : 40,
+    paddingHorizontal: 20,
+  },
+  headerContent: {
+    flex: 1,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
     alignItems: "center",
-    padding: 20
+  },
+  scoreIndicators: {
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingTop: 20,
+  },
+  indicatorContainer: {
+    alignItems: "center",
+  },
+  indicatorValue: {
+    color: "#4ADE80",
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 8,
+  },
+  indicatorBar: {
+    width: 50,
+    height: 4,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: 2,
+    overflow: "hidden",
+  },
+  indicatorFill: {
+    height: "100%",
+    borderRadius: 2,
+  },
+  scoreCircleContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  scoreTextContainer: {
+    position: "absolute",
+    alignItems: "center",
+  },
+  scoreLabel: {
+    color: "#7B5CFF",
+    fontSize: 14,
+    fontWeight: "500",
+    textTransform: "lowercase",
+  },
+  scoreValue: {
+    color: "#333",
+    fontSize: 18,
+    fontWeight: "bold",
   },
   contentContainer: {
     flex: 1,
-    justifyContent: "center",
+    marginTop: -20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    backgroundColor: "#F8F9FA",
+    overflow: "hidden",
+  },
+  questionsContainer: {
+    padding: 20,
+    paddingTop: 30,
+  },
+  questionItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    padding: 20
-  },
-  questionBox: {
     backgroundColor: "white",
-    borderRadius: 20,
-    width: "90%",
-    padding: 25,
-    marginBottom: 25,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    marginBottom: 12,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5
-  },
-  timerContainer: {
-    alignSelf: "center",
-    marginBottom: 10,
-    position: 'relative',
-    width: 60,
-    height: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  timerText: {
-    position: "absolute",
-    color: "#7B5CFF",
-    fontSize: 16,
-    fontWeight: "bold",
-    textAlign: 'center',
-  },
-  timerTextRed: {
-    color: "#FF5252"
-  },
-  questionCounter: {
-    color: "#A42FC1",
-    fontSize: 16,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 15
-  },
-  questionContent: {
-    marginTop: 20
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
   },
   questionText: {
+    fontSize: 16,
     color: "#333",
-    fontSize: 18,
-    textAlign: "center",
-    lineHeight: 24
+    fontWeight: "500",
   },
-  remainingText: {
-    color: "#666",
-    fontSize: 14,
-    textAlign: "center",
-    marginTop: 15,
-    fontStyle: "italic"
-  },
-  optionsContainer: {
-    width: "100%",
-    paddingHorizontal: 20
-  },
-  option: {
-    backgroundColor: "white",
-    borderRadius: 25,
-    padding: 18,
-    marginBottom: 15,
-    borderWidth: 2,
-    borderColor: "#7B5CFF"
-  },
-  correctOption: {
-    backgroundColor: "#E1FFE1",
-    borderColor: "#4CAF50"
-  },
-  incorrectOption: {
-    backgroundColor: "#FFE1E1",
-    borderColor: "#FF5252"
-  },
-  optionText: {
-    color: "#7B5CFF",
-    fontSize: 16,
-    fontWeight: "600",
-    textAlign: "center"
-  },
-  nextButton: {
-    backgroundColor: "#7B5CFF",
-    borderRadius: 25,
-    padding: 16,
-    marginTop: 20,
-    width: "50%",
-    alignSelf: "center"
-  },
-  disabledButton: {
-    opacity: 0.6
-  },
-  nextButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
-    textAlign: "center"
-  },
-  summaryContainer: {
-    flex: 1,
+  statusIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
   },
-  summaryTitle: {
-    color: "white",
-    fontSize: 28,
-    fontWeight: "bold",
-    marginBottom: 20
+  bubble: {
+    position: "absolute",
+    borderRadius: 999,
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
   },
-  summaryScore: {
-    color: "white",
-    fontSize: 24
-  }
-});
+})
