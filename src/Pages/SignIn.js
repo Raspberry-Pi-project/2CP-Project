@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import "./SignIn.css";
 import LOGO from "../photos/Design (3).png";
@@ -6,13 +6,14 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthProvider";
 const SignIn = () => {
-  const { setUser } = useAuth();
+  const { setUser , user } = useAuth();
   const navigate = useNavigate(); // Hook for navigation
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
 
   const [error, setError] = useState("");
+  useEffect(()=> {console.log("user",user)},[user])
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -31,12 +32,10 @@ const SignIn = () => {
 
       //if (response.data.token) {
       if (response.status === 200) {
-        setUser({ id: response.data.userId, role: response.data.role });
-        // localStorage.setItem("token", response.data.token);
-        //localStorage.setItem("role", response.data.role); // Store user role
+        await setUser({ id: response.data.userId, role: response.data.role });
         alert("Login successful");
         setTimeout(() => {
-          navigate("/NoQuizzes");
+          navigate("/draftquiz");
         }, 500); // Small delay
       } else {
         setError("Invalid credentials. Please try again.");
@@ -103,15 +102,15 @@ const SignIn = () => {
             </form>
             <br></br>
 
-
-          {/*  <p>                      // this is the correct one once you finish delet the brakcets comment and make it available
+            {/*  <p>                      // this is the correct one once you finish delet the brakcets comment and make it available
               Don't have an account? <Link to="/signup">Sign Up</Link>
             </p>   */}
 
-            <p>   {/* this one is just to goo directly into the history page just to test and see things it is not correct ofc */}
+            <p>
+              {" "}
+              {/* this one is just to goo directly into the history page just to test and see things it is not correct ofc */}
               Don't have an account? <Link to="/historypage">Sign Up</Link>
             </p>
-
           </div>
         </div>
       </div>

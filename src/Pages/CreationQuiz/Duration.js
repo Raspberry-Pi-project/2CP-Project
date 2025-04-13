@@ -1,5 +1,4 @@
-
-import { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./Duration.css";
 import { useNavigate } from "react-router-dom";
 import { useQuiz } from "../../context/QuizProvider";
@@ -8,14 +7,20 @@ const Duration = () => {
   const navigate = useNavigate();
   const { quizData, setQuizData } = useQuiz();
 
+  // Initialize state with values from quizData
   const [nb_attempts, setNbAttempts] = useState(quizData.nb_attempts || 1);
-  const [duration, setDuration] = useState(
-    quizData.duration || "No time limit"
+  const [duration, setDuration] = useState(quizData.duration || 30);
+  const [score, setScore] = useState(quizData.score || 100);
+  const [correctionType, setCorrectionType] = useState(
+    quizData.correctionType || "auto"
   );
-  const [score, setScore] = useState(quizData.score || 0);
   const [currentStep, setCurrentStep] = useState(2);
+  const [error, setError] = useState(null);
+
+  // Dropdown states
   const [showAttemptsDropdown, setShowAttemptsDropdown] = useState(false);
   const [showDurationDropdown, setShowDurationDropdown] = useState(false);
+  const [showCorrectionDropdown, setShowCorrectionDropdown] = useState(false);
 
   // Options for dropdowns
   const attemptsOptions = ["1", "2", "3", "Unlimited"];
@@ -29,22 +34,41 @@ const Duration = () => {
     "1 hour",
     "No time limit",
   ];
+  const correctionOptions = ["auto", "manual"];
 
+  // Update quizData when form fields change
   useEffect(() => {
-    setQuizData({ ...quizData, nb_attempts, duration, score });
-    console.log(quizData);
-  }, [nb_attempts, duration, score]);
-
-  const handleReturn = () => {
-    setQuizData({ ...quizData, nb_attempts, duration, score });
-    navigate("/Info");
-  };
+    setQuizData({
+      ...quizData,
+      nb_attempts,
+      duration,
+      score,
+      correctionType,
+    });
+  }, [nb_attempts, duration, score, correctionType]);
 
   const handleNext = () => {
-    setQuizData({ ...quizData, nb_attempts, duration, score });
+    // Validate required fields
+    if (!score) {
+      setError("Score is required");
+      return;
+    }
+
+    // Save entered data before navigating
+    setQuizData({
+      ...quizData,
+      nb_attempts,
+      duration,
+      score,
+      correctionType,
+    });
+    console.log("quizData", quizData);
     navigate("/generating");
   };
 
+  const handleReturn = () => {
+    navigate("/info");
+  };
 
   return (
     <div className="quiz-generator-container">
@@ -72,17 +96,15 @@ const Duration = () => {
           </div>
 
           {/* Duration and Attempts Form */}
-          <div className="duration-attempts-form">
+          <div className="duration-form">
             <div className="form-group">
-              <label>number of Attempts :</label>
+              <label>Number of Attempts:</label>
               <div className="dropdown-container">
                 <div
                   className="dropdown-field"
                   onClick={() => setShowAttemptsDropdown(!showAttemptsDropdown)}
                 >
-                  <span>
-                    {nb_attempts || "enter the number of possible attempts"}
-                  </span>
+                  <span>{nb_attempts === -1 ? "Unlimited" : nb_attempts}</span>
                   <span className="dropdown-arrow">▼</span>
                 </div>
                 {showAttemptsDropdown && (
@@ -109,13 +131,19 @@ const Duration = () => {
             </div>
 
             <div className="form-group">
-              <label>Duration :</label>
+              <label>Duration:</label>
               <div className="dropdown-container">
                 <div
                   className="dropdown-field"
                   onClick={() => setShowDurationDropdown(!showDurationDropdown)}
                 >
-                  <span>{duration || "Enter the General Duration"}</span>
+                  <span>
+                    {duration === -1
+                      ? "No time limit"
+                      : duration === 60
+                      ? "1 hour"
+                      : `${duration} minutes`}
+                  </span>
                   <span className="dropdown-arrow">▼</span>
                 </div>
                 {showDurationDropdown && (
@@ -165,20 +193,58 @@ const Duration = () => {
               </div>
             </div>
 
-            <div className="form-note">
-              you can set the duration of each question later .
-            </div>
-
             <div className="form-group">
               <label>Score:</label>
               <input
                 type="number"
-                placeholder="enter the total score"
+                placeholder="Enter the total score"
                 value={score}
-                onChange={(e) => setScore(e.target.value)}
+                onChange={(e) => setScore(parseInt(e.target.value))}
                 className="form-input"
+                required
               />
             </div>
+
+            <div className="form-group">
+              <label>Correction Type:</label>
+              <div className="dropdown-container">
+                <div
+                  className="dropdown-field"
+                  onClick={() =>
+                    setShowCorrectionDropdown(!showCorrectionDropdown)
+                  }
+                >
+                  <span>
+                    {correctionType === "auto"
+                      ? "Auto-graded"
+                      : "Manually graded"}
+                  </span>
+                  <span className="dropdown-arrow">▼</span>
+                </div>
+                {showCorrectionDropdown && (
+                  <div className="dropdown-options">
+                    {correctionOptions.map((option, index) => (
+                      <div
+                        key={index}
+                        className="dropdown-option"
+                        onClick={() => {
+                          setCorrectionType(option);
+                          setShowCorrectionDropdown(false);
+                        }}
+                      >
+                        {option === "auto" ? "Auto-graded" : "Manually graded"}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="form-note">
+              You can set the duration of each question later.
+            </div>
+
+            {error && <div className="error-message">{error}</div>}
           </div>
 
           {/* Navigation */}
