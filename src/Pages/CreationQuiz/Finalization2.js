@@ -90,8 +90,13 @@ const Finalization2 = () => {
             <div className="form-group">
               <label>YEAR OF STUDY : (optional) </label>
               <input
+
+                
+                placeholder="enter the year of study"
+
                 type="number"
-                placeholder="enter the total score"
+                
+
                 value={yearOfStudy}
                 onChange={(e) => setYearOfStudy(e.target.value)}
                 className="form-input"
@@ -100,9 +105,9 @@ const Finalization2 = () => {
 
             <div className="form-group">
               <label>GROUPE : (optional)</label>
-              <input
+              <input              
+                placeholder="enter the group"
                 type="number"
-                placeholder=""
                 value={group}
                 onChange={(e) => setGroup(e.target.value)}
                 className="form-input"
