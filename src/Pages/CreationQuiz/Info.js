@@ -6,31 +6,59 @@ import { useAuth } from "../../context/AuthProvider";
 const Infos = () => {
   const navigate = useNavigate();
   const { quizData, setQuizData } = useQuiz();
-  const { user  } = useAuth();
+  const { user } = useAuth();
   // Initialize state with values from quizData
   const [subject, setSubject] = useState(quizData.subject || "");
   const [title, setTitle] = useState(quizData.title || "");
   const [description, setDescription] = useState(quizData.description || "");
-  const [for_year, setForYear] = useState(quizData.for_year || "");
-  const [for_groupe, setForGroupe] = useState(quizData.for_groupe || "");
+
+  const [image, setImage] = useState(quizData.image || null);
+  const [navigation, setNavigation] = useState(quizData.navigation || "dynamic");
+
   const [currentStep, setCurrentStep] = useState(1);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
+  useEffect(() => {
+    setQuizData({
+      ...quizData,
+      title: "",
+      description: "",
+      subject: "",
+      nb_attempts: 1,
+      duration: 30, // Default 30 minutes
+      correctionType: "auto", // Default to auto-graded
+      score: 100, // Default score
+      for_year: "", // To be filled by user
+      for_groupe: "", // To be filled by user
+      status: "draft", // Default to draft
+      questions: [], // Array to hold questions
+      navigation: "dynamic", // Default navigation
+    })
+  }, []);
+
   // Update quizData when form fields change
   useEffect(() => {
     setQuizData({
       ...quizData,
-      id_teacher : user.id,
+      id_teacher: user.id,
       subject,
       title,
       description,
-      for_year : parseInt(for_year),
-      for_groupe : parseInt(for_groupe),
+      navigation,
+      
     });
-  }, [subject, title, description, for_year, for_groupe , user]);
+  }, [subject, title, description, user]);
 
+  const handleImageUpload = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const imageUrl = URL.createObjectURL(e.target.files[0]); // ✅ Define imageUrl here
+      setImage(imageUrl);
+      setQuizData({ ...quizData, image: imageUrl });
+    }
+  };
+  
   const handleNext = async () => {
     // Validate required fields
     if (!title || !subject) {
@@ -45,8 +73,6 @@ const Infos = () => {
       subject,
       title,
       description,
-      for_year : parseInt(for_year),
-      for_groupe : parseInt(for_groupe),
     });
     console.log("quizData", quizData);
     navigate("/duration");
@@ -113,27 +139,41 @@ const Infos = () => {
                 rows="4"
               />
             </div>
-
             <div className="form-group">
-              <label>For Year:</label>
-              <input
-                type="text"
-                placeholder="Enter target year (e.g., 2023-2024)"
-                value={for_year}
-                onChange={(e) => setForYear(e.target.value)}
+              <label>Navigation:</label>
+              <textarea
+                placeholder="Navigation between question"
+                value={description}
+                onChange={(e) => setNavigation(e.target.value)}
                 className="form-input"
+                rows="4"
               />
             </div>
-
             <div className="form-group">
-              <label>For Group:</label>
-              <input
-                type="text"
-                placeholder="Enter target group"
-                value={for_groupe}
-                onChange={(e) => setForGroupe(e.target.value)}
-                className="form-input"
-              />
+              <label>Image :</label>
+              <div className="image-upload-container">
+                {image ? (
+                  <div className="image-preview">
+                    <img src={image || "/placeholder.svg"} alt="Quiz" />
+                    <button
+                      className="remove-image-btn"
+                      onClick={() => setImage(null)}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ) : (
+                  <label className="image-upload-label">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      style={{ display: "none" }}
+                    />
+                    <div className="upload-placeholder">Add one +</div>
+                  </label>
+                )}
+              </div>
             </div>
 
             {error && <div className="error-message">{error}</div>}

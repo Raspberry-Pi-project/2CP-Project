@@ -105,6 +105,16 @@
     font-weight: 500;
     cursor: pointer;
   }
+
+  .consult-btn:hover {
+    background-color: #6a5acd;
+  }
+  
+  .consult-btn:active {
+    background-color: #5a4abf;
+    transform: scale(0.95);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  }
   
   .options-btn {
     width: 30px;

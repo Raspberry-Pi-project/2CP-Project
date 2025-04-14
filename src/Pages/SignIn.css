@@ -48,6 +48,16 @@ body{
     background-color: #7768e5;
     cursor: pointer;
   }
+
+  .login-button:hover {
+    background-color: #6a5acd;
+  }
+  
+  .login-button:active {
+    background-color: #5a4abf;
+    transform: scale(0.95);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  }
   .big-box{
     
     align-items: center;
