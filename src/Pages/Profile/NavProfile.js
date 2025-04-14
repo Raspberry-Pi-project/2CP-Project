@@ -12,7 +12,7 @@ export const NavProfile = () => {
                 <img className={styles.navLogo} src={logo} alt="logo" />
             </div>
             <div className={styles.navRight}>
-                <button className={styles.logout}>Logout</button>
+                <button className={styles.logout} onClick={() => navigate("/")}>Logout</button>
                 <button className={styles.addUser} onClick={() => navigate("/SignUp")}>
                     + Add a new user
                 </button>
