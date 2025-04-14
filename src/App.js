@@ -9,27 +9,40 @@ import SignUp from "./Pages/SignUp";
 import { Fragment } from "react";
 import BannerApp from "./components/BannerApp/bann";
 import FullPage from "./Pages/NoQuizzespage/FullPage";
-import Duration from './Pages/CreationQuiz/Duration';
+import Duration from "./Pages/CreationQuiz/Duration";
 import Info from "./Pages/CreationQuiz/Info";
+import Generating from "./Pages/CreationQuiz/generating";
 import Finalization1 from "./Pages/CreationQuiz/Finalization1";
 import Finalization2 from "./Pages/CreationQuiz/Finalization2";
+import { AuthProvider } from "./context/AuthProvider";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { QuizProvider } from "./context/QuizProvider"; // Import the QuizProvider
+import HistoryPage from "./Pages/History/historypage";
+import QuizDetails from "./Pages/QuizDetails/quizdetails";
+import Results from "./Pages/ResultsPage/results";
+import DraftQuiz from "./Pages/DraftQuizPage/draftquiz";
+
 
 
 export default function App() {
   return (
-    <Router>
-      <MainLayout />
-    </Router>
+    <AuthProvider>
+      <QuizProvider>
+      <Router>
+        <MainLayout />
+       </Router>
+       </QuizProvider>
+    </AuthProvider>
   );
-}
+} 
 
 function MainLayout() {
   const location = useLocation();
 
-  // List of pages where BannerApp should be shown instead of Navbars
-  const bannerPages = ["/NoQuizzes", "/Info", "/Duration", "/Finalization1", "/Finalization2"]; //here add the pages of the web app
+  const bannerPages = ["/noquizzes", "/info", "/duration", "/generating", "/finalization1", "/finalization2", "/historypage", "/quizdetails" , "/results" , "/draftquiz"]; 
 
-  const showBanner = bannerPages.includes(location.pathname);
+  const showBanner = bannerPages.includes(location.pathname.toLowerCase());
+
 
   return (
     <Fragment>
@@ -37,14 +50,81 @@ function MainLayout() {
       {showBanner ? <BannerApp /> : <Navbars />}
 
       <Routes>
-        <Route path="/" element={<Home />} />
+
+      <Route path="/" element={<Home />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/NoQuizzes" element={<FullPage />} />
         <Route path="/Info" element={<Info />} />
         <Route path="/Duration" element={<Duration />} />
+        <Route path="/Generating" element={<Generating />} />
         <Route path="/Finalization1" element={<Finalization1 />} />
         <Route path="/Finalization2" element={<Finalization2 />} />
+        <Route path="/historypage" element={<HistoryPage />} />
+        <Route path="/quizdetails" element={<QuizDetails />} />
+        <Route path="/results" element={<Results />} />
+        <Route path="/draftquiz" element={<DraftQuiz />} />
+
+
+
+{/*}
+        <Route 
+          path="/NoQuizzes" 
+          element={
+            <ProtectedRoute allowedRoles={["teacher", "admin"]}>
+              <FullPage />
+            </ProtectedRoute>
+          } 
+        />
+
+        <Route 
+          path="/Info" 
+          element={
+            <ProtectedRoute allowedRoles={["admin", "teacher"]}>
+              <Info />
+            </ProtectedRoute>
+          } 
+        />
+
+        <Route 
+          path="/Duration" 
+          element={
+            <ProtectedRoute allowedRoles={["admin", "teacher"]}>
+              <Duration />
+            </ProtectedRoute>
+          } 
+        />
+
+        <Route 
+        path="/Generating"
+        element={
+          <ProtectedRoute allowedRoles={["admin", "teacher"]}>
+            <Generating />
+          </ProtectedRoute>
+        }
+      />
+        <Route 
+          path="/Finalization1" 
+          element={
+            <ProtectedRoute allowedRoles={["admin", "teacher"]}>
+              <Finalization1 />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/Finalization2" 
+          element={
+            <ProtectedRoute allowedRoles={["admin", "teacher"]}>
+              <Finalization2 />
+            </ProtectedRoute>
+          } 
+        />  
+        
+        
+        // ADD HERE THE OTHER 4 PAGES THAT I ADDED
+        
+        */}
+
       </Routes>
 
       {/* Hide Footer on pages that use BannerApp */}

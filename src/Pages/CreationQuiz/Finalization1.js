@@ -1,49 +1,112 @@
-import React, { useState } from 'react';
-import './Finalization1.css';
-import finalization1 from '../../photos/Group 4.png';
-import QuestionCard from '../../components/QuestionCard';
-import { useNavigate } from "react-router-dom";
+
+import { useState } from "react"
+import "./Finalization1.css"
+import { useNavigate } from "react-router-dom"
+import { faTrash, faPlus } from "@fortawesome/free-solid-svg-icons"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 
 const Finalization1 = () => {
-    const [questions, setQuestions] = useState([
-        { question: 'What is the capital of France?' },
-        { question: 'What is 2 + 2?' },
-        { question: 'Which planet is known as the Red Planet?' },
-    ]);
+  const navigate = useNavigate()
+  const [currentStep, setCurrentStep] = useState(4)
+  const [questions, setQuestions] = useState([
+    { id: 1, title: "Question 01" },
+    { id: 2, title: "Question 02" },
+    { id: 3, title: "Question 03" },
+  ])
 
-    const navigate = useNavigate();
+  const handleEdit = (id) => {
+    // Navigate to edit question page or open modal
+    console.log(`Edit question ${id}`)
+  }
 
-    const handleDelete = (index) => {
-        const updatedQuestions = questions.filter((_, i) => i !== index); 
-        setQuestions(updatedQuestions); 
-    };
+  const handleDelete = (id) => {
+    setQuestions(questions.filter((q) => q.id !== id))
+  }
 
-    return (
-        <div className="wrapperFinalization1">
-            <div className="rightFinalization1">
-                <h1 className="Finalization1">Finalization</h1>
-            </div>
-            <div className="leftFinalization1">
-                <img className="imageFinalization1" src={finalization1} alt="" />
-                <div className="questionsContainer">
-                    {questions.map((q, index) => (
-                        <QuestionCard
-                            key={index}
-                            question={q.question}
-                            onDelete={() => handleDelete(index)} 
-                        />
-                    ))}
-                    <button className="addQuestionButton" onClick={() => navigate("/Info")}>
-                        +
-                    </button>
-                </div>
-                <button className="PublishFinalization2">Publish</button>
-                <button className="saveindraft">Save in Draft</button>
-                <button className="CancelFinalization2">Cancel</button>
-                <button className="ReturnFinalization2">Return</button>
-            </div>
+  const handleAddQuestion = () => {
+    const newId = questions.length > 0 ? Math.max(...questions.map((q) => q.id)) + 1 : 1
+    setQuestions([...questions, { id: newId, title: `Question ${String(newId).padStart(2, "0")}` }])
+  }
+
+  const handlePublish = () => {
+    navigate("/finalization2")
+  }
+
+  const handleSaveInDraft = () => {
+    // Save quiz in draft
+    console.log("Saved in draft")
+    navigate("/draftquiz")
+  }
+
+  const handleCancel = () => {
+    // Cancel and go back
+    navigate("/generating")
+  }
+
+  return (
+    <div className="quiz-generator-container">
+
+      {/* Main Content */}
+      <div className="main-content">
+        {/* Sidebar */}
+        <div className="sidebar">
+          <h2>Finalazation</h2>
         </div>
-    );
-};
+
+        {/* Quiz Content */}
+        <div className="quiz-content">
+          {/* Step Indicator */}
+          <div className="step-indicator">
+            {[1, 2, 3, 4, 5].map((step) => (
+              <div
+                key={step}
+                className={`step ${currentStep === step ? "active" : ""} ${currentStep > step ? "completed" : ""}`}
+              >
+                {step}
+              </div>
+            ))}
+          </div>
+
+          {/* Questions List */}
+          <div className="questions-container">
+            <div className="questions-grid">
+              {questions.map((question) => (
+                <div key={question.id} className="question-card">
+                  <div className="question-actions">
+                    <button className="edit-btn" onClick={() => handleEdit(question.id)}>
+                      Edit
+                    </button>
+                    <button className="delete-btn" onClick={() => handleDelete(question.id)}>
+                      <FontAwesomeIcon icon={faTrash} />
+                    </button>
+                  </div>
+                  <div className="question-title">{question.title}</div>
+                </div>
+              ))}
+              <button className="add-question-btn" onClick={handleAddQuestion}>
+                <FontAwesomeIcon icon={faPlus} className="plus-icon" />
+              </button>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="action-buttons">
+            <button className="publish-btn" onClick={handlePublish}>
+              Next to Publish
+            </button>
+            <button className="draft-btn" onClick={handleSaveInDraft}>
+              Save in Draft
+            </button>
+            <button className="cancel-btn" onClick={handleCancel}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default Finalization1;
+>>>>>>> 47d7e324b7e66fa132a9d61df3dae6d0106bf740
+

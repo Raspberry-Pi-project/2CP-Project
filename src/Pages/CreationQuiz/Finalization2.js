@@ -1,32 +1,91 @@
-import React from 'react';
-import "./Finalization2.css";
-import finalization2 from "../../photos/Group 5.png";
+import { useState } from "react"
+import "./Finalization2.css"
+import { useNavigate } from "react-router-dom"
 
 const Finalization2 = () => {
-    return (
-            <div className="wrapperFinalization2">
-                <div className="rightFinalization2">
-                    <h1 className="Finalization2">Finalization</h1>
-                    
-                </div>
-                <div className="leftFinalization2">
-                <img className="imageFinalization2" src={finalization2} alt="" /><br />
-                  <label id="Yearlabel" htmlFor="Year of study">Year of study :</label><br/>
-                  <input type="text" id="Year" placeholder="Enter the year" required /><br/>
-                  <label id="Grouplabel" htmlFor="Group">Group :</label><br />
-                  <input type="text" id="Group" placeholder="Enter the group" required /><br/>
-                  <button className="PublishFinalization2">
-                    Publish
-                  </button>
-                  <button className="CancelFinalization2">
-                    Cancel
-                  </button>
-                  <button className="ReturnFinalization2" >
-                    Return
-                  </button>
-                </div>
+  const navigate = useNavigate()
+  const [currentStep, setCurrentStep] = useState(5)
+  const [yearOfStudy, setYearOfStudy] = useState("")
+  const [group, setGroup] = useState("")
+
+  const handleReturn = () => {
+    navigate("/Finalization1")
+  }
+
+  function handlePublish() {
+    // Publish quiz
+    console.log("Quiz published")
+    // Navigate to dashboard or confirmation page orr as needed i do not know wch hbin dyro ki npubliyiwh 
+    navigate("/dashboard")
+  }
+  const handleCancel = () => {
+    // Cancel and go back
+    navigate("/finalization1")
+  }
+
+  return (
+    <div className="quiz-generator-container">
+
+      {/* Main Content */}
+      <div className="main-content">
+        {/* Sidebar */}
+        <div className="sidebar">
+          <h2>Finalazation</h2>
+        </div>
+
+        {/* Quiz Content */}
+        <div className="quiz-content">
+          {/* Step Indicator */}
+          <div className="step-indicator">
+            {[1, 2, 3, 4, 5].map((step) => (
+              <div
+                key={step}
+                className={`step ${currentStep === step ? "active" : ""} ${currentStep > step ? "completed" : ""}`}
+              >
+                {step}
+              </div>
+            ))}
+          </div>
+
+          {/* Final Form */}
+          <div className="final-form">
+            <div className="form-group">
+              <label>YEAR OF STUDY :</label>
+              <input
+                type="text"
+                placeholder="enter the total score"
+                value={yearOfStudy}
+                onChange={(e) => setYearOfStudy(e.target.value)}
+                className="form-input"
+              />
             </div>
-    );
-};
+
+            <div className="form-group">
+              <label>GROUPE :</label>
+              <input
+                type="text"
+                placeholder="enter the total score"
+                value={group}
+                onChange={(e) => setGroup(e.target.value)}
+                className="form-input"
+              />
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="action-buttons final-actions">
+            <button className="publish-btn" onClick={handlePublish}>
+              Publish
+            </button>
+            <button className="cancel-btn" onClick={handleCancel}>
+              Cancel
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default Finalization2;

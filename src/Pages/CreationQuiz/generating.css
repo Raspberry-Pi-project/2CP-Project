@@ -1,0 +1,414 @@
+/* Main Layout */
+.quiz-generator-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+  }
+  
+  /* Main Content */
+  .main-content {
+    display: flex;
+    flex: 1;
+  }
+  
+  /* Sidebar */
+  .sidebar {
+    width: 200px;
+    background: linear-gradient(to bottom, #e6e6fa, #7b68ee);
+    padding: 20px;
+    color: #333;
+  }
+  
+  .sidebar h2 {
+    margin-top: 0;
+    font-size: 24px;
+  }
+  
+  /* Quiz Content */
+  .quiz-content {
+    flex: 1;
+    padding: 20px;
+    background-color: #f9f9f9;
+  }
+  
+  /* Step Indicator */
+  .step-indicator {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    position: relative;
+  }
+  
+  .step-indicator::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 20%;
+    right: 20%;
+    height: 2px;
+    background-color: #ccc;
+    z-index: 1;
+  }
+  
+  .step {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: white;
+    border: 2px solid #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 20px;
+    position: relative;
+    z-index: 2;
+  }
+  
+  .step.active {
+    border-color: #4cd3a5;
+    background-color: #4cd3a5;
+    color: white;
+  }
+  
+  .step.completed {
+    border-color: #4cd3a5;
+    background-color: white;
+    color: #333;
+  }
+  
+  /* Quiz Type Selection */
+  .quiz-type-selection {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  
+  .quiz-type-btn {
+    flex: 1;
+    padding: 15px;
+    border: 1px solid #e0e0e0;
+    background-color: white;
+    border-radius: 10px;
+    margin: 0 5px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+  }
+  
+  .quiz-type-btn.active {
+    background-color: #d7f5e7;
+    border-color: #d7f5e7;
+  }
+  
+  /* Question Input */
+  .question-container {
+    margin-bottom: 20px;
+  }
+  
+  .question-input {
+    width: 100%;
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 16px;
+    outline: none;
+  }
+  
+  /* Answer Options */
+  .options-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+  
+  .option-container {
+    position: relative;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 20px;
+    background-color: white;
+  }
+  
+  .option-icons {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 5px;
+  }
+  
+  .check-btn,
+  .delete-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid #e0e0e0;
+    background-color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  
+  .check-btn.selected {
+    background-color: #4cd3a5;
+    color: white;
+    border-color: #4cd3a5;
+  }
+  
+  .option-input {
+    width: 100%;
+    border: none;
+    outline: none;
+    font-size: 16px;
+    color: #666;
+  }
+  
+  .add-option-btn {
+    border: 2px dashed #7b68ee;
+    border-radius: 10px;
+    background-color: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    height: 100%;
+  }
+  
+  .plus-icon {
+    font-size: 30px;
+    color: #7b68ee;
+  }
+  
+  /* True/False Options */
+  .true-false-container {
+    display: flex;
+    margin-bottom: 20px;
+    max-width: 600px;
+  }
+  
+  .true-false-btn {
+    flex: 1;
+    padding: 15px 30px;
+    border: 1px solid #e0e0e0;
+    background-color: white;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .true-false-btn:first-child {
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+  }
+  
+  .true-false-btn:last-child {
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+  }
+  
+  .true-false-btn.active {
+    background-color: #d7f5e7;
+    border-color: #d7f5e7;
+  }
+  
+  /* Short Answer */
+  .short-answer-container {
+    margin-bottom: 20px;
+  }
+  
+  .short-answer-input {
+    width: 100%;
+    height: 150px;
+    padding: 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 16px;
+    resize: none;
+    outline: none;
+  }
+  
+  /* Quiz Settings */
+  .quiz-settings {
+    margin-top: 20px;
+  }
+  
+  .answer-type-container {
+    display: flex;
+    margin-bottom: 20px;
+  }
+  
+  .answer-type-btn {
+    padding: 10px 20px;
+    border: 1px solid #e0e0e0;
+    background-color: white;
+    border-radius: 20px;
+    margin-right: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .answer-type-btn.active {
+    background-color: #d7f5e7;
+    border-color: #d7f5e7;
+  }
+  
+  /* Common Controls */
+  .common-controls {
+    margin-top: 30px;
+  }
+  
+  .timer-points-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    gap: 20px;
+  }
+  
+  .timer-container,
+  .points-container {
+    display: flex;
+    align-items: center;
+    position: relative;
+  }
+  
+  .timer-icon {
+    margin-right: 10px;
+    margin-bottom: 0px;
+    margin-top: 30px;
+    font-size: 25px;
+  }
+  
+  .dropdown {
+    position: relative;
+  }
+  
+  .dropdown-btn {
+    padding: 10px 15px;
+    border: 1px solid #e0e0e0;
+    background-color: #f5f5f5;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    min-width: 120px;
+    justify-content: space-between;
+  }
+  
+  .dropdown-arrow {
+    margin-left: 10px;
+    font-size: 12px;
+  }
+  
+  .dropdown-content {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 5px;
+    width: 100%;
+    z-index: 10;
+    max-height: 200px;
+    overflow-y: auto;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .dropdown-item {
+    padding: 10px;
+    cursor: pointer;
+  }
+  
+  .dropdown-item:hover {
+    background-color: #f5f5f5;
+  }
+  
+/* Toggle Switch */
+.toggle-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0; /* Remove extra padding */
+    margin-top: 30px;
+
+}
+
+.toggle-switch {
+    display: flex;
+    border-radius: 20px;
+    overflow: hidden;
+    background: none;
+    border: 1px solid #ccc;
+    height: 32px; /* Ensure consistent height */
+}
+
+.toggle-option {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 15px 15px;
+    flex: 1;
+    text-align: center;
+    transition: all 0.3s ease;
+    line-height: 32px; /* Ensures text is centered vertically */
+    max-width: max-content;
+    padding: 5px 15px;
+    margin: 0 0px;
+    text-align: center;
+    flex: 1;
+    transition: all 0.3s ease;
+    font-size: 15px;
+    padding: 5px 10px;
+
+    
+}
+
+.toggle-option.selected {
+    background-color: #d7f5e7;
+    color: #0a3a3a;
+    border-radius: 15px;
+    max-width: max-content;
+    padding: 5px 15px;
+    margin: 0 0px;
+    text-align: center;
+    flex: 1;
+    transition: all 0.3s ease;
+    font-size: 15px;
+    padding: 5px 10px;
+}
+
+  /* Navigation Buttons */
+  .navigation-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px;
+    margin-bottom: 20px;
+    gap: 10px;
+    width: 100%;
+  }
+  
+  .return-btn,
+  .next-btn {
+    padding: 10px 30px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  
+  .return-btn {
+    background-color: #666;
+    color: white;
+  }
+  
+  .next-btn {
+    background-color: #4cd3a5;
+    color: white;
+  }
+  
+  
