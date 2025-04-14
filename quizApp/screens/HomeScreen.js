@@ -138,11 +138,45 @@ export default function HomeScreen({ navigation }) {
   }
 
   const handleQuizPress = (quiz) => {
-    // If it's the Physics quiz, navigate to Quizlet2 instead of Quizlet
-    if (quiz.id === "4") {
-      navigation.navigate("Quizlet2", { quiz: quiz })
-    } else {
-      navigation.navigate("Quizlet", { quiz: quiz })
+    // Navigate to QuizInfo screen first for all quizzes
+    navigation.navigate("QuizInfo", {
+      quiz: {
+        ...quiz,
+        description: getQuizDescription(quiz),
+        time: getQuizTime(quiz),
+        attempts: 2, // Default number of attempts
+      },
+    })
+  }
+
+  // Helper function to get quiz description
+  const getQuizDescription = (quiz) => {
+    switch (quiz.id) {
+      case "1":
+        return "A comprehensive assessment of English grammar skills, covering various aspects of language usage and comprehension."
+      case "2":
+        return "A brief quiz about math: a short assessment that tests mathematical skills and knowledge through various question types."
+      case "3":
+        return "Test your knowledge of general science concepts, from biology to physics and chemistry."
+      case "4":
+        return "Explore the fundamental laws of physics through this interactive quiz covering mechanics, energy, and more."
+      default:
+        return "A brief assessment to test your knowledge."
+    }
+  }
+
+  // Helper function to get quiz time
+  const getQuizTime = (quiz) => {
+    switch (quiz.id) {
+      case "1":
+      case "2":
+        return "1 hour"
+      case "3":
+        return "30 minutes"
+      case "4":
+        return "45 minutes"
+      default:
+        return "30 minutes"
     }
   }
 
