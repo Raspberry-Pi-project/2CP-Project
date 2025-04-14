@@ -72,10 +72,9 @@ const SimpleQuizCard = ({ quiz, onPress, index }) => {
   )
 }
 
-// Simple history card without animations
-const SimpleHistoryCard = ({ title, date, icon }) => {
+const SimpleHistoryCard = ({ title, date, icon, score, onPress }) => {
   return (
-    <View style={styles.historyCard}>
+    <TouchableOpacity style={styles.historyCard} onPress={onPress}>
       <View style={styles.historyCardContent}>
         <View style={styles.historyCardIconContainer}>
           <View
@@ -94,10 +93,10 @@ const SimpleHistoryCard = ({ title, date, icon }) => {
         </View>
 
         <View style={styles.historyCardScoreContainer}>
-          <Text style={styles.historyCardScore}>85%</Text>
+          <Text style={styles.historyCardScore}>{score}%</Text>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   )
 }
 
@@ -107,10 +106,10 @@ export default function HomeScreen({ navigation }) {
 
   // History data
   const historyData = [
-    { id: "1", title: "Math Quiz", date: "JAN", icon: "math" },
-    { id: "2", title: "English Quiz", date: "FEB", icon: "language" },
-    { id: "3", title: "Science Quiz", date: "MAR", icon: "math" },
-    { id: "4", title: "History Quiz", date: "APR", icon: "language" },
+    { id: "1", title: "Math Quiz", date: "JAN", icon: "math", score: 85, totalQuestions: 10, timeSpent: 450 },
+    { id: "2", title: "English Quiz", date: "FEB", icon: "language", score: 92, totalQuestions: 15, timeSpent: 720 },
+    { id: "3", title: "Science Quiz", date: "MAR", icon: "math", score: 78, totalQuestions: 12, timeSpent: 540 },
+    { id: "4", title: "History Quiz", date: "APR", icon: "language", score: 88, totalQuestions: 8, timeSpent: 380 },
   ]
 
   const togglePanel = () => {
@@ -186,6 +185,14 @@ export default function HomeScreen({ navigation }) {
     inputRange: [0, 1],
     outputRange: [80, height * 0.7],
   })
+
+  const handleHistoryQuizPress = (item) => {
+    navigation.navigate("QuizScore", {
+      score: (item.score * item.totalQuestions) / 100, // Convert percentage to actual score
+      totalQuestions: item.totalQuestions,
+      timeSpent: item.timeSpent,
+    })
+  }
 
   return (
     <View style={styles.container}>
@@ -289,7 +296,14 @@ export default function HomeScreen({ navigation }) {
 
             <ScrollView showsVerticalScrollIndicator={false}>
               {historyData.map((item) => (
-                <SimpleHistoryCard key={item.id} title={item.title} date={item.date} icon={item.icon} />
+                <SimpleHistoryCard
+                  key={item.id}
+                  title={item.title}
+                  date={item.date}
+                  icon={item.icon}
+                  score={item.score}
+                  onPress={() => handleHistoryQuizPress(item)}
+                />
               ))}
             </ScrollView>
           </Animated.View>
