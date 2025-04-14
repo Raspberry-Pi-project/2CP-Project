@@ -17,6 +17,12 @@ const Finalization1 = () => {
   
   // Get questions from quizData
   const questions = quizData.questions || [];
+  useEffect(() => {
+    setQuizData({
+      ...quizData,
+      status: "draft",
+    });
+  }, []);
 
   const handleEdit = (index) => {
     // Navigate back to generating page with the question to edit
@@ -81,14 +87,15 @@ const Finalization1 = () => {
       title: "",
       description: "",
       subject: "",
-      nb_attempts: 1,
-      duration: 30, // Default 30 minutes
+      nb_attempts:0 ,
+      duration:0 , // Default 30 minutes
       correctionType: "auto", // Default to auto-graded
-      score: 100, // Default score
+      score: 0, // Default score
       for_year: "", // To be filled by user
       for_groupe: "", // To be filled by user
       status: "draft", // Default to draft
       questions: [], // Array to hold questions
+      created_at : "",
     })
     // Navigate to draft quiz page
     navigate("/draftquiz");

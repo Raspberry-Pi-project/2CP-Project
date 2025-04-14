@@ -18,6 +18,7 @@ const Finalization2 = () => {
       ...quizData,
       for_year: parseInt(yearOfStudy),
       for_groupe: parseInt(group),
+      status: "published",
     });
   }, [yearOfStudy, group]);
 
