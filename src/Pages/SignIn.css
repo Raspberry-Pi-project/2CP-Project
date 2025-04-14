@@ -73,4 +73,20 @@ body{
   }
   
   
+
+  
+
+  .role-select {
+    width: 100%;
+    align-self: center;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    padding: 5px;
+    height: 36px; 
+    background-color: #f3f5f4;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px #f3f5f4(0, 0, 0, 0.1);
+
+  }
+
   

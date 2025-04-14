@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import "./quizdetails.css";
 import { useNavigate, useParams } from "react-router-dom";
@@ -16,6 +17,7 @@ const QuizDetails = () => {
   const [activeTab, setActiveTab] = useState("info");
   const { quizData, setQuizData } = useQuiz(); // Get quiz data from context
 
+
   // Sample quiz data
   /*const quizData = {
     id: quizId,
@@ -23,8 +25,7 @@ const QuizDetails = () => {
     subject: "Subject",
     language: "Language",
     description: "A quiz about artificial intelligence concepts and applications.",
-    image:
-      "https://aipromptopus.com/wp-content/uploads/2023/12/train-your-ai-.jpeg",
+    image: "https://aipromptopus.com/wp-content/uploads/2023/12/train-your-ai-.jpeg",
     questions: [
       {
         id: 1,
@@ -63,6 +64,7 @@ const QuizDetails = () => {
   const handleStartSession = () => {
     console.log("Starting new session");
     // Navigate to session setup page
+
     navigate(`/session-setup/${quizId}`); // this one must go to the page of finalization2 (to set group and year of study) then publish  it
   };
 
@@ -164,6 +166,7 @@ const QuizDetails = () => {
     }
   };
 
+
   return (
     <div className="quiz-details-container">
       {/* Main Content */}
@@ -216,11 +219,51 @@ const QuizDetails = () => {
             </div>
           </div>
           <div className="quiz-header-actions">
+            <button className="view-results-button" onClick={handleViewResults}>
+              <FontAwesomeIcon icon={faChartBar} /> View Results
+            </button>
+            <button className="start-session-button" onClick={handleStartSession}>
+              <FontAwesomeIcon icon={faPlay} /> Start Session
+            </button>
             <button className="edit-quiz-btn" onClick={handleEditQuiz}>
               <FontAwesomeIcon icon={faEdit} /> Edit Quiz
             </button>
           </div>
         </div>
+
+
+        {/* Quiz Information Section */}
+        <div className="quiz-info-section">
+          <h2 className="section-title">Quiz Information</h2>
+
+          <div className="tab-content">
+            <div className="quiz-details-info">
+              <div className="info-section">
+                <h3>Description</h3>
+                <p>{quizData.description}</p>
+              </div>
+              <div className="info-section">
+                <h3>Questions ({quizData.questions.length})</h3>
+                <div className="questions-list">
+                  {quizData.questions.map((question, index) => (
+                    <div key={question.id} className="question-item">
+                      <span className="question-number">{index + 1}.</span>
+                      <span className="question-text">{question.text}</span>
+                      <div className="question-meta">
+                        <span className="question-type">{question.type}</span>
+                        <span className="question-points">{question.points} points</span>
+                        <span className="question-time">{question.time}s</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/*Add Question button */}
+          <button className="add-question-btnnn" onClick={handleAddQuestion}>
+            <FontAwesomeIcon icon={faPlus} /> Add Question
 
         {/* Quiz Tabs */}
         <div className="quiz-tabs">
@@ -235,14 +278,14 @@ const QuizDetails = () => {
             onClick={() => setActiveTab("sessions")}
           >
             Sessions
+
           </button>
         </div>
-
-        {/* Tab Content */}
-        <div className="tab-content">{renderTabContent()}</div>
       </div>
     </div>
   );
 };
 
-export default QuizDetails;
+
+export default QuizDetails
+
