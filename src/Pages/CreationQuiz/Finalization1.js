@@ -108,5 +108,5 @@ const Finalization1 = () => {
 }
 
 export default Finalization1;
->>>>>>> 47d7e324b7e66fa132a9d61df3dae6d0106bf740
+
 
