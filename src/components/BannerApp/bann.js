@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import LOGO from "../../photos/Design (1) 1.png"
 import "./bann.css"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { useQuiz } from "../../context/QuizProvider"
 import {
   faHome,
   faBell,
@@ -21,7 +22,25 @@ const BannerApp = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [selectedYear, setSelectedYear] = useState("")
   const [selectedGroup, setSelectedGroup] = useState("")
-
+  const { quizData,setQuizData } = useQuiz() // Get setQuiz function from QuizProvider context
+  const handleNewQuiz = () => {
+    setQuizData({
+      ...quizData,
+      title: "",
+      description: "",
+      subject: "",
+      nb_attempts:0 ,
+      duration:0 , // Default 30 minutes
+      correctionType: "auto", // Default to auto-graded
+      score: 0, // Default score
+      for_year: "", // To be filled by user
+      for_groupe: "", // To be filled by user
+      status: "draft", // Default to draft
+      questions: [], // Array to hold questions
+      created_at : "",
+    })
+    navigate("/Info")
+  }
   const handleSearchClick = () => {
     setIsDropdownOpen(!isDropdownOpen)
   }
@@ -86,7 +105,7 @@ const BannerApp = () => {
 
         {/* Add Button  ; To Add QUIZZES*/}
         <div className="col-md-1 col-sm-2 text-center">
-          <button className="banner-btnnn" onClick={() => navigate("/Info")}>
+          <button className="banner-btnnn" onClick={handleNewQuiz}>
             <FontAwesomeIcon icon={faPlus} />
           </button>
         </div>

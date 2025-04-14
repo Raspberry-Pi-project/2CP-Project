@@ -1,100 +1,100 @@
-import { useState } from "react"
-import "./historypage.css"
-import { useNavigate } from "react-router-dom"
-import { faEllipsisVertical } from "@fortawesome/free-solid-svg-icons"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-
+import { useState, useEffect } from "react";
+import axios from "axios";
+import "./historypage.css";
+import { useNavigate } from "react-router-dom";
+import { faEllipsisVertical } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useAuth } from "../../context/AuthProvider";
+import { useQuiz } from "../../context/QuizProvider"; // Import the QuizProvider context
+import LOGO from "../../photos/Frame 39 (2).png";
 
 const HistoryPage = () => {
-  const navigate = useNavigate()
-  const [activeFilter, setActiveFilter] = useState("All")
-
-  // Sample quiz data
-  const quizzes = [
-    {
-      id: 1,
-      title: "AI Challenge",
-      difficulty: "Medium",
-      questions: 10,
-      image: "https://aipromptopus.com/wp-content/uploads/2023/12/train-your-ai-.jpeg",
-      category: "date",
-    },
-    {
-      id: 2,
-      title: "General Knowledge Challenge",
-      difficulty: "Medium",
-      questions: 10,
-      image:
-        "https://cdn.pixabay.com/photo/2024/06/20/11/59/data-8841981_1280.png",
-      category: "recently",
-    },
-    {
-      id: 3,
-      title: "General Knowledge Challenge",
-      difficulty: "Medium",
-      questions: 10,
-      image:
-        "https://miro.medium.com/v2/resize:fit:1200/1*J38nYZU7gzu-4lQmtjlSUw.jpeg",
-      category: "A-Z",
-    },
-    {
-      id: 4,
-      title: "General Knowledge Challenge",
-      difficulty: "Medium",
-      questions: 10,
-      image: "https://employees.mcco.com/img/msds.png",
-      category: "A-Z",
-    },
-    {
-      id: 5,
-      title: "General Knowledge Challenge",
-      difficulty: "Medium",
-      questions: 10,
-      image: "https://cdn.pixabay.com/photo/2022/12/09/03/55/big-data-7644537_640.jpg",
-      category: "A-Z",
-    },
-    {
-      id: 6,
-      title: "General Knowledge Challenge",
-      difficulty: "Medium",
-      questions: 10,
-      image:
-        "https://mir-s3-cdn-cf.behance.net/project_modules/1400/b2fc78180847927.6511e1644fae9.jpg",
-      category: "recently",
-    },
-    {
-      id: 7,
-      title: "General Knowledge Challenge",
-      difficulty: "Medium",
-      questions: 10,
-      image: "https://cdn.pixabay.com/photo/2015/08/19/05/16/large-895564_1280.jpg",
-      category: "Data structure",
-    },
-    {
-      id: 8,
-      title: "General Knowledge Challenge",
-      difficulty: "Medium",
-      questions: 10,
-      image: "https://cdn.pixabay.com/photo/2015/08/19/05/16/large-895564_1280.jpg",
-      category: "Arrays",
-    },
-  ]
+  const navigate = useNavigate();
+  const [activeFilter, setActiveFilter] = useState("All");
+  const [quizzes, setQuizzes] = useState([]); // State to store quizzes from the database
+  const [loading, setLoading] = useState(true); // Loading state for fetching quizzes
+  const [error, setError] = useState(null); // Error state if something goes wrong
+  const { user } = useAuth(); // Get user information from context (if needed)
+  const [page, setPage] = useState(1); // State for pagination
+  const [limit, setLimit] = useState(10); // State for number of quizzes per page
+  const { setQuizData } = useQuiz(); // Get setQuiz function from QuizProvider context
 
   // Filter options
-  const filters = ["All", "A-Z", "date", "recently", "Data structure", "Arrays"]
+  const filters = [
+    "All",
+    "A-Z",
+    "date",
+    "recently",
+    "Data structure",
+    "Arrays",
+  ];
+
+  // Fetch quizzes from the backend API
+  useEffect(() => {
+    const fetchQuizzes = async () => {
+      try {
+        // You might need to replace the URL with your own backend URL
+        const response = await axios.post(
+          "http://localhost:3000/teachers/getQuizzes",
+          { page, limit, id_teacher: user.id, status: "published" },
+          { withCredentials: true }
+        ); // Adjust the API endpoint accordingly
+        console.log("API response:", response.data);
+
+        // Ensure response.data is an array before setting it to state
+        const quizzesData = Array.isArray(response.data)
+          ? response.data
+          : response.data.quizzes || response.data.data || [];
+
+        setQuizzes(quizzesData); // Set quizzes data from the backend
+      } catch (error) {
+        setError("Failed to fetch quizzes.");
+        console.error("Error fetching quizzes:", error);
+        setQuizzes([]); // Set empty array on error
+      } finally {
+        setLoading(false); // Set loading to false when fetch is complete
+      }
+    };
+    setLoading(true); // Set loading to true before fetching
+    fetchQuizzes();
+  }, [page, limit, user.id]); // Added user.id to dependency array
+
+  useEffect(() => {
+    console.log("Quizzes updated:", quizzes); // Log quizzes data whenever it changes
+  }, [quizzes]);
 
   // Handle consulting a quiz
-  const handleConsult = (quizId) => {
-    navigate(`/quiz-details/${quizId}`)
-  }
+  const handleConsult = async (quizId) => {
+    try {
+      // Fetch quiz details from the backend API
+      const response = await axios.post(
+        "http://localhost:3000/teachers/getQuizDetails",
+        { id_quiz: quizId },
+        { withCredentials: true }
+      );
+      //console.log("Quiz details response:", response.data);
+      if (response.status !== 200) {
+        throw new Error("Failed to fetch quiz details");
+      } else {
+        setQuizData(response.data); // Set the selected quiz data in context
+        navigate(`/quizdetails`);
+      }
+    } catch (error) {
+      console.error("Error fetching quiz details:", error);
+    }
+  };
 
   // Handle quiz options
   const handleQuizOptions = (quizId) => {
-    console.log(`Options for quiz ${quizId}`)
-  }
+    console.log(`Options for quiz ${quizId}`);
+  };
 
   // Filter quizzes based on active filter
-  const filteredQuizzes = activeFilter === "All" ? quizzes : quizzes.filter((quiz) => quiz.category === activeFilter)
+  const filteredQuizzes = Array.isArray(quizzes)
+    ? activeFilter === "All"
+      ? quizzes
+      : quizzes.filter((quiz) => quiz.category === activeFilter)
+    : [];
 
   return (
     <div className="history-container">
@@ -105,7 +105,9 @@ const HistoryPage = () => {
           {filters.map((filter) => (
             <button
               key={filter}
-              className={`filter-tab ${activeFilter === filter ? "active" : ""}`}
+              className={`filter-tab ${
+                activeFilter === filter ? "active" : ""
+              }`}
               onClick={() => setActiveFilter(filter)}
             >
               {filter}
@@ -113,49 +115,75 @@ const HistoryPage = () => {
           ))}
         </div>
 
-        {/* Quiz Grid */}
-        <div className="quiz-grid">
-          {filteredQuizzes.map((quiz) => (
-            <div key={quiz.id} className="quiz-card">
-              <div className="quiz-image">
-                <img src={quiz.image || "/placeholder.svg"} alt={quiz.title} />
-              </div>
-              <div className="quiz-info">
-                <h3 className="quiz-title">{quiz.title}</h3>
-                <p className="quiz-difficulty">{quiz.difficulty}</p>
-                <p className="quiz-questions">{quiz.questions} Questions</p>
-                <div className="quiz-actions">
+        {/* Loading state */}
+        {loading && <p>Loading quizzes...</p>}
 
-
-
-{/****************************************************************************************************** 
----------->>>>> HERE WHERE YOU HAVE TO WORK WITH THE ID TO GO TO THE QUIZ DETAILS PAGE for each one 
-              
-                  <button className="consult-btn" onClick={() => handleConsult(quiz.id)}>
-                    CONSULTE
-                  </button>
-
-              */}
-
-
-
-              {/*HERE I HAVE JUST PUT EXMPLE TO TEST AND SEE THE FUNCTIONALITY OF QUIZ DETAILS OPTION, WHEN YOU FINISH THE FIRST DELETE THIIS ONE IT IS ADDITIONAL*/}
-              <button className="consult-btn" onClick={() => navigate("/quizdetails") }>
-                    CONSULTE
-                  </button>
-                 
-                  <button className="options-btn" onClick={() => handleQuizOptions(quiz.id)}>
-                    <FontAwesomeIcon icon={faEllipsisVertical} />
-                  </button>
-                </div>
-              </div>
+        {/* Error state */}
+        {error && <p>{error}</p>}
+        {/* No quizzes found state */}
+        {quizzes.length === 0 && !loading && !error && (
+          <div className="full-page-container">
+            <div className="logo-container">
+              <img src={LOGO} alt="Logo" className="full-page-logo" />
             </div>
-          ))}
-        </div>
+          </div>
+        )}
+        {/* Quiz Grid */}
+        {!loading && !error && quizzes.length > 0 && (
+          <div className="quiz-grid">
+            {Array.isArray(quizzes) && quizzes.length > 0 ? (
+              quizzes.map((quiz, index) => (
+                <div key={quiz.id_quiz} className="quiz-card">
+                  <div className="quiz-image">
+                    <img
+                      src={quiz.image || "/placeholder.svg"}
+                      alt={quiz.title}
+                    />
+                  </div>
+                  <div className="quiz-info">
+                    <h3 className="quiz-title">{quiz.title}</h3>
+                    <h3 className="quiz-title">ID :{quiz.id_quiz}</h3>
+                    <p className="quiz-questions">
+                      {quiz.totalQuestions} Questions
+                    </p>
+                    <p className="quiz-questions">
+                      For Year{" "}
+                      {quiz.for_year === 0 || quiz.for_year === NaN
+                        ? "all"
+                        : quiz.for_year}{" "}
+                      Group{" "}
+                      {quiz.for_groupe === 0 || quiz.for_groupe === NaN
+                        ? "all"
+                        : quiz.for_groupe}{" "}
+                    </p>
+                    <div className="quiz-actions">
+                      {/* Button to consult the quiz details */}
+                      <button
+                        className="consult-btn"
+                        onClick={() => handleConsult(quiz.id_quiz)}
+                      >
+                        CONSULT
+                      </button>
+
+                      {/* Button for quiz options */}
+                      <button
+                        className="options-btn"
+                        onClick={() => handleQuizOptions(quiz.id_quiz)}
+                      >
+                        <FontAwesomeIcon icon={faEllipsisVertical} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p>No quizzes found</p>
+            )}
+          </div>
+        )}
       </div>
     </div>
-  )
-}
+  );
+};
 
 export default HistoryPage;
-
