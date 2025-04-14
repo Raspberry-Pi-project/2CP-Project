@@ -10,6 +10,7 @@ import QuizletScreen2 from "./screens/QuizletScreen2"
 import QuizScreen from "./screens/QuizScreen"
 import QuizScoreScreen from "./screens/QuizScoreScreen"
 import ProfileScreen from "./screens/ProfileScreen"
+import QuizInfoScreen from "./screens/QuizInfoScreen"
 import { LogBox } from "react-native"
 
 // Ignore specific warnings that might be causing issues
@@ -30,6 +31,7 @@ export default function App() {
           <Stack.Screen name="First" component={FirstScreen} />
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Home" component={HomeScreen} />
+          <Stack.Screen name="QuizInfo" component={QuizInfoScreen} />
           <Stack.Screen name="Quizlet" component={QuizletScreen} />
           <Stack.Screen name="Quizlet2" component={QuizletScreen2} />
           <Stack.Screen name="Quiz" component={QuizScreen} />
