@@ -1,25 +1,45 @@
-import { View, StyleSheet, TouchableOpacity, Text } from "react-native"
+import { View, StyleSheet, TouchableOpacity, Text, Animated } from "react-native"
+import { Feather } from "@expo/vector-icons"
 import { colors } from "../constants/colors"
 
-export default function BottomNavigation({ onArrowPress, isPanelExpanded, onProfilePress }) {
+export default function BottomNavigation({
+  onArrowPress,
+  isPanelExpanded,
+  onProfilePress,
+  onSearchPress,
+}) {
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.navItem}>
-        <Text style={[styles.navIcon, styles.activeIcon]}>🏠</Text>
+      <TouchableOpacity style={styles.navItem} onPress={onSearchPress}>
+        <Feather name="search" size={24} color={colors.primary} />
       </TouchableOpacity>
+
       <TouchableOpacity style={styles.navItem}>
-        <Text style={styles.navIcon}>🔍</Text>
+        <Text style={styles.navIcon}>🏠</Text>
       </TouchableOpacity>
+
       <TouchableOpacity style={styles.addButton} onPress={onArrowPress} activeOpacity={0.7}>
         <View style={styles.addButtonInner}>
-          <Text style={styles.addIcon}>{isPanelExpanded ? "↓" : "↑"}</Text>
+          <Animated.View
+            style={{
+              transform: [
+                {
+                  rotate: isPanelExpanded ? "180deg" : "0deg",
+                },
+              ],
+            }}
+          >
+            <Feather name="chevron-up" size={24} color="white" />
+          </Animated.View>
         </View>
       </TouchableOpacity>
+
       <TouchableOpacity style={styles.navItem}>
         <Text style={styles.navIcon}>📚</Text>
       </TouchableOpacity>
+
       <TouchableOpacity style={styles.navItem} onPress={onProfilePress}>
-        <Text style={styles.navIcon}>👤</Text>
+        <Feather name="user" size={24} color={colors.primary} />
       </TouchableOpacity>
     </View>
   )
@@ -39,33 +59,39 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 12,
     paddingHorizontal: 24,
-    zIndex: 2, // Ensure it's above the live quizzes panel
+    zIndex: 2,
   },
   navItem: {
     alignItems: "center",
     justifyContent: "center",
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "white",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   navIcon: {
     fontSize: 24,
     color: colors.muted,
-  },
-  activeIcon: {
-    color: colors.primary,
   },
   addButton: {
     marginTop: -32,
   },
   addButtonInner: {
     backgroundColor: colors.primary,
-    borderRadius: 24,
-    width: 48,
-    height: 48,
+    borderRadius: 30,
+    width: 60,
+    height: 60,
     alignItems: "center",
     justifyContent: "center",
-  },
-  addIcon: {
-    fontSize: 24,
-    color: colors.white,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 4,
   },
 })
-

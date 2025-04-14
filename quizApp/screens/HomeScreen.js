@@ -11,6 +11,7 @@ import {
   FlatList,
   Dimensions,
   Animated,
+  TextInput,
 } from "react-native"
 import { colors } from "../constants/colors"
 import CustomStatusBar from "../components/CustomStatusBar"
@@ -18,6 +19,7 @@ import BottomNavigation from "../components/BottomNavigation"
 import { QUIZ_DATA } from "../data/quizData"
 import Svg, { Path } from "react-native-svg"
 import { LinearGradient } from "expo-linear-gradient"
+import { Feather } from "@expo/vector-icons"
 
 const { width, height } = Dimensions.get("window")
 
@@ -102,7 +104,10 @@ const SimpleHistoryCard = ({ title, date, icon, score, onPress }) => {
 
 export default function HomeScreen({ navigation }) {
   const [isExpanded, setIsExpanded] = useState(false)
+  const [isSearchActive, setIsSearchActive] = useState(false)
+  const [searchText, setSearchText] = useState("")
   const panelAnimation = useRef(new Animated.Value(0)).current
+  const searchInputRef = useRef(null)
 
   // History data
   const historyData = [
@@ -111,6 +116,13 @@ export default function HomeScreen({ navigation }) {
     { id: "3", title: "Science Quiz", date: "MAR", icon: "math", score: 78, totalQuestions: 12, timeSpent: 540 },
     { id: "4", title: "History Quiz", date: "APR", icon: "language", score: 88, totalQuestions: 8, timeSpent: 380 },
   ]
+
+  // Filter quizzes based on search text
+  const filteredQuizzes = QUIZ_DATA.filter(
+    (quiz) =>
+      quiz.title.toLowerCase().includes(searchText.toLowerCase()) ||
+      quiz.subtitle.toLowerCase().includes(searchText.toLowerCase()),
+  )
 
   const togglePanel = () => {
     const toValue = isExpanded ? 0 : 1
@@ -123,6 +135,20 @@ export default function HomeScreen({ navigation }) {
     }).start()
 
     setIsExpanded(!isExpanded)
+  }
+
+  // Toggle search input
+  const toggleSearch = () => {
+    setIsSearchActive(!isSearchActive)
+    if (!isSearchActive) {
+      // Focus the input when search is activated
+      setTimeout(() => {
+        searchInputRef.current?.focus()
+      }, 100)
+    } else {
+      // Clear search when deactivated
+      setSearchText("")
+    }
   }
 
   // Clean up animation when component unmounts
@@ -227,17 +253,47 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.sectionTitleContainer}>
             <View style={styles.sectionTitleDecoration} />
             <Text style={styles.sectionTitle}>LIVE QUIZZES</Text>
+
+            {/* Search Input */}
+            {isSearchActive ? (
+              <View style={styles.searchInputContainer}>
+                <TextInput
+                  ref={searchInputRef}
+                  style={styles.searchInput}
+                  placeholder="Search quizzes..."
+                  placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                  value={searchText}
+                  onChangeText={setSearchText}
+                  autoCapitalize="none"
+                />
+                <TouchableOpacity onPress={toggleSearch} style={styles.searchCloseButton}>
+                  <Feather name="x" size={18} color="white" />
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity onPress={toggleSearch} style={styles.searchButton}>
+                <Feather name="search" size={18} color="white" />
+              </TouchableOpacity>
+            )}
           </View>
 
           <View style={styles.liveQuizzes}>
-            <FlatList
-              data={QUIZ_DATA}
-              renderItem={renderQuizItem}
-              keyExtractor={(item) => item.id}
-              showsVerticalScrollIndicator={false}
-              scrollEnabled={false}
-              contentContainerStyle={{ paddingHorizontal: 24 }}
-            />
+            {filteredQuizzes.length > 0 ? (
+              <FlatList
+                data={filteredQuizzes}
+                renderItem={renderQuizItem}
+                keyExtractor={(item) => item.id}
+                showsVerticalScrollIndicator={false}
+                scrollEnabled={false}
+                contentContainerStyle={{ paddingHorizontal: 24 }}
+              />
+            ) : (
+              <View style={styles.noResultsContainer}>
+                <Feather name="search" size={40} color="rgba(255, 255, 255, 0.5)" />
+                <Text style={styles.noResultsText}>No quizzes found</Text>
+                <Text style={styles.noResultsSubtext}>Try a different search term</Text>
+              </View>
+            )}
           </View>
 
           {/* Spacer for bottom panel */}
@@ -309,7 +365,12 @@ export default function HomeScreen({ navigation }) {
           </Animated.View>
         </Animated.View>
 
-        <BottomNavigation onArrowPress={togglePanel} isPanelExpanded={isExpanded} onProfilePress={goToProfile} />
+        <BottomNavigation
+          onArrowPress={togglePanel}
+          isPanelExpanded={isExpanded}
+          onProfilePress={goToProfile}
+          onSearchPress={toggleSearch}
+        />
       </LinearGradient>
     </View>
   )
@@ -380,6 +441,53 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: colors.white,
     letterSpacing: 1,
+    flex: 1,
+  },
+  searchButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  searchInputContainer: {
+    flex: 1,
+    height: 36,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    marginLeft: 10,
+  },
+  searchInput: {
+    flex: 1,
+    height: "100%",
+    color: "white",
+    fontSize: 14,
+  },
+  searchCloseButton: {
+    width: 24,
+    height: 24,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  noResultsContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 40,
+  },
+  noResultsText: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "bold",
+    marginTop: 16,
+  },
+  noResultsSubtext: {
+    color: "rgba(255, 255, 255, 0.7)",
+    fontSize: 14,
+    marginTop: 8,
   },
   liveQuizzes: {
     marginBottom: 24,
