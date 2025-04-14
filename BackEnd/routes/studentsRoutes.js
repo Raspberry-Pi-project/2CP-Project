@@ -10,17 +10,17 @@ const { startAttempt } = require("../controllers/attemptsController");
 
 const router = express.Router();
 
-router.get("/getAvailableQuizzes", getQuizzes);
-router.get("/getQuizDetails", getQuizDetails);
+router.post("/getAvailableQuizzes", getQuizzes);
+router.post("/getQuizDetails", getQuizDetails);
 
 router.post("/startAttempt",startAttempt);
 router.post("/submitAnswers", submitAnswers);
 
 
-router.get("/getQuizResults", getQuizResults);
-router.get("/history", getHistory);
+router.post("/getQuizResults", getQuizResults);
+router.post("/history", getHistory);
 
-router.get("/profile",getStudents)
+router.post("/profile",getStudents)
 
 
 module.exports = router;

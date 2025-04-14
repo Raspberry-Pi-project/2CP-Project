@@ -9,13 +9,13 @@ const router = express.Router();
 
 
 //Teacher routes
-router.get("/getTeachers" , getTeachers )
+router.post("/getTeachers" , getTeachers )
 router.put("/updateTeacher" , updateTeacher)
 router.delete("/deleteTeacher" , deleteTeacher)
 
 
 //Students routes
-router.get("/getStudents" , getStudents)
+router.post("/getStudents" , getStudents)
 router.put("/updateStudent" , updateStudent)
 router.delete("/deleteStudent" , deleteStudent)
 

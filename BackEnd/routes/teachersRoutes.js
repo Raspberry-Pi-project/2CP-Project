@@ -17,14 +17,14 @@ router.put("/updateQuiz" , updateQuiz);
 router.get("/getQuizDetails" , getQuizDetails);
 
 //students functions
-router.get("/getStudents" , getStudents)
-router.get("countParticipants",countParticipants)
-router.get("/getStudentResults", getQuizResults);
+router.post("/getStudents" , getStudents)
+router.post("countParticipants",countParticipants)
+router.post("/getStudentResults", getQuizResults);
 
 
 
 router.put("/calculatePercentage",calculatePercentage);
-router.get("/getAllResults", getAllResults);
+router.post("/getAllResults", getAllResults);
 
 
 module.exports = router;
