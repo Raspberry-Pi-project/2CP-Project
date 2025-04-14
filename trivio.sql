@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1
--- Généré le : dim. 13 avr. 2025 à 19:57
+-- Généré le : lun. 14 avr. 2025 à 23:32
 -- Version du serveur : 10.4.32-MariaDB
 -- Version de PHP : 8.2.12
 
@@ -73,7 +73,33 @@ INSERT INTO `answers` (`id_answer`, `id_question`, `answer_text`, `correct`) VAL
 (10, 7, 'TRUE', 0),
 (11, 7, 'FALSE', 1),
 (12, 8, 'TRUE', 0),
-(13, 8, 'FALSE', 1);
+(13, 8, 'FALSE', 1),
+(14, 9, 'TRUE', 1),
+(15, 9, 'FALSE', 0),
+(16, 10, 'TRUE', 0),
+(17, 10, 'FALSE', 1),
+(18, 11, 'TRUE', 1),
+(19, 11, 'FALSE', 0),
+(20, 12, 'TRUE', 0),
+(21, 12, 'FALSE', 1),
+(22, 13, 'TRUE', 1),
+(23, 13, 'FALSE', 0),
+(24, 14, 'TRUE', 0),
+(25, 14, 'FALSE', 1),
+(26, 15, 'TRUE', 1),
+(27, 15, 'FALSE', 0),
+(28, 16, 'TRUE', 0),
+(29, 16, 'FALSE', 1),
+(30, 17, 'TRUE', 1),
+(31, 17, 'FALSE', 0),
+(32, 18, 'TRUE', 0),
+(33, 18, 'FALSE', 1),
+(34, 19, 'TRUE', 1),
+(35, 19, 'FALSE', 0),
+(36, 20, 'TRUE', 0),
+(37, 20, 'FALSE', 1),
+(38, 21, 'TRUE', 1),
+(39, 21, 'FALSE', 0);
 
 -- --------------------------------------------------------
 
@@ -133,7 +159,20 @@ INSERT INTO `questions` (`id_question`, `id_quiz`, `duration`, `question_text`, 
 (5, 15, 30, 'water', 1, 2, 'true-false', '2025-04-13 15:02:01', 0),
 (6, 16, 30, 'water', 1, 2, 'true-false', '2025-04-13 15:05:35', 0),
 (7, 16, 0, 'ddzd', 2, 1, 'true-false', '2025-04-13 15:05:35', 0),
-(8, 17, 0, 'a', 1, 1, 'true-false', '2025-04-13 15:35:57', 0);
+(8, 17, 0, 'a', 1, 1, 'true-false', '2025-04-13 15:35:57', 0),
+(9, 18, 0, 'hyfgygf', 1, 1, 'true-false', '2025-04-13 18:41:45', 0),
+(10, 18, 0, 'dhbf', 2, 1, 'true-false', '2025-04-13 18:41:45', 0),
+(11, 19, 0, 'hyfgygf', 1, 1, 'true-false', '2025-04-14 12:04:04', 0),
+(12, 19, 0, 'dhbf', 2, 1, 'true-false', '2025-04-14 12:04:04', 0),
+(13, 20, 0, 'hyfgygf', 1, 1, 'true-false', '2025-04-14 12:04:43', 0),
+(14, 20, 0, 'dhbf', 2, 1, 'true-false', '2025-04-14 12:04:43', 0),
+(15, 21, 0, 'hyfgygf', 1, 1, 'true-false', '2025-04-14 12:07:13', 0),
+(16, 21, 0, 'dhbf', 2, 1, 'true-false', '2025-04-14 12:07:13', 0),
+(17, 22, 0, 'hyfgygf', 1, 1, 'true-false', '2025-04-14 16:27:37', 0),
+(18, 22, 0, 'dhbf', 2, 1, 'true-false', '2025-04-14 16:27:37', 0),
+(19, 23, 0, 'hyfgygf', 1, 1, 'true-false', '2025-04-14 16:30:50', 0),
+(20, 23, 0, 'dhbf', 2, 1, 'true-false', '2025-04-14 16:30:50', 0),
+(21, 23, 0, 'ayayaya', 3, 1, 'true-false', '2025-04-14 16:30:50', 0);
 
 -- --------------------------------------------------------
 
@@ -155,23 +194,30 @@ CREATE TABLE `quizzes` (
   `for_groupe` int(11) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `nb_attempts` int(11) NOT NULL DEFAULT 1,
-  `image` blob DEFAULT NULL
+  `image` blob DEFAULT NULL,
+  `navigation` varchar(100) NOT NULL DEFAULT 'dynamic'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Déchargement des données de la table `quizzes`
 --
 
-INSERT INTO `quizzes` (`id_quiz`, `title`, `description`, `duration`, `correctionType`, `id_teacher`, `subject`, `status`, `score`, `for_year`, `for_groupe`, `created_at`, `nb_attempts`, `image`) VALUES
-(9, 'test 7', 'just a test', 0, '', 11, 'CS', 'draft', 0, 2, 9, '2025-02-23 18:46:03', 0, ''),
-(10, 'test quiz', 'teeeeest', 0, '', 11, 'sfsd', 'draft', 0, 2, 9, '2025-02-25 05:55:03', 0, ''),
-(11, 'test quiz', 'teeeeest', 0, '', 11, 'sfsd', 'draft', 0, NULL, NULL, '2025-02-25 05:55:18', 0, ''),
-(12, 'test quiz', 'teeeeest', 0, '', 11, 'sfsd', 'draft', 0, NULL, NULL, '2025-02-25 06:24:01', 0, ''),
-(13, 'test quiz', 'teeeeest', 0, '', 11, 'sfsd', 'draft', 0, NULL, NULL, '2025-02-25 06:27:52', 0, ''),
-(14, 'hhu', 'h', 30, 'auto', 12, 'gyg', 'draft', 100, 7, 2, '2025-04-13 12:22:52', 1, ''),
-(15, 'c', 'a', 30, 'auto', 12, 'ad', 'draft', 100, 4, 2, '2025-04-13 15:02:01', 1, ''),
-(16, 'c', 'a', 30, 'auto', 12, 'ad', 'draft', 100, 4, 2, '2025-04-13 15:05:35', 1, ''),
-(17, 's', 's', 30, 'auto', 12, 'a', 'published', 100, 4, 2, '2025-04-13 15:35:57', 1, '');
+INSERT INTO `quizzes` (`id_quiz`, `title`, `description`, `duration`, `correctionType`, `id_teacher`, `subject`, `status`, `score`, `for_year`, `for_groupe`, `created_at`, `nb_attempts`, `image`, `navigation`) VALUES
+(9, 'test 7', 'just a test', 0, '', 11, 'CS', 'draft', 0, 2, 9, '2025-02-23 18:46:03', 0, '', ''),
+(10, 'test quiz', 'teeeeest', 0, '', 11, 'sfsd', 'draft', 0, 2, 9, '2025-02-25 05:55:03', 0, '', ''),
+(11, 'test quiz', 'teeeeest', 0, '', 11, 'sfsd', 'draft', 0, NULL, NULL, '2025-02-25 05:55:18', 0, '', ''),
+(12, 'test quiz', 'teeeeest', 0, '', 11, 'sfsd', 'draft', 0, NULL, NULL, '2025-02-25 06:24:01', 0, '', ''),
+(13, 'test quiz', 'teeeeest', 0, '', 11, 'sfsd', 'draft', 0, NULL, NULL, '2025-02-25 06:27:52', 0, '', ''),
+(14, 'hhu', 'h', 30, 'auto', 12, 'gyg', 'draft', 100, 7, 2, '2025-04-13 12:22:52', 1, '', ''),
+(15, 'c', 'a', 30, 'auto', 12, 'ad', 'draft', 100, 4, 2, '2025-04-13 15:02:01', 1, '', ''),
+(16, 'c', 'a', 30, 'auto', 12, 'ad', 'draft', 100, 4, 2, '2025-04-13 15:05:35', 1, '', ''),
+(17, 's', 's', 30, 'auto', 12, 'a', 'published', 100, 4, 2, '2025-04-13 15:35:57', 1, '', ''),
+(18, 'fefef', 'fyegfy', 30, 'auto', 12, 'efbhdf', 'draft', 100, NULL, NULL, '2025-04-13 18:41:45', 1, NULL, ''),
+(19, 'fefef', 'fyegfy', 30, 'auto', 12, 'efbhdf', 'draft', 100, 2, 2, '2025-04-14 12:04:04', 1, NULL, ''),
+(20, 'fefef', 'fyegfy', 30, 'auto', 12, 'efbhdf', 'draft', 100, 2, 1, '2025-04-14 12:04:43', 1, NULL, ''),
+(21, 'fefef', 'fyegfy', 30, 'auto', 12, 'efbhdf', 'published', 100, 4, 4, '2025-04-14 12:07:13', 1, NULL, ''),
+(22, 'fefef', 'fyegfy', 30, 'auto', 12, 'efbhdf', 'published', 100, 4, 4, '2025-04-14 16:27:37', 1, NULL, ''),
+(23, 'fefef', 'fyegfy', 30, 'auto', 12, 'efbhdf', 'draft', 100, 4, 4, '2025-04-14 16:30:50', 1, NULL, '');
 
 -- --------------------------------------------------------
 
@@ -318,7 +364,7 @@ ALTER TABLE `admins`
 -- AUTO_INCREMENT pour la table `answers`
 --
 ALTER TABLE `answers`
-  MODIFY `id_answer` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id_answer` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
 
 --
 -- AUTO_INCREMENT pour la table `attempts`
@@ -336,13 +382,13 @@ ALTER TABLE `published_quizzes`
 -- AUTO_INCREMENT pour la table `questions`
 --
 ALTER TABLE `questions`
-  MODIFY `id_question` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id_question` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT pour la table `quizzes`
 --
 ALTER TABLE `quizzes`
-  MODIFY `id_quiz` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id_quiz` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT pour la table `students`
