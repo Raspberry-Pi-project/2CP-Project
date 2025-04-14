@@ -6,12 +6,17 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import {
   faHome,
   faBell,
-  faUserCircle,
   faPlus,
   faSearch,
   faChevronDown,
   faTimes,
+  faBook,
+  faUser,
+  faQuestionCircle,
+  faCog,
+  faSignOutAlt,
 } from "@fortawesome/free-solid-svg-icons"
+import HamburgerMenu from "./hamburger-menu"
 
 const Link = ({ to, children }) => <a href={to}>{children}</a>
 
@@ -21,6 +26,39 @@ const BannerApp = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [selectedYear, setSelectedYear] = useState("")
   const [selectedGroup, setSelectedGroup] = useState("")
+
+  const navigationRoutes = [
+    {
+      name: "Home",
+      path: "/noquizzes",
+      icon: <FontAwesomeIcon icon={faHome} />,
+    },
+    {
+      name: "Profile",
+      path: "/TeacherProfile",
+      icon: <FontAwesomeIcon icon={faUser} />,
+    },
+    {
+      name: "History",
+      path: "/historypage",
+      icon: <FontAwesomeIcon icon={faBook} />,
+    },
+    {
+      name: "Create Quiz",
+      path: "/Info",
+      icon: <FontAwesomeIcon icon={faPlus} />,
+    },
+    {
+      name: "Draft",
+      path: "/draftquiz",
+      icon: <FontAwesomeIcon icon={faQuestionCircle} />,
+    },
+    {
+      name: "Logout",
+      path: "/",
+      icon: <FontAwesomeIcon icon={faSignOutAlt} />,
+    },
+  ]
 
   const handleSearchClick = () => {
     setIsDropdownOpen(!isDropdownOpen)
@@ -33,12 +71,12 @@ const BannerApp = () => {
 
   const selectYear = (year) => {
     setSelectedYear(year)
-    setSearchMode("group") 
+    setSearchMode("group")
   }
 
   const selectGroup = (group) => {
     setSelectedGroup(group)
-    setIsDropdownOpen(false) 
+    setIsDropdownOpen(false)
   }
 
   const resetSearch = (e) => {
@@ -49,7 +87,6 @@ const BannerApp = () => {
     setSelectedYear("")
     setSelectedGroup("")
   }
-
 
   const getPlaceholderText = () => {
     if (selectedYear && selectedGroup) {
@@ -75,6 +112,13 @@ const BannerApp = () => {
   return (
     <div className="banner-container">
       <div className="banner-row py-2">
+        {/* Hamburger Menu - Remove the extra div wrapper */}
+        <div className="col-md-1 col-sm-2 text-center">
+          <div className="banner-btn" >
+          <HamburgerMenu routes={navigationRoutes} />
+          </div>
+        </div>
+
         {/* Home Button */}
         <div className="col-md-1 col-sm-2 text-center">
           <Link to="/noquizzes">
@@ -113,7 +157,6 @@ const BannerApp = () => {
                     <div className="search-option" onClick={() => selectSearchMode("year")}>
                       Select Year and Group
                     </div>
-
                   </div>
                 )}
 
@@ -156,17 +199,10 @@ const BannerApp = () => {
           </button>
         </div>
 
-        {/* Account Circle */}
-        <div className="col-md-1 col-sm-3 text-center">
-          <div className="banner-profile">
-            <FontAwesomeIcon icon={faUserCircle} size="2x" />
-          </div>
-        </div>
-
         {/* Small Logo */}
         <div className="col-md-2 col-sm-3 text-center">
           <Link to="/">
-            <img src={LOGO || "/placeholder.svg"} alt="Logo" className="banner-logo" />
+          <img src={LOGO} alt="Logo" className="banner-logo" />
           </Link>
         </div>
       </div>

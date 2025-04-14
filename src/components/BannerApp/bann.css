@@ -1,8 +1,8 @@
-
-body, html {
+.banner-row {
+  width: 100%;
   overflow-x: hidden;
-  margin: 0;
-  padding: 0;
+  max-width: 100vw;
+  flex-wrap: nowrap;
 }
 
 .banner-container {
@@ -23,7 +23,6 @@ body, html {
     padding: 0px;
   }
   
-  /* Home Button & Notifications */
   .banner-btn {
     background: none;
     border:1px solid #d7d6d688;
@@ -38,7 +37,7 @@ body, html {
     margin-left: 5px;
     margin-right: 0px;
   }
-  
+
   .banner-btn:hover {
     background: rgba(0, 0, 0, 0.1);
     border-radius: 5px;
@@ -84,22 +83,11 @@ body, html {
   justify-content: center; 
   align-items: center;    
   margin: 0 auto;
+  overflow: auto !important;
   }
+
   
-  /* Account Circle */
-  .banner-profile {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background-color: #ddd;
-    color: #666;
-    padding-right: 0px;
-    margin-left: 35px;
-  }
-  
+
   /* Small Logo */
   .banner-logo {
     width: 250px;
@@ -262,9 +250,51 @@ body, html {
 }
 
 .year-badge {
-  background-color: #5c00a7;
+  background-color: var(--main-color);
 }
 
 .group-badge {
-  background-color: #7e22ce;
+  background-color: #c498eb;
+}
+
+
+
+/* Remove padding and margin from banner container */
+.banner-container {
+  padding: 0;
+  margin: 0;
+}
+
+/* Adjust the banner row to be more compact */
+.banner-row {
+/* Reduce gap between items */
+  padding: 0;
+/* Set a fixed height */
+}
+
+
+
+/* Adjust the hamburger menu positioning */
+.hamburger-toggle {
+  margin: 0;
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 23px !important;
+}
+
+
+* {
+  box-sizing: border-box;
+}
+
+body, html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
