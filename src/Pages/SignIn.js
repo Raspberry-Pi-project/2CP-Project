@@ -81,19 +81,20 @@ const SignIn = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
-              <br />
               <label htmlFor="role">Role</label>
-              <br />
-              <input
-                type="text"
-                id="role"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                placeholder="admin / teacher"
-                required
-              />
-              <br />
-
+<br />
+<select
+  id="role"
+  value={role}
+  onChange={(e) => setRole(e.target.value)}
+  required
+  className="role-select"
+>
+  <option value="" disabled>Select a role</option>
+  <option value="admin">Admin</option>
+  <option value="teacher">Teacher</option>
+</select>
+<br />
               {/* <p><Link to="/NoQuizzes"> */}
               <button type="submit" className="login-button">
                 LOGIN
