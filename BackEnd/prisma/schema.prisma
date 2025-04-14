@@ -64,6 +64,7 @@ model quizzes {
   created_at        DateTime            @default(now()) @db.Timestamp(0)
   nb_attempts       Int                 @default(1)
   image             Bytes?              @db.Blob
+  navigation        String              @default("dynamic") @db.VarChar(100)
   attempts          attempts[]
   published_quizzes published_quizzes[]
   questions         questions[]

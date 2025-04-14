@@ -17,6 +17,7 @@ const getQuizzes = async (req, res) => {
       for_groupe,
       correctionType,
       
+      
     } = req.body;
 
     //default to page 1
@@ -47,7 +48,6 @@ const getQuizzes = async (req, res) => {
       });
       quiz.totalQuestions = totalQuestions;  
     }
-    console.log(quizzes);
     res.json({
       page,
       limit,
@@ -74,7 +74,8 @@ const createQuiz = async (req, res) => {
       for_groupe,
       status,
       questions,
-      image
+      image,
+      navigation
     } = req.body;
 
     const newQuiz = await prisma.quizzes.create({
@@ -90,6 +91,7 @@ const createQuiz = async (req, res) => {
         score,
         for_year,
         for_groupe,
+        navigation,
         status, // Save the status
         questions: {
           create: questions.map((question) => ({
@@ -140,6 +142,7 @@ const updateQuiz = async (req, res) => {
       for_groupe,
       status,
       questions,
+      navigation
     } = req.body;
 
     // Update the quiz
@@ -160,6 +163,7 @@ const updateQuiz = async (req, res) => {
         for_year,
         for_groupe,
         status,
+        navigation
       },
     });
 
@@ -274,8 +278,10 @@ const deleteQuiz = async (req, res) => {
   }
 };
 
+
+
 const getQuizDetails = async (req, res) => {
-  const { id_quiz } = req.params;
+  const { id_quiz } = req.body;
   try {
     const quiz = await prisma.quizzes.findUnique({
       where: { id_quiz: id_quiz },
@@ -300,7 +306,7 @@ const getQuizDetails = async (req, res) => {
         },
       },
     });
-
+    console.log("quiz",quiz);
     if (!quiz) return res.status(404).json({ error: "Quiz not found" });
     res.json(quiz);
   } catch (error) {

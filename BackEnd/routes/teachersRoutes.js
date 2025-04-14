@@ -14,7 +14,7 @@ router.post("/getQuizzes" , getQuizzes)
 router.post("/createQuiz", createQuiz);
 router.put("/deleteQuiz" , deleteQuiz);
 router.put("/updateQuiz" , updateQuiz);
-router.get("/getQuizDetails" , getQuizDetails);
+router.post("/getQuizDetails" , getQuizDetails);
 
 //students functions
 router.post("/getStudents" , getStudents)
