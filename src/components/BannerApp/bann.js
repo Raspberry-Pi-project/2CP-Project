@@ -158,8 +158,10 @@ const BannerApp = () => {
 
         {/* Account Circle */}
         <div className="col-md-1 col-sm-3 text-center">
-          <div className="banner-profile">
-            <FontAwesomeIcon icon={faUserCircle} size="2x" />
+          <div className="banner-profile"
+          onClick={() => navigate('/TeacherDash')}
+          style={{ cursor: 'pointer'}}>
+            <FontAwesomeIcon icon={faUserCircle} size="2x"  />
           </div>
         </div>
 
