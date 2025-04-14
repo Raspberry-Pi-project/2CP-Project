@@ -11,9 +11,9 @@ const Infos = () => {
   const [subject, setSubject] = useState(quizData.subject || "");
   const [title, setTitle] = useState(quizData.title || "");
   const [description, setDescription] = useState(quizData.description || "");
-  const [for_year, setForYear] = useState(quizData.for_year || "");
-  const [for_groupe, setForGroupe] = useState(quizData.for_groupe || "");
+
   const [image, setImage] = useState(quizData.image || null);
+  const [navigation, setNavigation] = useState(quizData.navigation || "dynamic");
 
   const [currentStep, setCurrentStep] = useState(1);
   const [error, setError] = useState(null);
@@ -34,6 +34,7 @@ const Infos = () => {
       for_groupe: "", // To be filled by user
       status: "draft", // Default to draft
       questions: [], // Array to hold questions
+      navigation: "dynamic", // Default navigation
     })
   }, []);
 
@@ -45,10 +46,10 @@ const Infos = () => {
       subject,
       title,
       description,
-      for_year: parseInt(for_year),
-      for_groupe: parseInt(for_groupe),
+      navigation,
+      
     });
-  }, [subject, title, description, for_year, for_groupe, user]);
+  }, [subject, title, description, user]);
 
   const handleImageUpload = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -72,8 +73,6 @@ const Infos = () => {
       subject,
       title,
       description,
-      for_year: parseInt(for_year),
-      for_groupe: parseInt(for_groupe),
     });
     console.log("quizData", quizData);
     navigate("/duration");
@@ -136,6 +135,16 @@ const Infos = () => {
                 placeholder="Describe your quiz"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+                className="form-input"
+                rows="4"
+              />
+            </div>
+            <div className="form-group">
+              <label>Navigation:</label>
+              <textarea
+                placeholder="Navigation between question"
+                value={description}
+                onChange={(e) => setNavigation(e.target.value)}
                 className="form-input"
                 rows="4"
               />
