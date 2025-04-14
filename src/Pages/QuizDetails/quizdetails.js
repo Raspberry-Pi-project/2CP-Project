@@ -3,7 +3,7 @@ import { useState } from "react";
 import "./quizdetails.css";
 import { useNavigate, useParams } from "react-router-dom";
 import {
-  faPlus,
+  faPlus,faPlay,
   faEdit,
   faUsers,
   faChartBar,
@@ -65,7 +65,7 @@ const QuizDetails = () => {
     console.log("Starting new session");
     // Navigate to session setup page
 
-    navigate(`/session-setup/${quizId}`); // this one must go to the page of finalization2 (to set group and year of study) then publish  it
+    navigate(`/Finalization2`); // this one must go to the page of finalization2 (to set group and year of study) then publish  it
   };
 
   // Handle adding questions
@@ -98,7 +98,7 @@ const QuizDetails = () => {
               <div className="questions-list">
                 {quizData.questions.map((question, index) => (
                   <div key={question.id_question} className="question-item">
-                    <span className="question-number">{index + 1}.</span>
+                    <span className="question-number">{question.question_number}.</span>
                     <span className="question-text">
                       {question.question_text}
                     </span>
@@ -204,7 +204,7 @@ const QuizDetails = () => {
                   <span className="meta-value">{quizData.nb_attempts}</span>
                 </div>
                 <div className="quiz-meta-item">
-                  <span className="meta-label">for year/group</span>
+                  <span className="meta-label">year/group</span>
                   <span className="meta-value">
                     {quizData.for_year}/{quizData.for_groupe}
                   </span>
@@ -246,13 +246,13 @@ const QuizDetails = () => {
                 <h3>Questions ({quizData.questions.length})</h3>
                 <div className="questions-list">
                   {quizData.questions.map((question, index) => (
-                    <div key={question.id} className="question-item">
-                      <span className="question-number">{index + 1}.</span>
-                      <span className="question-text">{question.text}</span>
+                    <div key={question.id_question} className="question-item">
+                      <span className="question-number">{question.question_number}.</span>
+                      <span className="question-text">{question.question_text}</span>
                       <div className="question-meta">
-                        <span className="question-type">{question.type}</span>
+                        <span className="question-type">{question.question_type}</span>
                         <span className="question-points">{question.points} points</span>
-                        <span className="question-time">{question.time}s</span>
+                        <span className="question-time">{question.duration}s</span>
                       </div>
                     </div>
                   ))}
@@ -264,24 +264,11 @@ const QuizDetails = () => {
           {/*Add Question button */}
           <button className="add-question-btnnn" onClick={handleAddQuestion}>
             <FontAwesomeIcon icon={faPlus} /> Add Question
-
+          </button>        
         {/* Quiz Tabs */}
-        <div className="quiz-tabs">
-          <button
-            className={`quiz-tab ${activeTab === "info" ? "active" : ""}`}
-            onClick={() => setActiveTab("info")}
-          >
-            Quiz Information
-          </button>
-          <button
-            className={`quiz-tab ${activeTab === "sessions" ? "active" : ""}`}
-            onClick={() => setActiveTab("sessions")}
-          >
-            Sessions
-
-          </button>
-        </div>
+        
       </div>
+    </div>
     </div>
   );
 };

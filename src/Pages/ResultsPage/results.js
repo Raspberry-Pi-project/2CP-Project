@@ -241,10 +241,7 @@ const Results = () => {
                         <span className="meta-label">Subject</span>
                         <span className="meta-value">{quizData.subject}</span>
                       </div>
-                      <div className="quiz-meta-item">
-                        <span className="meta-label">Language</span>
-                        <span className="meta-value">{quizData.language}</span>
-                      </div>
+                      
                     </div>
                   </div>
                 </div>

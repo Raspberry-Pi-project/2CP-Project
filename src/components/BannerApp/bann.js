@@ -15,7 +15,7 @@ import {
   faUser,
   faQuestionCircle,
   faCog,
-  faSignOutAlt,
+  faSignOutAlt,faUserCircle
 } from "@fortawesome/free-solid-svg-icons"
 import HamburgerMenu from "./hamburger-menu"
 
@@ -144,7 +144,7 @@ const BannerApp = () => {
 
         {/* Home Button */}
         <div className="col-md-1 col-sm-2 text-center">
-          <Link to="/noquizzes">
+          <Link to="/draftquiz">
             <button className="banner-btn">
               <FontAwesomeIcon icon={faHome} />
             </button>
