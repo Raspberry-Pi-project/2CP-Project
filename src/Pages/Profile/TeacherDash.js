@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { NavProfile } from './NavProfile';
+import { NavProfileT } from './NavProfileT';
 import teacherIcon from "../../photos/teacher.png";
 import studentIcon from "../../photos/student.png";
 import quizIcon from "../../photos/quizz.png";
@@ -11,7 +11,7 @@ const Teacher = () => {
 
   return (
     <div className={styles.adminDashContainer}>
-      <NavProfile />
+      <NavProfileT />
 
       <div className={styles.adminBody}>
         <div className={styles.sidebarArea}>
@@ -28,11 +28,7 @@ const Teacher = () => {
         <div className={styles.mainContent}>
           <h1 className={styles.dashboardTitle}>Dashboard</h1>
           <div className={styles.dashboardCards}>
-            <div className={`${styles.card} ${styles.teachers}`}>
-              <h3>Teachers</h3>
-              <img src={teacherIcon} alt="Teacher Icon" />
-              <h2>10</h2>
-            </div>
+            
             <div className={`${styles.card} ${styles.students}`}>
               <h3>Students</h3>
               <img src={studentIcon} alt="Student Icon" />
