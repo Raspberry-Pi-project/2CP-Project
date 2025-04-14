@@ -436,14 +436,14 @@ export default function QuizletScreen({ navigation, route }) {
                 ],
               }}
             >
-              <TouchableOpacity
+              {/* <TouchableOpacity
                 style={[styles.option, styles.otherOption, selectedAnswer === -1 && styles.selectedOption]}
                 onPress={() => handleAnswer((currentQuestionData.options || []).length)}
                 disabled={selectedAnswer !== null || showCustomInput}
                 activeOpacity={0.7}
               >
                 <Text style={[styles.optionText, styles.otherOptionText]}>Other (specify)</Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </Animated.View>
 
             {/* Custom answer input */}
