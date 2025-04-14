@@ -15,7 +15,7 @@ import {
   faUser,
   faQuestionCircle,
   faCog,
-  faSignOutAlt,
+  faSignOutAlt,faUserCircle
 } from "@fortawesome/free-solid-svg-icons"
 import HamburgerMenu from "./hamburger-menu"
 
