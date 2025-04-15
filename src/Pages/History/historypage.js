@@ -100,6 +100,7 @@ const HistoryPage = () => {
     <div className="history-container">
       {/* Main Content */}
       <div className="history-content">
+        <h2 className="history-title">History</h2>
         {/* Filter Tabs */}
         <div className="filter-tabs">
           {filters.map((filter) => (

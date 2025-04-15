@@ -32,7 +32,7 @@ const BannerApp = () => {
   const navigationRoutes = [
     {
       name: "Home",
-      path: "/noquizzes",
+      path: "/draftquiz",
       icon: <FontAwesomeIcon icon={faHome} />,
     },
     {

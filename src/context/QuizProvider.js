@@ -16,8 +16,8 @@ export const QuizProvider = ({ children }) => {
     duration: 30, // Default 30 minutes
     correctionType: "auto", // Default to auto-graded
     score: 100, // Default score
-    for_year: "", // To be filled by user
-    for_groupe: "", // To be filled by user
+    for_year: 0, // To be filled by user
+    for_groupe: 0, // To be filled by user
     status: "draft", // Default to draft
     questions: [], // Array to hold questions
   });

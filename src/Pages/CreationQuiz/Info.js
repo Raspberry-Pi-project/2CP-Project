@@ -30,8 +30,8 @@ const Infos = () => {
       duration: 30, // Default 30 minutes
       correctionType: "auto", // Default to auto-graded
       score: 100, // Default score
-      for_year: "", // To be filled by user
-      for_groupe: "", // To be filled by user
+      for_year: 0, // To be filled by user
+      for_groupe: 0, // To be filled by user
       status: "draft", // Default to draft
       questions: [], // Array to hold questions
       navigation: "dynamic", // Default navigation
@@ -56,7 +56,11 @@ const Infos = () => {
       const imageUrl = URL.createObjectURL(e.target.files[0]); // ✅ Define imageUrl here
       setImage(imageUrl);
       setQuizData({ ...quizData, image: imageUrl });
-    }
+      return
+    } 
+      setImage(null);
+      setQuizData({ ...quizData, image: null });
+    
   };
   
   const handleNext = async () => {
@@ -72,7 +76,7 @@ const Infos = () => {
       id_teacher: user.id,
       subject,
       title,
-      description,
+      description,navigation
     });
     console.log("quizData", quizData);
     navigate("/duration");
@@ -143,10 +147,10 @@ const Infos = () => {
               <label>Navigation:</label>
               <textarea
                 placeholder="Navigation between question"
-                value={description}
+                value={navigation}
                 onChange={(e) => setNavigation(e.target.value)}
                 className="form-input"
-                rows="4"
+                
               />
             </div>
             <div className="form-group">
@@ -167,7 +171,7 @@ const Infos = () => {
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={handleImageUpload}
+                      /*onChange={handleImageUpload}*/
                       style={{ display: "none" }}
                     />
                     <div className="upload-placeholder">Add one +</div>
