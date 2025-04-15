@@ -77,7 +77,15 @@ const createQuiz = async (req, res) => {
       image,
       navigation
     } = req.body;
-
+    console.log(req.body)
+    let for_year2 = for_year;
+    let for_groupe2 = for_groupe;
+    if (typeof(for_year2) === "string") {
+      for_year2 = 0
+    }
+    if (typeof(for_groupe2) === "string") {
+      for_groupe2 = 0
+    }
     const newQuiz = await prisma.quizzes.create({
       data: {
         image,
@@ -89,8 +97,8 @@ const createQuiz = async (req, res) => {
         duration,
         correctionType,
         score,
-        for_year,
-        for_groupe,
+        for_year : for_year2,
+        for_groupe : for_groupe2,
         navigation,
         status, // Save the status
         questions: {
