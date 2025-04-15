@@ -97,6 +97,7 @@ const DraftQuiz = () => {
     <div className="history-container">
       {/* Main Content */}
       <div className="history-content">
+      <h2 className="history-title">Draft</h2>
         {/* Filter Tabs */}
         <div className="filter-tabs">
           {filters.map((filter) => (
@@ -150,7 +151,7 @@ const DraftQuiz = () => {
                         className="consult-btn"
                         onClick={() => handleStart(quiz.id_quiz)}
                       >
-                        CONSULT
+                        PUBLISH
                       </button>
 
                       {/* Button for quiz options */}

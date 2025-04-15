@@ -30,6 +30,8 @@
     flex: 1;
     padding: 20px;
     background-color: #f9f9f9;
+    position: relative;
+    padding-bottom: 80px;
   }
   
   /* Step Indicator */
@@ -384,31 +386,95 @@
 
   /* Navigation Buttons */
   .navigation-buttons {
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+    right: 0;
     display: flex;
     justify-content: space-between;
-    margin-top: 30px;
-    margin-bottom: 20px;
-    gap: 10px;
-    width: 100%;
+    padding: 0 20px;
   }
   
   .return-btn,
   .next-btn {
-    padding: 10px 30px;
+    background-color: #4cd3a5;
+    color: white;
     border: none;
     border-radius: 5px;
+    padding: 12px 24px;
     font-size: 16px;
+    font-weight: 600;
     cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    width: 200px;
   }
   
   .return-btn {
     background-color: #666;
-    color: white;
   }
   
-  .next-btn {
+  .return-btn:hover,
+  .next-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  .return-btn:hover {
+    background-color: #555;
+  }
+  
+  .next-btn:hover {
+    background-color: #3ab894;
+  }
+  
+  .return-btn:active,
+  .next-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Save Question Button */
+  .save-question-btn {
     background-color: #4cd3a5;
     color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    position: absolute;
+    top: 7px;
+    right: 20px;
+    z-index: 10;
+    width: 200px;
+    max-width: none;
+    margin: 0;
+  }
+  
+  .save-question-btn:hover {
+    background-color: #3ab894;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  .save-question-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Question Actions Container */
+  .question-actions {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 5;
+    width: auto;
+    margin: 0;
+    justify-content: flex-end;
   }
   
   

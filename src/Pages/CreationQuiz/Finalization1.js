@@ -91,8 +91,8 @@ const Finalization1 = () => {
       duration:0 , // Default 30 minutes
       correctionType: "auto", // Default to auto-graded
       score: 0, // Default score
-      for_year: "", // To be filled by user
-      for_groupe: "", // To be filled by user
+      for_year: 0, // To be filled by user
+      for_groupe: 0, // To be filled by user
       status: "draft", // Default to draft
       questions: [], // Array to hold questions
       created_at : "",
@@ -165,12 +165,7 @@ const Finalization1 = () => {
                   ? "Auto-graded"
                   : "Manually graded"}
               </p>
-              <p>
-                <strong>For Year:</strong> {quizData.for_year}
-              </p>
-              <p>
-                <strong>For Group:</strong> {quizData.for_groupe}
-              </p>
+              
             </div>
           </div>
 
