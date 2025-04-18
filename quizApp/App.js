@@ -1,7 +1,10 @@
+"use client"
+
 import { NavigationContainer } from "@react-navigation/native"
 import { createNativeStackNavigator } from "@react-navigation/native-stack"
 import { StatusBar } from "expo-status-bar"
 import { SafeAreaProvider } from "react-native-safe-area-context"
+import { useState, useEffect } from "react"
 import FirstScreen from "./screens/FirstScreen"
 import LoginScreen from "./screens/LoginScreen"
 import HomeScreen from "./screens/HomeScreen"
@@ -11,6 +14,8 @@ import QuizScreen from "./screens/QuizScreen"
 import QuizScoreScreen from "./screens/QuizScoreScreen"
 import ProfileScreen from "./screens/ProfileScreen"
 import QuizInfoScreen from "./screens/QuizInfoScreen"
+import FeedbackScreen from "./screens/FeedbackScreen"
+import notificationManager, { NotificationManager } from "./components/NotificationManager"
 import { LogBox } from "react-native"
 
 // Ignore specific warnings that might be causing issues
@@ -23,6 +28,23 @@ LogBox.ignoreLogs([
 const Stack = createNativeStackNavigator()
 
 export default function App() {
+  const [showNotification, setShowNotification] = useState(false)
+
+  useEffect(() => {
+    // Show notification after a short delay to ensure app is fully loaded
+    const timer = setTimeout(() => {
+      // Using the advanced notification manager
+      notificationManager.show("A new Physics quiz is now available!", "NEW_QUIZ", 5000)
+
+      // After a delay, show another type of notification as a demo
+      setTimeout(() => {
+        notificationManager.show("You've completed 5 quizzes!", "ACHIEVEMENT", 5000)
+      }, 6000)
+    }, 2000)
+
+    return () => clearTimeout(timer)
+  }, [])
+
   return (
     <SafeAreaProvider>
       <NavigationContainer>
@@ -37,7 +59,11 @@ export default function App() {
           <Stack.Screen name="Quiz" component={QuizScreen} />
           <Stack.Screen name="QuizScore" component={QuizScoreScreen} />
           <Stack.Screen name="Profile" component={ProfileScreen} />
+          <Stack.Screen name="Feedback" component={FeedbackScreen} />
         </Stack.Navigator>
+
+        {/* Advanced Notification Manager with ref */}
+        <NotificationManager ref={notificationManager.ref} />
       </NavigationContainer>
     </SafeAreaProvider>
   )

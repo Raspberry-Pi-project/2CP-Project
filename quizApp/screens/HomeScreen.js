@@ -11,6 +11,9 @@ import {
   FlatList,
   Dimensions,
   Animated,
+  TextInput,
+  RefreshControl, // Add this import
+  ActivityIndicator,
 } from "react-native"
 import { colors } from "../constants/colors"
 import CustomStatusBar from "../components/CustomStatusBar"
@@ -18,6 +21,7 @@ import BottomNavigation from "../components/BottomNavigation"
 import { QUIZ_DATA } from "../data/quizData"
 import Svg, { Path } from "react-native-svg"
 import { LinearGradient } from "expo-linear-gradient"
+import { Feather } from "@expo/vector-icons"
 
 const { width, height } = Dimensions.get("window")
 
@@ -72,10 +76,9 @@ const SimpleQuizCard = ({ quiz, onPress, index }) => {
   )
 }
 
-// Simple history card without animations
-const SimpleHistoryCard = ({ title, date, icon }) => {
+const SimpleHistoryCard = ({ title, date, icon, score, onPress }) => {
   return (
-    <View style={styles.historyCard}>
+    <TouchableOpacity style={styles.historyCard} onPress={onPress}>
       <View style={styles.historyCardContent}>
         <View style={styles.historyCardIconContainer}>
           <View
@@ -94,24 +97,49 @@ const SimpleHistoryCard = ({ title, date, icon }) => {
         </View>
 
         <View style={styles.historyCardScoreContainer}>
-          <Text style={styles.historyCardScore}>85%</Text>
+          <Text style={styles.historyCardScore}>{score}%</Text>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   )
 }
 
 export default function HomeScreen({ navigation }) {
   const [isExpanded, setIsExpanded] = useState(false)
+  const [isSearchActive, setIsSearchActive] = useState(false)
+  const [searchText, setSearchText] = useState("")
+  const [refreshing, setRefreshing] = useState(false) // Add refreshing state
+  const [quizzes, setQuizzes] = useState(QUIZ_DATA) // Store quizzes in state
   const panelAnimation = useRef(new Animated.Value(0)).current
+  const searchInputRef = useRef(null)
+
+  // Add refresh function
+  const onRefresh = () => {
+    setRefreshing(true)
+
+    // Simulate API call with a timeout
+    setTimeout(() => {
+      // Simulate getting new data by shuffling the existing quizzes
+      const shuffledQuizzes = [...QUIZ_DATA].sort(() => Math.random() - 0.5)
+      setQuizzes(shuffledQuizzes)
+      setRefreshing(false)
+    }, 1500)
+  }
 
   // History data
   const historyData = [
-    { id: "1", title: "Math Quiz", date: "JAN", icon: "math" },
-    { id: "2", title: "English Quiz", date: "FEB", icon: "language" },
-    { id: "3", title: "Science Quiz", date: "MAR", icon: "math" },
-    { id: "4", title: "History Quiz", date: "APR", icon: "language" },
+    { id: "1", title: "Math Quiz", date: "JAN", icon: "math", score: 85, totalQuestions: 10, timeSpent: 450 },
+    { id: "2", title: "English Quiz", date: "FEB", icon: "language", score: 92, totalQuestions: 15, timeSpent: 720 },
+    { id: "3", title: "Science Quiz", date: "MAR", icon: "math", score: 78, totalQuestions: 12, timeSpent: 540 },
+    { id: "4", title: "History Quiz", date: "APR", icon: "language", score: 88, totalQuestions: 8, timeSpent: 380 },
   ]
+
+  // Filter quizzes based on search text - update to use quizzes state
+  const filteredQuizzes = quizzes.filter(
+    (quiz) =>
+      quiz.title.toLowerCase().includes(searchText.toLowerCase()) ||
+      quiz.subtitle.toLowerCase().includes(searchText.toLowerCase()),
+  )
 
   const togglePanel = () => {
     const toValue = isExpanded ? 0 : 1
@@ -126,12 +154,31 @@ export default function HomeScreen({ navigation }) {
     setIsExpanded(!isExpanded)
   }
 
+  // Toggle search input
+  const toggleSearch = () => {
+    setIsSearchActive(!isSearchActive)
+    if (!isSearchActive) {
+      // Focus the input when search is activated
+      setTimeout(() => {
+        searchInputRef.current?.focus()
+      }, 100)
+    } else {
+      // Clear search when deactivated
+      setSearchText("")
+    }
+  }
+
   // Clean up animation when component unmounts
   useEffect(() => {
     return () => {
       panelAnimation.stopAnimation()
     }
   }, [])
+
+  // Update the goToFeedback function and add a new goToProfile function
+  const goToFeedback = () => {
+    navigation.navigate("Feedback")
+  }
 
   const goToProfile = () => {
     navigation.navigate("Profile")
@@ -187,6 +234,14 @@ export default function HomeScreen({ navigation }) {
     outputRange: [80, height * 0.7],
   })
 
+  const handleHistoryQuizPress = (item) => {
+    navigation.navigate("QuizScore", {
+      score: (item.score * item.totalQuestions) / 100, // Convert percentage to actual score
+      totalQuestions: item.totalQuestions,
+      timeSpent: item.timeSpent,
+    })
+  }
+
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -206,8 +261,13 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.greeting}>GOOD MORNING</Text>
             <Text style={styles.title}>#Matricule</Text>
           </View>
-          <View style={styles.avatarContainer}>
-            <Image source={{ uri: "https://via.placeholder.com/40" }} style={styles.avatar} />
+          <View style={styles.headerActions}>
+            <TouchableOpacity style={styles.refreshButton} onPress={onRefresh}>
+              <Feather name="refresh-cw" size={20} color="white" />
+            </TouchableOpacity>
+            <View style={styles.avatarContainer}>
+              <Image source={{ uri: "https://via.placeholder.com/40" }} style={styles.avatar} />
+            </View>
           </View>
         </View>
 
@@ -216,21 +276,67 @@ export default function HomeScreen({ navigation }) {
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#ffffff"]}
+              tintColor="#ffffff"
+              progressBackgroundColor="#7B5CFF"
+            />
+          }
         >
           <View style={styles.sectionTitleContainer}>
             <View style={styles.sectionTitleDecoration} />
             <Text style={styles.sectionTitle}>LIVE QUIZZES</Text>
+
+            {/* Search Input */}
+            {isSearchActive ? (
+              <View style={styles.searchInputContainer}>
+                <TextInput
+                  ref={searchInputRef}
+                  style={styles.searchInput}
+                  placeholder="Search quizzes..."
+                  placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                  value={searchText}
+                  onChangeText={setSearchText}
+                  autoCapitalize="none"
+                />
+                <TouchableOpacity onPress={toggleSearch} style={styles.searchCloseButton}>
+                  <Feather name="x" size={18} color="white" />
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity onPress={toggleSearch} style={styles.searchButton}>
+                <Feather name="search" size={18} color="white" />
+              </TouchableOpacity>
+            )}
           </View>
 
           <View style={styles.liveQuizzes}>
-            <FlatList
-              data={QUIZ_DATA}
-              renderItem={renderQuizItem}
-              keyExtractor={(item) => item.id}
-              showsVerticalScrollIndicator={false}
-              scrollEnabled={false}
-              contentContainerStyle={{ paddingHorizontal: 24 }}
-            />
+            {refreshing && (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#ffffff" />
+                <Text style={styles.loadingText}>Refreshing quizzes...</Text>
+              </View>
+            )}
+
+            {filteredQuizzes.length > 0 ? (
+              <FlatList
+                data={filteredQuizzes}
+                renderItem={renderQuizItem}
+                keyExtractor={(item) => item.id}
+                showsVerticalScrollIndicator={false}
+                scrollEnabled={false}
+                contentContainerStyle={{ paddingHorizontal: 24 }}
+              />
+            ) : (
+              <View style={styles.noResultsContainer}>
+                <Feather name="search" size={40} color="rgba(255, 255, 255, 0.5)" />
+                <Text style={styles.noResultsText}>No quizzes found</Text>
+                <Text style={styles.noResultsSubtext}>Try a different search term</Text>
+              </View>
+            )}
           </View>
 
           {/* Spacer for bottom panel */}
@@ -289,13 +395,27 @@ export default function HomeScreen({ navigation }) {
 
             <ScrollView showsVerticalScrollIndicator={false}>
               {historyData.map((item) => (
-                <SimpleHistoryCard key={item.id} title={item.title} date={item.date} icon={item.icon} />
+                <SimpleHistoryCard
+                  key={item.id}
+                  title={item.title}
+                  date={item.date}
+                  icon={item.icon}
+                  score={item.score}
+                  onPress={() => handleHistoryQuizPress(item)}
+                />
               ))}
             </ScrollView>
           </Animated.View>
         </Animated.View>
 
-        <BottomNavigation onArrowPress={togglePanel} isPanelExpanded={isExpanded} onProfilePress={goToProfile} />
+        {/* Then update the BottomNavigation component props */}
+        <BottomNavigation
+          onArrowPress={togglePanel}
+          isPanelExpanded={isExpanded}
+          onProfilePress={goToProfile}
+          onFeedbackPress={goToFeedback}
+          onSearchPress={toggleSearch}
+        />
       </LinearGradient>
     </View>
   )
@@ -366,6 +486,53 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: colors.white,
     letterSpacing: 1,
+    flex: 1,
+  },
+  searchButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  searchInputContainer: {
+    flex: 1,
+    height: 36,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    marginLeft: 10,
+  },
+  searchInput: {
+    flex: 1,
+    height: "100%",
+    color: "white",
+    fontSize: 14,
+  },
+  searchCloseButton: {
+    width: 24,
+    height: 24,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  noResultsContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 40,
+  },
+  noResultsText: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "bold",
+    marginTop: 16,
+  },
+  noResultsSubtext: {
+    color: "rgba(255, 255, 255, 0.7)",
+    fontSize: 14,
+    marginTop: 8,
   },
   liveQuizzes: {
     marginBottom: 24,
@@ -526,5 +693,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: "#4ADE80",
+  },
+  loadingContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 20,
+  },
+  loadingText: {
+    color: "#ffffff",
+    marginTop: 10,
+    fontSize: 16,
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  refreshButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 8,
   },
 })
