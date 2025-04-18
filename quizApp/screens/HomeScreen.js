@@ -12,6 +12,8 @@ import {
   Dimensions,
   Animated,
   TextInput,
+  RefreshControl, // Add this import
+  ActivityIndicator,
 } from "react-native"
 import { colors } from "../constants/colors"
 import CustomStatusBar from "../components/CustomStatusBar"
@@ -106,8 +108,23 @@ export default function HomeScreen({ navigation }) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [isSearchActive, setIsSearchActive] = useState(false)
   const [searchText, setSearchText] = useState("")
+  const [refreshing, setRefreshing] = useState(false) // Add refreshing state
+  const [quizzes, setQuizzes] = useState(QUIZ_DATA) // Store quizzes in state
   const panelAnimation = useRef(new Animated.Value(0)).current
   const searchInputRef = useRef(null)
+
+  // Add refresh function
+  const onRefresh = () => {
+    setRefreshing(true)
+
+    // Simulate API call with a timeout
+    setTimeout(() => {
+      // Simulate getting new data by shuffling the existing quizzes
+      const shuffledQuizzes = [...QUIZ_DATA].sort(() => Math.random() - 0.5)
+      setQuizzes(shuffledQuizzes)
+      setRefreshing(false)
+    }, 1500)
+  }
 
   // History data
   const historyData = [
@@ -117,8 +134,8 @@ export default function HomeScreen({ navigation }) {
     { id: "4", title: "History Quiz", date: "APR", icon: "language", score: 88, totalQuestions: 8, timeSpent: 380 },
   ]
 
-  // Filter quizzes based on search text
-  const filteredQuizzes = QUIZ_DATA.filter(
+  // Filter quizzes based on search text - update to use quizzes state
+  const filteredQuizzes = quizzes.filter(
     (quiz) =>
       quiz.title.toLowerCase().includes(searchText.toLowerCase()) ||
       quiz.subtitle.toLowerCase().includes(searchText.toLowerCase()),
@@ -157,6 +174,11 @@ export default function HomeScreen({ navigation }) {
       panelAnimation.stopAnimation()
     }
   }, [])
+
+  // Update the goToFeedback function and add a new goToProfile function
+  const goToFeedback = () => {
+    navigation.navigate("Feedback")
+  }
 
   const goToProfile = () => {
     navigation.navigate("Profile")
@@ -239,8 +261,13 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.greeting}>GOOD MORNING</Text>
             <Text style={styles.title}>#Matricule</Text>
           </View>
-          <View style={styles.avatarContainer}>
-            <Image source={{ uri: "https://via.placeholder.com/40" }} style={styles.avatar} />
+          <View style={styles.headerActions}>
+            <TouchableOpacity style={styles.refreshButton} onPress={onRefresh}>
+              <Feather name="refresh-cw" size={20} color="white" />
+            </TouchableOpacity>
+            <View style={styles.avatarContainer}>
+              <Image source={{ uri: "https://via.placeholder.com/40" }} style={styles.avatar} />
+            </View>
           </View>
         </View>
 
@@ -249,6 +276,15 @@ export default function HomeScreen({ navigation }) {
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#ffffff"]}
+              tintColor="#ffffff"
+              progressBackgroundColor="#7B5CFF"
+            />
+          }
         >
           <View style={styles.sectionTitleContainer}>
             <View style={styles.sectionTitleDecoration} />
@@ -278,6 +314,13 @@ export default function HomeScreen({ navigation }) {
           </View>
 
           <View style={styles.liveQuizzes}>
+            {refreshing && (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#ffffff" />
+                <Text style={styles.loadingText}>Refreshing quizzes...</Text>
+              </View>
+            )}
+
             {filteredQuizzes.length > 0 ? (
               <FlatList
                 data={filteredQuizzes}
@@ -365,10 +408,12 @@ export default function HomeScreen({ navigation }) {
           </Animated.View>
         </Animated.View>
 
+        {/* Then update the BottomNavigation component props */}
         <BottomNavigation
           onArrowPress={togglePanel}
           isPanelExpanded={isExpanded}
           onProfilePress={goToProfile}
+          onFeedbackPress={goToFeedback}
           onSearchPress={toggleSearch}
         />
       </LinearGradient>
@@ -648,5 +693,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: "#4ADE80",
+  },
+  loadingContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 20,
+  },
+  loadingText: {
+    color: "#ffffff",
+    marginTop: 10,
+    fontSize: 16,
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  refreshButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 8,
   },
 })

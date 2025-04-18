@@ -1,11 +1,14 @@
 import { View, StyleSheet, TouchableOpacity, Text, Animated } from "react-native"
 import { Feather } from "@expo/vector-icons"
 import { colors } from "../constants/colors"
+import Svg, { Path, Circle } from "react-native-svg"
 
+// Update the component props to include onFeedbackPress
 export default function BottomNavigation({
   onArrowPress,
   isPanelExpanded,
   onProfilePress,
+  onFeedbackPress,
   onSearchPress,
 }) {
   return (
@@ -34,14 +37,35 @@ export default function BottomNavigation({
         </View>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.navItem}>
-        <Text style={styles.navIcon}>📚</Text>
+      <TouchableOpacity style={styles.navItem} onPress={onFeedbackPress}>
+        <FeedbackIcon size={24} color={colors.primary} />
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.navItem} onPress={onProfilePress}>
         <Feather name="user" size={24} color={colors.primary} />
       </TouchableOpacity>
     </View>
+  )
+}
+
+// Custom Feedback Icon component based on the provided image
+function FeedbackIcon({ size = 24, color = "#000" }) {
+  return (
+    <Svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <Path d="M3 5h12M3 9h12M3 13h5M17 5l4 4-4 4" />
+      <Circle cx="8.5" cy="18.5" r="2.5" />
+      <Circle cx="15.5" cy="18.5" r="2.5" />
+      <Path d="M9 18.5h6" />
+    </Svg>
   )
 }
 
