@@ -9,11 +9,12 @@ import {
   SafeAreaView,
   Dimensions,
   Animated,
-  TextInput,
   Easing,
   Keyboard,
   TouchableWithoutFeedback,
   Alert,
+  Platform,
+  TextInput,
 } from "react-native"
 import Icon from "react-native-vector-icons/Feather"
 import QuizBackground from "../components/QuizBackground"
@@ -57,6 +58,9 @@ export default function QuizletScreen({ navigation, route }) {
   const [timeLeft, setTimeLeft] = useState(15)
   const [showCustomInput, setShowCustomInput] = useState(false)
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false)
+  const [correctAnswers, setCorrectAnswers] = useState(5) // Example starting values
+  const [incorrectAnswers, setIncorrectAnswers] = useState(7)
+  const [timerActive, setTimerActive] = useState(true)
 
   // Animation refs
   const progressAnim = useRef(new Animated.Value(0)).current
@@ -131,54 +135,64 @@ export default function QuizletScreen({ navigation, route }) {
     setShowCustomInput(false)
     setCustomAnswer("")
     customInputAnim.setValue(0)
+
+    // Always reset timer to 15 when changing questions
+    setTimeLeft(15)
+    timerProgress.setValue(1)
+    timerOpacity.setValue(1)
+    setTimerActive(true)
   }, [currentQuestion])
 
   useEffect(() => {
     // Timer animation
-    const timerInterval = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 0) {
-          handleNext()
-          return 0
-        }
-        const newTime = prev - 1
+    let timerInterval
 
-        Animated.timing(timerProgress, {
-          toValue: newTime / 15,
-          duration: 1000,
-          useNativeDriver: true,
-        }).start()
+    if (timerActive) {
+      timerInterval = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 0) {
+            handleNext()
+            return 15 // Reset to 15 when timer hits 0
+          }
+          const newTime = prev - 1
 
-        // Pulse animation when time is running low
-        if (newTime <= 5) {
-          Animated.sequence([
-            Animated.timing(pulseAnim, {
-              toValue: 1.2,
-              duration: 300,
-              useNativeDriver: true,
-            }),
-            Animated.timing(pulseAnim, {
-              toValue: 1,
-              duration: 300,
-              useNativeDriver: true,
-            }),
-          ]).start()
-        }
-
-        if (newTime === 0) {
-          Animated.timing(timerOpacity, {
-            toValue: 0,
-            duration: 500,
+          Animated.timing(timerProgress, {
+            toValue: newTime / 15,
+            duration: 1000,
             useNativeDriver: true,
           }).start()
-        }
 
-        return newTime
-      })
-    }, 1000)
+          // Pulse animation when time is running low
+          if (newTime <= 5) {
+            Animated.sequence([
+              Animated.timing(pulseAnim, {
+                toValue: 1.2,
+                duration: 300,
+                useNativeDriver: true,
+              }),
+              Animated.timing(pulseAnim, {
+                toValue: 1,
+                duration: 300,
+                useNativeDriver: true,
+              }),
+            ]).start()
+          }
+
+          if (newTime === 0) {
+            Animated.timing(timerOpacity, {
+              toValue: 0,
+              duration: 500,
+              useNativeDriver: true,
+            }).start()
+          }
+
+          return newTime
+        })
+      }, 1000)
+    }
 
     return () => clearInterval(timerInterval)
-  }, [currentQuestion])
+  }, [currentQuestion, timerActive])
 
   useEffect(() => {
     // Keyboard listeners
@@ -199,6 +213,7 @@ export default function QuizletScreen({ navigation, route }) {
     // If "Other" option is selected
     if (index === (questions[currentQuestion]?.options?.length || 0)) {
       setShowCustomInput(true)
+      setTimerActive(false) // Pause timer when custom input is shown
       Animated.timing(customInputAnim, {
         toValue: 1,
         duration: 300,
@@ -208,13 +223,31 @@ export default function QuizletScreen({ navigation, route }) {
       return
     }
 
+    // Animate the selection
+    Animated.sequence([
+      Animated.timing(shakeAnim, {
+        toValue: 3,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(shakeAnim, {
+        toValue: 0,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start()
+
     setSelectedAnswer(index)
     const newAnswers = [...answers]
     newAnswers[currentQuestion] = index
     setAnswers(newAnswers)
 
+    // Update score and correct/incorrect counts (keep this logic for scoring)
     if (index === questions[currentQuestion]?.correctAnswer) {
       setScore((prev) => prev + 1)
+      setCorrectAnswers((prev) => prev + 1)
+    } else {
+      setIncorrectAnswers((prev) => prev + 1)
     }
   }
 
@@ -226,6 +259,9 @@ export default function QuizletScreen({ navigation, route }) {
       newAnswers[currentQuestion] = { custom: customAnswer }
       setAnswers(newAnswers)
       Keyboard.dismiss()
+
+      // Move to next question after submitting custom answer
+      handleNext()
     } else {
       // Shake animation for empty input
       Animated.sequence([
@@ -265,15 +301,16 @@ export default function QuizletScreen({ navigation, route }) {
       // Move to next question
       setCurrentQuestion((prev) => prev + 1)
       setSelectedAnswer(null)
-      setTimeLeft(15)
+      setTimeLeft(15) // Reset timer
+      setTimerActive(true) // Ensure timer is active for next question
     } else {
       // Quiz is complete - navigate directly to results without delay
       navigation.navigate("Quiz", {
         quizResults: {
           score: score,
           total: questions.length,
-          correctCount: score,
-          incorrectCount: questions.length - score,
+          correctCount: correctAnswers,
+          incorrectCount: incorrectAnswers,
           questions: questions.map((q, index) => ({
             id: q.id || index + 1,
             text: `Question ${index + 1}`,
@@ -282,30 +319,6 @@ export default function QuizletScreen({ navigation, route }) {
         },
       })
     }
-  }
-
-  // Progress bar component
-  const ProgressBar = () => {
-    return (
-      <View style={styles.progressContainer}>
-        <View style={styles.progressBackground}>
-          <Animated.View
-            style={[
-              styles.progressFill,
-              {
-                width: progressAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: ["0%", "100%"],
-                }),
-              },
-            ]}
-          />
-        </View>
-        <Text style={styles.progressText}>
-          {currentQuestion + 1}/{questions.length}
-        </Text>
-      </View>
-    )
   }
 
   // Ensure we have a current question to display
@@ -317,210 +330,178 @@ export default function QuizletScreen({ navigation, route }) {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <SafeAreaView style={styles.container}>
-        <LinearGradient colors={["#A42FC1", "#8B27A3"]} style={StyleSheet.absoluteFill} />
-        <QuizBackground />
+        {/* Background */}
+        <View style={styles.content}>
+          {/* Purple Header - Only for Question Section */}
+          <View style={styles.purpleHeader}>
+            <LinearGradient colors={["#A42FC1", "#8B27A3"]} style={styles.headerGradient}>
+              <QuizBackground />
 
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Icon name="arrow-left" size={24} color="white" />
-          </TouchableOpacity>
-          <ProgressBar />
-        </View>
-
-        <View style={[styles.contentContainer, isKeyboardVisible && styles.keyboardAdjustedContent]}>
-          <Animated.View
-            style={[
-              styles.questionBox,
-              {
-                opacity: questionAnim,
-                transform: [
-                  {
-                    translateY: questionAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [50, 0],
-                    }),
-                  },
-                ],
-              },
-            ]}
-          >
-            <Animated.View
-              style={[
-                styles.timerContainer,
-                {
-                  opacity: timerOpacity,
-                  transform: [{ scale: pulseAnim }],
-                },
-              ]}
-            >
-              <Svg width={timerRadius * 2 + timerStroke} height={timerRadius * 2 + timerStroke}>
-                <Circle
-                  cx={timerRadius + timerStroke / 2}
-                  cy={timerRadius + timerStroke / 2}
-                  r={timerRadius}
-                  stroke="rgba(123, 92, 255, 0.2)"
-                  strokeWidth={timerStroke}
-                  fill="transparent"
-                />
-                <AnimatedCircle
-                  cx={timerRadius + timerStroke / 2}
-                  cy={timerRadius + timerStroke / 2}
-                  r={timerRadius}
-                  stroke="#7B5CFF"
-                  strokeWidth={timerStroke}
-                  fill="transparent"
-                  strokeDasharray={timerCircumference}
-                  strokeDashoffset={timerProgress.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [timerCircumference, 0],
-                  })}
-                  strokeLinecap="round"
-                />
-              </Svg>
-              <Text style={[styles.timerText, timeLeft < 6 && styles.timerTextRed]}>{timeLeft}s</Text>
-            </Animated.View>
-
-            <View style={styles.questionContent}>
-              <Text style={styles.questionText}>{currentQuestionData.text}</Text>
-              <Text style={styles.remainingText}>{questions.length - currentQuestion - 1} questions remaining</Text>
-            </View>
-          </Animated.View>
-
-          <View style={styles.optionsContainer}>
-            {(currentQuestionData.options || []).map((option, index) => (
-              <Animated.View
-                key={index}
-                style={{
-                  opacity: optionsAnim[index],
-                  transform: [
-                    {
-                      translateX: optionsAnim[index].interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [-50, 0],
-                      }),
-                    },
-                  ],
-                }}
-              >
-                <TouchableOpacity
-                  style={[styles.option, selectedAnswer === index && styles.selectedOption]}
-                  onPress={() => handleAnswer(index)}
-                  disabled={selectedAnswer !== null || showCustomInput}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.optionText, selectedAnswer === index && styles.selectedOptionText]}>
-                    {option}
-                  </Text>
-                  {selectedAnswer === index && (
-                    <View style={styles.checkmark}>
-                      <Svg width={20} height={20} viewBox="0 0 24 24">
-                        <Path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="#7B5CFF" />
-                      </Svg>
-                    </View>
-                  )}
+              <View style={styles.headerControls}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                  <Icon name="arrow-left" size={24} color="white" />
                 </TouchableOpacity>
-              </Animated.View>
-            ))}
 
-            {/* "Other" option */}
-            <Animated.View
-              style={{
-                opacity: optionsAnim[(currentQuestionData.options || []).length],
-                transform: [
-                  {
-                    translateX: optionsAnim[(currentQuestionData.options || []).length].interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [-50, 0],
-                    }),
-                  },
-                ],
-              }}
-            >
-              {/* <TouchableOpacity
-                style={[styles.option, styles.otherOption, selectedAnswer === -1 && styles.selectedOption]}
-                onPress={() => handleAnswer((currentQuestionData.options || []).length)}
-                disabled={selectedAnswer !== null || showCustomInput}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.optionText, styles.otherOptionText]}>Other (specify)</Text>
-              </TouchableOpacity> */}
-            </Animated.View>
+                {/* Score Circle */}
+                <Animated.View
+                  style={[
+                    styles.timerContainer,
+                    {
+                      opacity: timerOpacity,
+                      transform: [{ scale: pulseAnim }],
+                    },
+                  ]}
+                >
+                  <Svg width={timerRadius * 2 + timerStroke} height={timerRadius * 2 + timerStroke}>
+                    <Circle
+                      cx={timerRadius + timerStroke / 2}
+                      cy={timerRadius + timerStroke / 2}
+                      r={timerRadius}
+                      stroke="rgba(255, 255, 255, 0.2)"
+                      strokeWidth={timerStroke}
+                      fill="white"
+                    />
+                    <AnimatedCircle
+                      cx={timerRadius + timerStroke / 2}
+                      cy={timerRadius + timerStroke / 2}
+                      r={timerRadius}
+                      stroke="#7B5CFF"
+                      strokeWidth={timerStroke}
+                      fill="transparent"
+                      strokeDasharray={timerCircumference}
+                      strokeDashoffset={timerProgress.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [timerCircumference, 0],
+                      })}
+                      strokeLinecap="round"
+                    />
+                  </Svg>
+                  <Text style={[styles.timerText, timeLeft < 6 && styles.timerTextRed]}>{timeLeft}</Text>
+                </Animated.View>
+              </View>
 
-            {/* Custom answer input */}
-            {showCustomInput && (
+              {/* Question Counter */}
+              <View style={styles.questionCounterContainer}>
+                <Text style={styles.questionCounter}>Question {currentQuestion + 1}/20</Text>
+              </View>
+
+              {/* Question Text */}
               <Animated.View
                 style={[
-                  styles.customInputContainer,
+                  styles.questionTextContainer,
                   {
-                    opacity: customInputAnim,
+                    opacity: questionAnim,
                     transform: [
                       {
-                        translateY: customInputAnim.interpolate({
+                        translateY: questionAnim.interpolate({
                           inputRange: [0, 1],
                           outputRange: [20, 0],
                         }),
-                      },
-                      {
-                        translateX: shakeAnim,
                       },
                     ],
                   },
                 ]}
               >
-                <TextInput
-                  style={styles.customInput}
-                  placeholder="Type your answer here..."
-                  value={customAnswer}
-                  onChangeText={setCustomAnswer}
-                  autoFocus
-                  multiline
-                />
-                <TouchableOpacity style={styles.submitButton} onPress={handleCustomAnswer}>
-                  <Text style={styles.submitButtonText}>Submit</Text>
-                </TouchableOpacity>
+                <Text style={styles.questionText}>{currentQuestionData.text}</Text>
               </Animated.View>
-            )}
+            </LinearGradient>
           </View>
 
-          <Animated.View
-            style={[
-              styles.nextButtonContainer,
-              {
-                opacity: nextButtonAnim,
-                transform: [
-                  {
-                    translateY: nextButtonAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [20, 0],
-                    }),
-                  },
-                ],
-              },
-            ]}
-          >
-            <TouchableOpacity
-              style={[
-                styles.nextButton,
-                (selectedAnswer === null && !showCustomInput) || (showCustomInput && !customAnswer.trim())
-                  ? styles.disabledButton
-                  : null,
-              ]}
-              onPress={handleNext}
-              disabled={(selectedAnswer === null && !showCustomInput) || (showCustomInput && !customAnswer.trim())}
-            >
-              <LinearGradient
-                colors={["#7B5CFF", "#6A4DE0"]}
-                style={styles.buttonGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
+          {/* Options (on white background) - Now completely separate from purple header */}
+          <View style={styles.optionsWrapper}>
+            <View style={styles.optionsContainer}>
+              {showCustomInput ? (
+                <Animated.View
+                  style={[
+                    styles.customInputContainer,
+                    {
+                      opacity: customInputAnim,
+                      transform: [
+                        {
+                          translateY: customInputAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [20, 0],
+                          }),
+                        },
+                        {
+                          translateX: shakeAnim,
+                        },
+                      ],
+                    },
+                  ]}
+                >
+                  <TextInput
+                    style={styles.customInput}
+                    placeholder="Enter your answer..."
+                    value={customAnswer}
+                    onChangeText={setCustomAnswer}
+                    autoFocus
+                    multiline
+                  />
+                  <TouchableOpacity style={styles.submitButton} onPress={handleCustomAnswer}>
+                    <Text style={styles.submitButtonText}>Submit</Text>
+                  </TouchableOpacity>
+                </Animated.View>
+              ) : (
+                (currentQuestionData.options || []).map(
+                  (option, index) =>
+                    (
+                      <Animated.View
+                    key={index}
+                    style={{
+                      opacity: optionsAnim[index],
+                      transform: [
+                        {
+                          translateY: optionsAnim[index].interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [20, 0],
+                          }),
+                        },
+                      ],
+                    }}
+                  >
+                    <TouchableOpacity
+                      style={[styles.option, selectedAnswer === index && styles.selectedOption]}
+                      onPress={() => handleAnswer(index)}
+                      disabled={selectedAnswer !== null || showCustomInput}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.optionText, selectedAnswer === index && styles.selectedOptionText]}>
+                        {option}
+                      </Text>
+
+                      {selectedAnswer === index && (
+                        <View style={styles.selectionIndicator}>
+                          <Svg width={20} height={20} viewBox="0 0 24 24">
+                            <Path
+                              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"
+                              fill="#A42FC1"
+                            />
+                            <Path
+                              d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"
+                              fill="#A42FC1"
+                            />
+                          </Svg>
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  </Animated.View>
+                    ),
+                )
+              )}
+            </View>
+
+            {/* Navigation Buttons */}
+            <View style={styles.navigationButtons}>
+              <TouchableOpacity
+                style={[styles.navButton, styles.nextButton]}
+                onPress={handleNext}
+                disabled={selectedAnswer === null && !customAnswer.trim() && !showCustomInput}
               >
-                <Text style={styles.nextButtonText}>
-                  {currentQuestion === questions.length - 1 ? "Finish" : "Next"}
-                </Text>
-                <Icon name="arrow-right" size={20} color="white" style={styles.nextIcon} />
-              </LinearGradient>
-            </TouchableOpacity>
-          </Animated.View>
+                <Text style={styles.navButtonText}>Next</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
       </SafeAreaView>
     </TouchableWithoutFeedback>
@@ -530,13 +511,28 @@ export default function QuizletScreen({ navigation, route }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#F8F9FA", // Light background color for the main container
   },
-  header: {
+  content: {
+    flex: 1,
+  },
+  purpleHeader: {
+    height: 220, // Adjusted height to only contain the question
+    borderBottomLeftRadius: 25,
+    borderBottomRightRadius: 25,
+    overflow: "hidden",
+  },
+  headerGradient: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === "ios" ? 40 : 20,
+    paddingBottom: 20,
+  },
+  headerControls: {
     flexDirection: "row",
-    alignItems: "center",
-    padding: 20,
     justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 15,
   },
   backButton: {
     width: 40,
@@ -546,190 +542,128 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  progressContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-    marginLeft: 15,
-  },
-  progressBackground: {
-    flex: 1,
-    height: 8,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    borderRadius: 4,
-    marginRight: 10,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    backgroundColor: "white",
-    borderRadius: 4,
-  },
-  progressText: {
-    color: "white",
-    fontSize: 14,
-    fontWeight: "bold",
-  },
-  contentContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  keyboardAdjustedContent: {
-    justifyContent: "flex-start",
-    paddingTop: 20,
-  },
-  questionBox: {
-    backgroundColor: "white",
-    borderRadius: 20,
-    width: "100%",
-    padding: 25,
-    marginBottom: 25,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
-  },
   timerContainer: {
-    alignSelf: "center",
-    marginBottom: 10,
-    position: "relative",
-    width: 60,
-    height: 60,
+    width: 50,
+    height: 50,
     justifyContent: "center",
     alignItems: "center",
   },
   timerText: {
     position: "absolute",
-    color: "#7B5CFF",
-    fontSize: 16,
+    color: "#333333",
+    fontSize: 18,
     fontWeight: "bold",
-    textAlign: "center",
   },
   timerTextRed: {
     color: "#FF5252",
   },
-  questionContent: {
-    marginTop: 20,
+  questionCounterContainer: {
+    alignItems: "center",
+    marginVertical: 15,
+  },
+  questionCounter: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  questionTextContainer: {
+    marginTop: 10,
+    backgroundColor: "transparent",
   },
   questionText: {
-    color: "#333",
+    color: "#FFFFFF",
     fontSize: 18,
+    fontWeight: "500",
     textAlign: "center",
     lineHeight: 24,
   },
-  remainingText: {
-    color: "#666",
-    fontSize: 14,
-    textAlign: "center",
-    marginTop: 15,
-    fontStyle: "italic",
+  optionsWrapper: {
+    flex: 1,
+    backgroundColor: "#F8F9FA", // Light background color for options
   },
   optionsContainer: {
-    width: "100%",
+    flex: 1,
     paddingHorizontal: 20,
+    paddingTop: 30,
+    paddingBottom: 80, // Space for navigation buttons
   },
   option: {
-    backgroundColor: "white",
-    borderRadius: 25,
-    padding: 18,
-    marginBottom: 15,
-    borderWidth: 2,
-    borderColor: "#E1E1E1",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#A42FC1",
+    borderRadius: 25,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    marginBottom: 12,
   },
   selectedOption: {
-    borderColor: "#7B5CFF",
-    backgroundColor: "rgba(123, 92, 255, 0.05)",
+    borderColor: "#A42FC1",
+    backgroundColor: "rgba(164, 47, 193, 0.05)",
+    transform: [{ scale: 1.02 }],
   },
   optionText: {
-    color: "#333",
     fontSize: 16,
-    fontWeight: "500",
+    color: "#333333",
   },
   selectedOptionText: {
-    color: "#7B5CFF",
-    fontWeight: "600",
+    fontWeight: "500",
+    color: "#A42FC1",
   },
-  checkmark: {
+  selectionIndicator: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: "rgba(123, 92, 255, 0.1)",
     justifyContent: "center",
     alignItems: "center",
   },
-  otherOption: {
-    borderStyle: "dashed",
-    borderColor: "#7B5CFF",
-    backgroundColor: "rgba(123, 92, 255, 0.05)",
-  },
-  otherOptionText: {
-    color: "#7B5CFF",
-    fontStyle: "italic",
-  },
   customInputContainer: {
-    backgroundColor: "white",
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#A42FC1",
     borderRadius: 15,
     padding: 15,
-    marginBottom: 15,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    marginBottom: 20,
   },
   customInput: {
-    borderWidth: 1,
-    borderColor: "#E1E1E1",
-    borderRadius: 10,
-    padding: 12,
-    fontSize: 16,
     minHeight: 80,
+    fontSize: 16,
+    color: "#333333",
     textAlignVertical: "top",
   },
   submitButton: {
-    backgroundColor: "#7B5CFF",
-    borderRadius: 10,
-    padding: 12,
+    backgroundColor: "#A42FC1",
+    borderRadius: 25,
+    paddingVertical: 12,
     alignItems: "center",
     marginTop: 10,
   },
   submitButtonText: {
-    color: "white",
+    color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "500",
   },
-  nextButtonContainer: {
+  navigationButtons: {
+    position: "absolute",
+    bottom: 20,
+    left: 20,
+    right: 20,
+  },
+  navButton: {
     width: "100%",
+    paddingVertical: 15,
+    borderRadius: 25,
     alignItems: "center",
-    marginTop: 10,
+    justifyContent: "center",
   },
   nextButton: {
-    width: "60%",
-    borderRadius: 25,
-    overflow: "hidden",
+    backgroundColor: "#A42FC1",
   },
-  buttonGradient: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: 16,
-  },
-  disabledButton: {
-    opacity: 0.6,
-  },
-  nextButtonText: {
-    color: "white",
+  navButtonText: {
+    color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  nextIcon: {
-    marginLeft: 8,
+    fontWeight: "500",
   },
 })
