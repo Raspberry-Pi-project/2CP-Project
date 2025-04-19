@@ -265,9 +265,6 @@ export default function HomeScreen({ navigation }) {
             <TouchableOpacity style={styles.refreshButton} onPress={onRefresh}>
               <Feather name="refresh-cw" size={20} color="white" />
             </TouchableOpacity>
-            <View style={styles.avatarContainer}>
-              <Image source={{ uri: "https://via.placeholder.com/40" }} style={styles.avatar} />
-            </View>
           </View>
         </View>
 

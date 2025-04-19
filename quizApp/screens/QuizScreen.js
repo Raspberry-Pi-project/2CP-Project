@@ -388,9 +388,18 @@ export default function QuizScreen({ navigation, route }) {
           <FloatingBubbles />
 
           <View style={styles.headerContent}>
-            {/* Back button */}
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-              <Icon name="arrow-left" size={24} color="white" />
+            {/* Remove the existing back button and add only home button */}
+            <TouchableOpacity 
+              style={styles.backButton} // Keep using the same style for consistency
+              onPress={() => {
+                // Reset the entire navigation stack and go to Home screen
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'Home' }],
+                });
+              }}
+            >
+              <Icon name="home" size={24} color="white" />
             </TouchableOpacity>
 
             {/* Score indicators */}
@@ -489,6 +498,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 10,
+  },
+  homeButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
