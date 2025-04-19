@@ -20,7 +20,7 @@ export default function QuizInfoScreen({ navigation, route }) {
       console.error("Failed to fetch quiz details:", err)
       setError("Failed to load quiz details. Please try again.")
     } finally {
-      setLoading(false) // Stop the loading spinner
+      setLoading(false) // 
     }
   }
 
