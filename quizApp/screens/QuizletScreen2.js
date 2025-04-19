@@ -194,15 +194,21 @@ export default function QuizletScreen2({ navigation, route }) {
   }
 
   const navigateToResults = () => {
+    // Calculate the number of correct and incorrect answers
+    const answeredQuestions = Object.values(answers);
+    const correctCount = answeredQuestions.filter(a => a.isCorrect).length;
+    const incorrectCount = answeredQuestions.filter(a => !a.isCorrect).length;
+    
+    // Navigate to "Quiz" with the correct parameters
     navigation.navigate("Quiz", {
       quizResults: {
-        score: score,
+        score: correctCount,
         total: physicsQuiz.questions.length,
         correctCount: correctCount,
         incorrectCount: incorrectCount,
         questions: physicsQuiz.questions.map((q, index) => ({
-          id: q.id || index + 1,
-          text: q.text,
+          id: index + 1,
+          text: `Question ${index + 1}`, // Use generic question text
           isCorrect: answers[index]?.isCorrect || false,
         })),
       },
