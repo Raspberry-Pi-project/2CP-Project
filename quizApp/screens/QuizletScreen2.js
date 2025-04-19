@@ -44,6 +44,7 @@ export default function QuizletScreen2({ navigation, route }) {
   const [currentView, setCurrentView] = useState("list") // 'list' or 'question'
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState(null)
+  const [selectedAnswers, setSelectedAnswers] = useState({})
   const [score, setScore] = useState(0)
   const [answers, setAnswers] = useState({})
   const [timeLeft, setTimeLeft] = useState(300) // 5 minutes in seconds
@@ -175,31 +176,81 @@ export default function QuizletScreen2({ navigation, route }) {
   }
 
   const handleAnswer = (index) => {
-    setSelectedAnswer(index)
-    const isCorrect = index === physicsQuiz.questions[currentQuestion].correctAnswer
-
-    // Update score and correct/incorrect counts
-    if (isCorrect) {
-      setScore((prev) => prev + 1)
-      setCorrectCount((prev) => prev + 1)
+    // Get current selections for this question
+    const currentSelections = [...(selectedAnswers[currentQuestion] || [])]
+    
+    // Toggle selection - if already selected, remove it; if not, add it
+    const selectionIndex = currentSelections.indexOf(index)
+    if (selectionIndex >= 0) {
+      currentSelections.splice(selectionIndex, 1)
     } else {
-      setIncorrectCount((prev) => prev + 1)
+      currentSelections.push(index)
     }
-
-    // Save answer
-    setAnswers((prev) => ({
+    
+    // Update selectedAnswers state
+    setSelectedAnswers({
+      ...selectedAnswers,
+      [currentQuestion]: currentSelections
+    })
+    
+    // For backward compatibility with selectedAnswer
+    // If deselecting the current selection, set to null
+    // Otherwise set to the current selection
+    if (selectedAnswer === index && selectionIndex >= 0) {
+      setSelectedAnswer(null)
+    } else if (selectionIndex < 0) {
+      setSelectedAnswer(index)
+    }
+    
+    // Check if any option is selected after this operation
+    if (currentSelections.length === 0) {
+      return // Don't update score or answers if nothing is selected
+    }
+    
+    // Update the answers state with the selected options
+    const question = physicsQuiz.questions[currentQuestion]
+    let isCorrect = false
+    
+    // If the question has a single correct answer
+    if (typeof question.correctAnswer === 'number') {
+      isCorrect = currentSelections.includes(question.correctAnswer)
+    } 
+    // If the question has multiple correct answers (future feature)
+    else if (Array.isArray(question.correctAnswer)) {
+      const allCorrectSelected = question.correctAnswer.every(ans => currentSelections.includes(ans))
+      const onlyCorrectSelected = currentSelections.every(ans => question.correctAnswer.includes(ans))
+      isCorrect = allCorrectSelected && onlyCorrectSelected
+    }
+    
+    // Update score and correct/incorrect counts based on selections
+    // This is just for preview as score will be recalculated on submit
+    if (isCorrect && !(answers[currentQuestion]?.isCorrect)) {
+      setScore(prev => prev + 1)
+      setCorrectCount(prev => prev + 1)
+    } else if (!isCorrect && answers[currentQuestion]?.isCorrect) {
+      setScore(prev => prev - 1)
+      setCorrectCount(prev => prev - 1)
+      setIncorrectCount(prev => prev + 1)
+    }
+    
+    // Save the answers with the multiple selections
+    setAnswers(prev => ({
       ...prev,
-      [currentQuestion]: { answer: index, isCorrect },
+      [currentQuestion]: {
+        answer: index, // Keep for backward compatibility
+        selections: currentSelections,
+        isCorrect
+      }
     }))
   }
 
   const navigateToResults = () => {
-    // Calculate the number of correct and incorrect answers
-    const answeredQuestions = Object.values(answers);
-    const correctCount = answeredQuestions.filter(a => a.isCorrect).length;
-    const incorrectCount = answeredQuestions.filter(a => !a.isCorrect).length;
+    // Calculate the final score based on the current answers
+    const answeredQuestions = Object.values(answers)
+    const correctCount = answeredQuestions.filter(a => a.isCorrect).length
+    const incorrectCount = answeredQuestions.filter(a => !a.isCorrect).length
     
-    // Navigate to "Quiz" with the correct parameters
+    // Navigate to "Quiz" with the parameters updated for multiple answers
     navigation.navigate("Quiz", {
       quizResults: {
         score: correctCount,
@@ -210,6 +261,8 @@ export default function QuizletScreen2({ navigation, route }) {
           id: index + 1,
           text: `Question ${index + 1}`, // Use generic question text
           isCorrect: answers[index]?.isCorrect || false,
+          // Include the selections for potential future use
+          selections: answers[index]?.selections || []
         })),
       },
     })
@@ -422,17 +475,19 @@ export default function QuizletScreen2({ navigation, route }) {
                   <TouchableOpacity
                     style={[
                       styles.option,
-                      selectedAnswer === index && styles.selectedOption
+                      (selectedAnswers[currentQuestion]?.includes(index) || selectedAnswer === index) && styles.selectedOption
                     ]}
                     onPress={() => handleAnswer(index)}
-                    disabled={selectedAnswer !== null}
                     activeOpacity={0.7}
                   >
-                    <Text style={[styles.optionText, selectedAnswer === index && styles.selectedOptionText]}>
+                    <Text style={[
+                      styles.optionText, 
+                      (selectedAnswers[currentQuestion]?.includes(index) || selectedAnswer === index) && styles.selectedOptionText
+                    ]}>
                       {option}
                     </Text>
 
-                    {selectedAnswer === index && (
+                    {(selectedAnswers[currentQuestion]?.includes(index) || selectedAnswer === index) && (
                       <View style={styles.selectionIndicator}>
                         <Svg width={20} height={20} viewBox="0 0 24 24">
                           <Path
@@ -469,9 +524,11 @@ export default function QuizletScreen2({ navigation, route }) {
               >
                 <TouchableOpacity
                   style={[styles.navButton, styles.nextButton]}
-                  disabled={selectedAnswer === null}
+                  disabled={
+                    !selectedAnswers[currentQuestion] || selectedAnswers[currentQuestion].length === 0
+                  }
                   onPress={() => {
-                    if (selectedAnswer !== null) {
+                    if (selectedAnswers[currentQuestion]?.length > 0 || selectedAnswer !== null) {
                       setCurrentView("list")
                     }
                   }}
