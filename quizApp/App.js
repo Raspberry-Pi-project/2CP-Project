@@ -15,6 +15,7 @@ import QuizScoreScreen from "./screens/QuizScoreScreen"
 import ProfileScreen from "./screens/ProfileScreen"
 import QuizInfoScreen from "./screens/QuizInfoScreen"
 import FeedbackScreen from "./screens/FeedbackScreen"
+import StudentPrivateChartScreen from "./screens/StudentPrivateChartScreen"
 import notificationManager, { NotificationManager } from "./components/NotificationManager"
 import { LogBox } from "react-native"
 
@@ -60,6 +61,7 @@ export default function App() {
           <Stack.Screen name="QuizScore" component={QuizScoreScreen} />
           <Stack.Screen name="Profile" component={ProfileScreen} />
           <Stack.Screen name="Feedback" component={FeedbackScreen} />
+          <Stack.Screen name="StudentPrivateChart" component={StudentPrivateChartScreen} />
         </Stack.Navigator>
 
         {/* Advanced Notification Manager with ref */}
