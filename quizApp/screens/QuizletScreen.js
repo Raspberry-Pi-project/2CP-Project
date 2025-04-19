@@ -61,6 +61,7 @@ export default function QuizletScreen({ navigation, route }) {
   const [correctAnswers, setCorrectAnswers] = useState(5) // Example starting values
   const [incorrectAnswers, setIncorrectAnswers] = useState(7)
   const [timerActive, setTimerActive] = useState(true)
+  const [selectedAnswers, setSelectedAnswers] = useState(Array(questions.length).fill([]))
 
   // Animation refs
   const progressAnim = useRef(new Animated.Value(0)).current
@@ -237,18 +238,28 @@ export default function QuizletScreen({ navigation, route }) {
       }),
     ]).start()
 
-    setSelectedAnswer(index)
-    const newAnswers = [...answers]
-    newAnswers[currentQuestion] = index
-    setAnswers(newAnswers)
-
-    // Update score and correct/incorrect counts (keep this logic for scoring)
-    if (index === questions[currentQuestion]?.correctAnswer) {
-      setScore((prev) => prev + 1)
-      setCorrectAnswers((prev) => prev + 1)
+    // Multiple selection logic
+    const newSelectedAnswers = [...selectedAnswers]
+    const currentSelections = [...(newSelectedAnswers[currentQuestion] || [])]
+    
+    // Toggle selection - if already selected, remove it; if not, add it
+    const selectionIndex = currentSelections.indexOf(index)
+    if (selectionIndex >= 0) {
+      currentSelections.splice(selectionIndex, 1)
     } else {
-      setIncorrectAnswers((prev) => prev + 1)
+      currentSelections.push(index)
     }
+    
+    newSelectedAnswers[currentQuestion] = currentSelections
+    setSelectedAnswers(newSelectedAnswers)
+    
+    // For backward compatibility, set the most recent selection
+    setSelectedAnswer(index)
+    
+    // Update the answers array for scoring
+    const newAnswers = [...answers]
+    newAnswers[currentQuestion] = currentSelections
+    setAnswers(newAnswers)
   }
 
   const handleCustomAnswer = () => {
@@ -304,20 +315,40 @@ export default function QuizletScreen({ navigation, route }) {
       setTimeLeft(15) // Reset timer
       setTimerActive(true) // Ensure timer is active for next question
     } else {
-      // Quiz is complete - navigate directly to results without delay
+      // Quiz is complete - calculate score based on selected answers
+      const finalScore = questions.reduce((totalScore, question, idx) => {
+        const userAnswers = selectedAnswers[idx] || [];
+        const correctAnswer = question.correctAnswer;
+        
+        // If there's only one correct answer
+        if (typeof correctAnswer === 'number') {
+          return userAnswers.includes(correctAnswer) ? totalScore + 1 : totalScore;
+        } 
+        // If there are multiple correct answers (assuming correctAnswer is an array)
+        else if (Array.isArray(correctAnswer)) {
+          // Check if user selected all correct answers and only correct answers
+          const allCorrectSelected = correctAnswer.every(ans => userAnswers.includes(ans));
+          const onlyCorrectSelected = userAnswers.every(ans => correctAnswer.includes(ans));
+          return (allCorrectSelected && onlyCorrectSelected) ? totalScore + 1 : totalScore;
+        }
+        
+        return totalScore;
+      }, 0);
+      
+      // Navigate to results screen with updated data
       navigation.navigate("Quiz", {
         quizResults: {
-          score: score,
+          score: finalScore,
           total: questions.length,
-          correctCount: correctAnswers,
-          incorrectCount: incorrectAnswers,
+          correctCount: finalScore,
+          incorrectCount: questions.length - finalScore,
           questions: questions.map((q, index) => ({
             id: q.id || index + 1,
             text: `Question ${index + 1}`,
-            isCorrect: answers[index] === q.correctAnswer,
+            isCorrect: selectedAnswers[index]?.includes(q.correctAnswer) || false,
           })),
         },
-      })
+      });
     }
   }
 
@@ -461,16 +492,22 @@ export default function QuizletScreen({ navigation, route }) {
                     }}
                   >
                     <TouchableOpacity
-                      style={[styles.option, selectedAnswer === index && styles.selectedOption]}
+                      style={[
+                        styles.option, 
+                        selectedAnswers[currentQuestion]?.includes(index) && styles.selectedOption
+                      ]}
                       onPress={() => handleAnswer(index)}
-                      disabled={selectedAnswer !== null || showCustomInput}
+                      disabled={showCustomInput}
                       activeOpacity={0.7}
                     >
-                      <Text style={[styles.optionText, selectedAnswer === index && styles.selectedOptionText]}>
+                      <Text style={[
+                        styles.optionText, 
+                        selectedAnswers[currentQuestion]?.includes(index) && styles.selectedOptionText
+                      ]}>
                         {option}
                       </Text>
 
-                      {selectedAnswer === index && (
+                      {selectedAnswers[currentQuestion]?.includes(index) && (
                         <View style={styles.selectionIndicator}>
                           <Svg width={20} height={20} viewBox="0 0 24 24">
                             <Path
@@ -496,7 +533,11 @@ export default function QuizletScreen({ navigation, route }) {
               <TouchableOpacity
                 style={[styles.navButton, styles.nextButton]}
                 onPress={handleNext}
-                disabled={selectedAnswer === null && !customAnswer.trim() && !showCustomInput}
+                disabled={
+                  selectedAnswers[currentQuestion]?.length === 0 && 
+                  !customAnswer.trim() && 
+                  !showCustomInput
+                }
               >
                 <Text style={styles.navButtonText}>Next</Text>
               </TouchableOpacity>
