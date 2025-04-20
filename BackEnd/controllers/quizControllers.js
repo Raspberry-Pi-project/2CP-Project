@@ -16,8 +16,6 @@ const getQuizzes = async (req, res) => {
       for_year,
       for_groupe,
       correctionType,
-      
-      
     } = req.body;
 
     //default to page 1
@@ -32,7 +30,6 @@ const getQuizzes = async (req, res) => {
     if (status) filters.status = status;
     if (for_year) filters.for_year = for_year;
     if (for_groupe) filters.for_groupe = for_groupe;
-    
 
     const quizzes = await prisma.quizzes.findMany({
       skip: (page - 1) * limit, //skip records based on page number
@@ -42,12 +39,13 @@ const getQuizzes = async (req, res) => {
     const totalQuizzes = await prisma.quizzes.count({
       where: filters,
     });
-    for (quiz of quizzes){
+    for (quiz of quizzes) {
       const totalQuestions = await prisma.questions.count({
         where: { id_quiz: quiz.id_quiz },
       });
-      quiz.totalQuestions = totalQuestions;  
+      quiz.totalQuestions = totalQuestions;
     }
+
     res.json({
       page,
       limit,
@@ -75,16 +73,16 @@ const createQuiz = async (req, res) => {
       status,
       questions,
       image,
-      navigation
+      navigation,
     } = req.body;
-    console.log(req.body)
+    console.log(req.body);
     let for_year2 = for_year;
     let for_groupe2 = for_groupe;
-    if (typeof(for_year2) === "string") {
-      for_year2 = 0
+    if (typeof for_year2 === "string") {
+      for_year2 = 0;
     }
-    if (typeof(for_groupe2) === "string") {
-      for_groupe2 = 0
+    if (typeof for_groupe2 === "string") {
+      for_groupe2 = 0;
     }
     const newQuiz = await prisma.quizzes.create({
       data: {
@@ -97,8 +95,8 @@ const createQuiz = async (req, res) => {
         duration,
         correctionType,
         score,
-        for_year : for_year2,
-        for_groupe : for_groupe2,
+        for_year: for_year2,
+        for_groupe: for_groupe2,
         navigation,
         status, // Save the status
         questions: {
@@ -150,7 +148,7 @@ const updateQuiz = async (req, res) => {
       for_groupe,
       status,
       questions,
-      navigation
+      navigation,
     } = req.body;
 
     // Update the quiz
@@ -171,7 +169,7 @@ const updateQuiz = async (req, res) => {
         for_year,
         for_groupe,
         status,
-        navigation
+        navigation,
       },
     });
 
@@ -286,8 +284,6 @@ const deleteQuiz = async (req, res) => {
   }
 };
 
-
-
 const getQuizDetails = async (req, res) => {
   const { id_quiz } = req.body;
   try {
@@ -314,7 +310,7 @@ const getQuizDetails = async (req, res) => {
         },
       },
     });
-    console.log("quiz",quiz);
+    console.log("quiz", quiz);
     if (!quiz) return res.status(404).json({ error: "Quiz not found" });
     res.json(quiz);
   } catch (error) {
