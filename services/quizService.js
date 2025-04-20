@@ -23,7 +23,7 @@ export const fetchHomeQuizzes = async () => {
 // Function to get quiz details
 export const getQuizDetails = async (quizId) => {
   try {
-    const response = await API.post('/quizzes/get-quiz-details', { id_quiz: quizId });
+    const response = await API.post('http://172.20.10.2:3000/students/getQuizDetails', { id_quiz: quizId });
     return response.data;
   } catch (error) {
     console.error('Error fetching quiz details:', error);

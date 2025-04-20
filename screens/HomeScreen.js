@@ -141,7 +141,7 @@ export default function HomeScreen({ navigation }) {
         return;
       }
 
-      const response = await api.post("/getAvailableQuizzes", {
+      const response = await api.post("http://172.20.10.2:3000/students/getAvailableQuizzes", {
         page: 1,
         limit: 10,
         for_groupe: studentGroup,
@@ -166,9 +166,16 @@ export default function HomeScreen({ navigation }) {
   const startQuiz = async (quizId) => {
     try {
       const attempt = await studentAPI.startAttempt(quizId);
+      
+      if (!attempt || !attempt.id) {
+        throw new Error("Invalid attempt object received");
+      }
+      
       navigation.navigate("QuizScreen", { attemptId: attempt.id });
     } catch (error) {
       console.error("Error starting quiz:", error);
+          alert("Failed to start quiz. Please try again later.");
+
     }
   };
 
@@ -184,15 +191,21 @@ export default function HomeScreen({ navigation }) {
   };
 
   const handleQuizPress = async (quiz) => {
+    console.log("Attempting to fetch details for quiz:", quiz.id_quiz); // Debug log
+
     try {
       const quizDetails = await getQuizDetails(quiz.id_quiz);
       navigation.navigate("QuizInfo", {
-        quiz: {
-          ...quizDetails,
-          description: quizDetails.description || getQuizDescription(quizDetails),
-          time: quizDetails.duration || getQuizTime(quizDetails),
-          attempts: quizDetails.nb_attempts || 1,
-        },
+        id_quiz: quiz.id_quiz,  // Required for fetching details
+        basicQuizData: {       // Basic info you already have
+        id_quiz: quiz.id_quiz,
+        title: quiz.title,
+        description: quiz.description,
+        duration: quiz.duration,
+        nb_attempts: quiz.nb_attempts,
+        subject: quiz.subject,
+        questions: quiz.questions || []
+  }
       });
     } catch (error) {
       console.error("Error fetching quiz details:", error);
@@ -340,6 +353,8 @@ export default function HomeScreen({ navigation }) {
               showsVerticalScrollIndicator={false}
               scrollEnabled={false}
               contentContainerStyle={{ paddingHorizontal: 24 }}
+              refreshing={loading}
+              onRefresh={fetchQuizzes}
             />
           )}
 

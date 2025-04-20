@@ -1,39 +1,89 @@
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar, Image, Dimensions } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import Icon from "react-native-vector-icons/Feather"
-//
+import { ActivityIndicator, Alert } from 'react-native';
+
 import axios from 'axios'
 const { width } = Dimensions.get("window")
+import { useNavigation, useRoute } from '@react-navigation/native';
 
 export default function QuizInfoScreen({ navigation, route }) {
-  const { id_quiz } = route.params || {} // Get quizId from route params
-  const [quiz, setQuiz] = useState(null) // State to store quiz details
-  const [loading, setLoading] = useState(true) // State to manage loading
-  const [error, setError] = useState(null) // State to manage errors
+  const { id_quiz, basicQuizData  } = route.params || {} // Get quizId from route params
+  const [quiz, setQuiz] = useState(() => {
+    if (basicQuizData) {
+      return {
+        ...basicQuizData,
+        time: basicQuizData.duration,
+        attempts: basicQuizData.nb_attempts,
+        questions: basicQuizData.questions || [],
+      };
+    }
+    return null; 
+  }) 
 
+
+  const [loading, setLoading] = useState(!basicQuizData) // State to manage loading
+  const [error, setError] = useState(null) // State to manage errors
+  const [quizData, setQuizData] = useState(null);
+
+  
 
   const fetchQuizDetails = async () => {
+    
+    if (!id_quiz) {
+      setError("Missing quiz ID");
+      setLoading(false);
+      return;
+    }
+
     try {
-      const response = await axios.post(`http://192.168.1.3:3000/students/getQuizDetails/${id_quiz}`) // Replace <your-backend-url> with your backend URL
-      setQuiz(response.data) // Update the state with the fetched quiz details
-    } catch (err) {
-      console.error("Failed to fetch quiz details:", err)
-      setError("Failed to load quiz details. Please try again.")
-    } finally {
+
+      const response = await axios.post(`http://172.20.10.2:3000/students/getQuizDetails`, 
+        { id_quiz },
+        { timeout: 10000 } // 10 seconds
+      )
+
+      
+      if (response.data) {
+        setQuiz({
+          //...basicQuizData, // Keep basic data as fallback
+          ...response.data, // Override with detailed data
+          time: response.data.duration,
+          attempts: response.data.nb_attempts, 
+          questions: response.data.questions || []
+         // id_quiz // Ensure ID is preserved
+        });
+      } else {
+        setError("No quiz data received");
+      }
+
+      //setQuiz(response.data) // Update the state with the fetched quiz details
+      }catch (err) {
+        console.error("API Error:", err.response?.data || err.message);
+        setError(err.response?.data?.error || err.message || "Failed to load quiz");
+      } finally {
       setLoading(false) // 
     }
   }
 
   useEffect(() => {
+    if (!basicQuizData && id_quiz) {
+      fetchQuizDetails();
+    } 
+    
+  }, [id_quiz, basicQuizData]);
+
+  /*useEffect(() => {
     if (id_quiz) {
       fetchQuizDetails();
     } else {
       setError("Quiz ID is missing.");
       setLoading(false);
     }
-  }, [id_quiz]);
+  }, [id_quiz]);  */
 
-  if (!quiz) {
+  /*if (!quiz) {
     // Handle case where quiz data is missing
     return (
       <SafeAreaView style={styles.container}>
@@ -47,10 +97,12 @@ export default function QuizInfoScreen({ navigation, route }) {
         </View>
       </SafeAreaView>
     )
-  }
+  } */
 
   // Get an icon based on quiz type
   const getQuizIcon = () => {
+    if (!quiz?.subject) return "help-circle";
+
     switch (quiz.id) {
       case "1": // English
         return "book"
@@ -83,12 +135,55 @@ export default function QuizInfoScreen({ navigation, route }) {
 
   const handleStartQuiz = () => {
     // Navigate to the appropriate quiz screen based on quiz ID
-    if (quiz.id === "4") {
+    /*if (quiz.id === "4") {
       navigation.navigate("Quizlet2", { quiz })
     } else {
       navigation.navigate("Quizlet", { quiz })
-    }
+    } */
+
+      /*const quizId = String(quiz.id_quiz || quiz.id); // fallback
+      navigation.navigate("Quizlet", { quizId, quiz }); */
+      
+      if (!quiz) return;
+
+      if (!quiz.questions || quiz.questions.length === 0) {
+        Alert.alert("No Questions", "This quiz doesn't contain any questions yet.");
+        return;
+      }
+
+      navigation.navigate("Quizlet", { 
+        quizId: quiz.id_quiz,
+        quizTitle: quiz.title,
+        quizData: quiz
+      });
   }
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="light-content" />
+        <LinearGradient colors={["#7B5CFF", "#A42FC1"]} style={StyleSheet.absoluteFill} />
+        <ActivityIndicator size="large" color="white" style={styles.loader} />
+      </SafeAreaView>
+    );
+  }
+
+  if (error || !quiz) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="light-content" />
+        <LinearGradient colors={["#7B5CFF", "#A42FC1"]} style={StyleSheet.absoluteFill} />
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error || "Quiz information not available"}</Text>
+          <TouchableOpacity style={styles.backButtonLarge} onPress={() => navigation.goBack()}>
+            <Text style={styles.backButtonText}>Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+  
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -134,12 +229,12 @@ export default function QuizInfoScreen({ navigation, route }) {
             <View style={styles.detailsContainer}>
               <View style={styles.detailItem}>
                 <Text style={styles.detailLabel}>Time :</Text>
-                <Text style={styles.detailValue}>{quiz.time || "30 minutes"}</Text>
+                <Text style={styles.detailValue}>{quiz.duration}</Text>
               </View>
 
               <View style={styles.detailItem}>
                 <Text style={styles.detailLabel}>Number of attempts :</Text>
-                <Text style={styles.detailValue}>{quiz.attempts || 1}</Text>
+                <Text style={styles.detailValue}>{quiz.nb_attempts }</Text>
               </View>
 
               <View style={styles.detailItem}>

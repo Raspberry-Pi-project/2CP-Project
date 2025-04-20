@@ -32,12 +32,12 @@ export default function LoginScreen({ navigation }) {
     }
 
     try {
-      console.log("Attempting login to:", "http://192.168.1.3:3000/auth/login");
+      console.log("Attempting login to:", "http://172.20.10.2:3000/auth/login");
       console.log("Request Payload:", { email, password, role: "student" });
 
       // Step 1: Login and get userId
       const response = await axios.post(
-        "http://192.168.1.3:3000/auth/login",
+        "http://172.20.10.2:3000/auth/login",
         {
           email,
           password,
@@ -64,7 +64,7 @@ export default function LoginScreen({ navigation }) {
 
       // Step 2: Fetch additional details using userId
       const userDetailsResponse = await axios.post(
-        `http://192.168.1.3:3000/students/${userId}`
+        `http://172.20.10.2:3000/students/${userId}`
       );
 // jknjkn
       const { groupe_student: studentGroup, annee: studentYear } =

@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getToken } from '../services/authStorge'; 
 
 
-const API_BASE_URL = 'http://192.168.1.3:3000/students';  
+const API_BASE_URL = 'http://172.20.10.2:3000/students';  
 
 const api = axios.create({
   baseURL: API_BASE_URL,
