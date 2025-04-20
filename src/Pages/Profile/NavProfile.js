@@ -2,9 +2,11 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from "../../photos/Design2.jpg";
 import styles from './NavProfile.module.css'; // Import styles from the CSS module
+import { useAuth } from '../../context/AuthProvider';
 
 export const NavProfile = () => {
     const navigate = useNavigate();
+    const {user} = useAuth()
 
     return (
         <nav className={styles.navProfile}>
@@ -13,9 +15,9 @@ export const NavProfile = () => {
             </div>
             <div className={styles.navRight}>
                 <button className={styles.logout} onClick={() => navigate("/")}>Logout</button>
-                <button className={styles.addUser} onClick={() => navigate("/SignUp")}>
+                {user.role === "admin" && <button className={styles.addUser} onClick={() => navigate("/SignUp")}>
                     + Add a new user
-                </button>
+                </button>}
             </div>
         </nav>
     );

@@ -2,32 +2,92 @@ import React from "react";
 import { NavProfile } from "./NavProfile";
 import { useNavigate } from "react-router-dom";
 import styles from "./TeacherProfile.module.css";
+import { useAuth } from "../../context/AuthProvider";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { useQuiz } from "../../context/QuizProvider";
 
 const TeacherProfile = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { setQuizData } = useQuiz(); // Import setQuizData from QuizProvider
+  const [quizzes, setQuizzes] = useState([]); // Initialize quizzes state to an empty array
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [teacher, setTeacher] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const quizzes = [
-    {
-      title: "General Knowledge Challenge",
-      difficulty: "Medium",
-      questions: 10,
-    },
-    {
-      title: "General Knowledge Challenge",
-      difficulty: "Medium",
-      questions: 10,
-    },
-    {
-      title: "General Knowledge Challenge",
-      difficulty: "Medium",
-      questions: 10,
-    },
-    {
-      title: "General Knowledge Challenge",
-      difficulty: "Medium",
-      questions: 10,
-    },
-  ];
+  // Check if user is logged in
+
+
+  useEffect(() => {
+    const fetchQuizzes = async () => {
+      if (!user || !user.id) return;
+
+      setLoading(true);
+      try {
+        const result = await axios.post(
+          "http://localhost:3000/teachers/getQuizzes",
+          { id_teacher: user.id, page, limit, status: "published" },
+          { withCredentials: true }
+        );
+
+        const userr = await axios.post(
+          "http://localhost:3000/teachers/getTeachers",
+          { id_teacher: user.id, page: 1, limit: 1000000 },
+          { withCredentials: true }
+        );
+
+        if (result.status !== 200) {
+          throw new Error("Failed to fetch quizzes");
+        } else {
+          setQuizzes(result.data.data);
+          setTotalPages(result.data.totalPages);
+          setTeacher(userr.data.data[0]);
+        }
+      } catch (error) {
+        console.error("Error fetching quizzes:", error);
+        setError("Failed to load profile data. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchQuizzes();
+  }, [page, limit, user]);
+
+  useEffect(() => {
+    console.log("Quizzes updated:", quizzes);
+  }, [quizzes]);
+  useEffect(() => {
+    console.log("teacher updated:", teacher);
+  }, [teacher]);
+
+  const handleConsult = async (quizId) => {
+    try {
+      // Fetch quiz details from the backend API
+      const response = await axios.post(
+        "http://localhost:3000/teachers/getQuizDetails",
+        { id_quiz: quizId },
+        { withCredentials: true }
+      );
+      //console.log("Quiz details response:", response.data);
+      if (response.status !== 200) {
+        throw new Error("Failed to fetch quiz details");
+      } else {
+        setQuizData(response.data); // Set the selected quiz data in context
+        navigate(`/quizDetails`); // will go to the page of finalization2 basing on its id
+      }
+    } catch (error) {
+      console.error("Error fetching quiz details:", error);
+    }
+
+    //setQuizData(quizzes.find((quiz) => quiz.id === quizId)); // Set the selected quiz data in context
+    // Navigate to the quiz details page
+    //
+  };
 
   return (
     <div className={styles.teacherProfileContainer}>
@@ -36,17 +96,35 @@ const TeacherProfile = () => {
       <div className={styles.teacherProfileBody}>
         <div className={styles.sidebar}>
           <div className={styles.profileSection}>
-            <div className={styles.profileCircle}>MR</div>
-            <p className={styles.adminName}>Teacher Name</p>
+            <div
+              className={styles.profileCircle}
+              onClick={() => {
+                navigate("/TeacherProfile");
+              }}
+            >
+              {loading === true
+                ? ""
+                : teacher.last_name[0] + teacher.first_name[0]}
+            </div>
+            <p className={styles.adminName}>
+              {teacher.last_name + " " + teacher.first_name}
+            </p>
           </div>
           <ul className={styles.sidebarMenu}>
-            <li
-              className={styles.menuItem}
-              onClick={() => navigate("/AdminDash")}
-            >
-              Dashboard
-            </li>
-            <li className={`${styles.menuItem} ${styles.active}`}>Teachers</li>
+            {user.role === "admin" && (
+              <>
+                <li
+                  className={styles.menuItem}
+                  onClick={() => navigate("/AdminDash")}
+                >
+                  Dashboard
+                </li>
+
+                <li className={`${styles.menuItem} ${styles.active}`}>
+                  Teachers
+                </li>
+              </>
+            )}
             <li
               className={styles.menuItem}
               onClick={() => navigate("/AdminStudent")}
@@ -59,10 +137,14 @@ const TeacherProfile = () => {
         <div className={styles.mainContent}>
           <h1 className={styles.pageTitle}>Profile</h1>
           <div className={styles.profileHeader}>
-            <div className={styles.teacherAvatar}>MR</div>
+            <div className={styles.teacherAvatar}>
+              {loading === true
+                ? ""
+                : teacher.last_name[0] + teacher.first_name[0]}
+            </div>
             <div className={styles.teacherInfo}>
-              <h2>Bahri Assia</h2>
-              <p>Teacher</p>
+              <h2>{teacher.last_name + " " + teacher.first_name}</h2>
+              <p>{user.role}</p>
             </div>
           </div>
 
@@ -70,25 +152,29 @@ const TeacherProfile = () => {
             <div className={styles.personalInfo}>
               <h3>Personal Information:</h3>
               <p>
-                <strong>Full Name:</strong> <br /> Bahri Assia
+                <strong>Full Name:</strong> <br />{" "}
+                {teacher.last_name + " " + teacher.first_name}
               </p>
               <p>
-                <strong>Email Address:</strong> <br /> Bahri_Assia@esi.dz
+                <strong>Email Address:</strong> <br /> {teacher.email}
               </p>
               <p>
-                <strong>User Id:</strong> <br /> 123
+                <strong>User Id:</strong> <br /> {teacher.id_teacher}
               </p>
             </div>
 
             <div className={styles.quizzes}>
               <h3>Quizzes:</h3>
               <div className={styles.quizCards}>
-                {quizzes.map((quiz, index) => (
+                {quizzes.length === 0 ? "No Quizzes Created" : quizzes.map((quiz, index) => (
                   <div className={styles.quizCard} key={index}>
                     <h4>{quiz.title}</h4>
-                    <p>{quiz.difficulty}</p>
-                    <p>{quiz.questions} Questions</p>
-                    <button className={styles.consultButton}>CONSULT</button>
+                    <p>{quiz.subject}</p>
+                    <p>
+                      {quiz.totalQuestions} Question
+                      {quiz.totalQuestions === 1 ? "" : "s"}
+                    </p>
+                    <button className={styles.consultButton} onClick={() => handleConsult(quiz.id_quiz)} >CONSULT</button>
                   </div>
                 ))}
               </div>

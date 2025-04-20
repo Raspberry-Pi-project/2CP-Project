@@ -1,6 +1,11 @@
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+} from "react-router-dom";
 import Navbars from "./components/Nav/navbar";
 import Home from "./Pages/home";
 import Footer from "./components/foot/footer";
@@ -20,28 +25,26 @@ import HistoryPage from "./Pages/History/historypage";
 import QuizDetails from "./Pages/QuizDetails/quizdetails";
 import Results from "./Pages/ResultsPage/results";
 import DraftQuiz from "./Pages/DraftQuizPage/draftquiz";
-import AdminDash from './Pages/Profile/AdminDash';
-import TeacherDash from './Pages/Profile/TeacherDash';
-import AdminTeacher from './Pages/Profile/AdminTeacher';
-import AdminStudent from './Pages/Profile/AdminStudent';
-import TeacherStudent from './Pages/Profile/TeacherStudents';
-import TeacherStudentProfile from './Pages/Profile/TeacherStudentProfile';
-import TeacherProfile from './Pages/Profile/TeacherProfile';
-import StudentProfile from './Pages/Profile/StudentProfile';
-
-
+import AdminDash from "./Pages/Profile/AdminDash";
+import TeacherDash from "./Pages/Profile/TeacherDash";
+import AdminTeacher from "./Pages/Profile/AdminTeacher";
+import AdminStudent from "./Pages/Profile/AdminStudent";
+import TeacherStudent from "./Pages/Profile/TeacherStudents";
+import TeacherStudentProfile from "./Pages/Profile/TeacherStudentProfile";
+import TeacherProfile from "./Pages/Profile/TeacherProfile";
+import StudentProfile from "./Pages/Profile/StudentProfile";
 
 export default function App() {
   return (
     <AuthProvider>
       <QuizProvider>
-      <Router>
-        <MainLayout />
-       </Router>
-       </QuizProvider>
+        <Router>
+          <MainLayout />
+        </Router>
+      </QuizProvider>
     </AuthProvider>
   );
-} 
+}
 
 function MainLayout() {
   const location = useLocation();
@@ -55,11 +58,12 @@ function MainLayout() {
     "/teacherstudents",
     "/teacherstudentprofile",
     "/teacherprofile",
-    "/studentprofile",
+    "/StudentProfile",
+    "/StudentProfile/:id",
   ];
 
-   // Define routes where only the banner should be shown
-   const bannerPages = [
+  // Define routes where only the banner should be shown
+  const bannerPages = [
     "/noquizzes",
     "/info",
     "/duration",
@@ -72,9 +76,15 @@ function MainLayout() {
     "/draftquiz",
   ];
 
-  const isNoBannerOrNavbar = noBannerOrNavbarPages.includes(location.pathname.toLowerCase());
+  const isNoBannerOrNavbar = noBannerOrNavbarPages.some(
+    (path) =>
+      location.pathname.toLowerCase() === path.toLowerCase() ||
+      (path.includes(":") &&
+        location.pathname
+          .toLowerCase()
+          .startsWith(path.split(":")[0].toLowerCase()))
+  );
   const showBanner = bannerPages.includes(location.pathname.toLowerCase());
-
 
   return (
     <Fragment>
@@ -82,8 +92,7 @@ function MainLayout() {
       {!isNoBannerOrNavbar && (showBanner ? <BannerApp /> : <Navbars />)}
 
       <Routes>
-
-      <Route path="/" element={<Home />} />
+        <Route path="/" element={<Home />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/NoQuizzes" element={<FullPage />} />
@@ -96,18 +105,19 @@ function MainLayout() {
         <Route path="/quizdetails" element={<QuizDetails />} />
         <Route path="/results" element={<Results />} />
         <Route path="/draftquiz" element={<DraftQuiz />} />
-        <Route path="/AdminDash" element={<AdminDash />} /> {/* Admin will now include NavProfile */}
+        <Route path="/AdminDash" element={<AdminDash />} />{" "}
+        {/* Admin will now include NavProfile */}
         <Route path="/TeacherDash" element={<TeacherDash />} />
-        <Route path="/AdminTeacher" element={<AdminTeacher/>} />
-        <Route path="AdminStudent" element={<AdminStudent/>}/>
-        <Route path="TeacherStudents" element={<TeacherStudent/>}/>
-        <Route path="TeacherStudentProfile" element={<TeacherStudentProfile/>}/>
-        <Route path="/TeacherProfile" element={<TeacherProfile/>}/>
-        <Route path="/StudentProfile" element={<StudentProfile/>}/>
-
-
-
-{/*}
+        <Route path="/AdminTeacher" element={<AdminTeacher />} />
+        <Route path="AdminStudent" element={<AdminStudent />} />
+        <Route path="TeacherStudents" element={<TeacherStudent />} />
+        <Route
+          path="TeacherStudentProfile"
+          element={<TeacherStudentProfile />}
+        />
+        <Route path="/TeacherProfile" element={<TeacherProfile />} />
+        <Route path="/StudentProfile/:id" element={<StudentProfile />} />
+        {/*}
         <Route 
           path="/NoQuizzes" 
           element={
@@ -164,10 +174,8 @@ function MainLayout() {
         // ADD HERE THE OTHER 4 PAGES THAT I ADDED
         
         */}
-
       </Routes>
 
-      
       {/* Conditionally render Footer */}
       {!isNoBannerOrNavbar && !showBanner && <Footer />}
     </Fragment>
