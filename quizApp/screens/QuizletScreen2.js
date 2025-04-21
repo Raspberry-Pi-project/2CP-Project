@@ -245,27 +245,35 @@ export default function QuizletScreen2({ navigation, route }) {
   }
 
   const navigateToResults = () => {
-    // Calculate the final score based on the current answers
-    const answeredQuestions = Object.values(answers)
-    const correctCount = answeredQuestions.filter(a => a.isCorrect).length
-    const incorrectCount = answeredQuestions.filter(a => !a.isCorrect).length
+    // Calculate score
+    const answeredQuestions = Object.values(answers);
+    const correctCount = answeredQuestions.filter(a => a.isCorrect).length;
+    const incorrectCount = answeredQuestions.filter(a => !a.isCorrect).length;
     
-    // Navigate to "Quiz" with the parameters updated for multiple answers
+    // Navigate to Quiz with complete information
     navigation.navigate("Quiz", {
       quizResults: {
         score: correctCount,
         total: physicsQuiz.questions.length,
         correctCount: correctCount,
         incorrectCount: incorrectCount,
+        timeSpent: 300 - timeLeft,
+        // Include quiz identifiers and full data
+        quizId: physicsQuiz.id,
+        originalQuiz: physicsQuiz,
+        // Create simplified questions list for QuizScreen display
         questions: physicsQuiz.questions.map((q, index) => ({
           id: index + 1,
-          text: `Question ${index + 1}`, // Use generic question text
+          text: `Question ${index + 1}`, // Simple numbered format for QuizScreen
           isCorrect: answers[index]?.isCorrect || false,
-          // Include the selections for potential future use
-          selections: answers[index]?.selections || []
+          selections: answers[index]?.selections || [],
+          answer: answers[index]?.answer,
+          // Link to original data for ReviewQuestionScreen
+          originalIndex: index,
+          quizId: physicsQuiz.id
         })),
       },
-    })
+    });
   }
 
   // Progress bar component

@@ -11,6 +11,7 @@ import {
   Animated,
   FlatList,
   Platform,
+  Alert,
 } from "react-native"
 import Icon from "react-native-vector-icons/Feather"
 import { LinearGradient } from "expo-linear-gradient"
@@ -356,8 +357,57 @@ export default function QuizScreen({ navigation, route }) {
   }, [])
 
   const handleQuestionPress = (question) => {
-    // Could navigate to question details or show a modal
-    console.log("Question pressed:", question)
+    // Get the original quiz data from the route params
+    const originalQuiz = route.params?.quizResults?.originalQuiz;
+    const quizId = route.params?.quizResults?.quizId;
+    
+    // Add logging for debugging
+    console.log("Quiz data:", { 
+      hasOriginalQuiz: !!originalQuiz, 
+      quizId: quizId || 'missing', 
+      questionIndex: question?.originalIndex 
+    });
+    
+    // Validate required data exists
+    if (!originalQuiz || !quizId) {
+      console.error("Missing quiz data for review");
+      
+      // FALLBACK: Look up the quiz from QUIZ_DATA if we have quizId
+      if (quizId) {
+        const fallbackQuiz = SAMPLE_QUIZ_DATA.find(quiz => quiz.id === quizId);
+        if (fallbackQuiz) {
+          navigation.navigate("ReviewQuestion", {
+            simplifiedQuestion: question,
+            originalQuestion: fallbackQuiz.questions[question.originalIndex || 0],
+            quizId: quizId,
+            selectedAnswer: question.answer || (question.selections && question.selections[0]),
+            isCorrect: question.isCorrect
+          });
+          return;
+        }
+      }
+      
+      // If we can't find the quiz, show an error
+      Alert.alert(
+        "Error",
+        "Cannot display question details. Please try again.",
+        [{ text: "OK" }]
+      );
+      return;
+    }
+    
+    // Find the original question using the index
+    const originalIndex = question.originalIndex || 0;
+    const originalQuestion = originalQuiz.questions[originalIndex];
+    
+    // Navigate to ReviewQuestion with complete data
+    navigation.navigate("ReviewQuestion", { 
+      simplifiedQuestion: question,
+      originalQuestion: originalQuestion,
+      quizId: quizId,
+      selectedAnswer: question.answer || (question.selections && question.selections[0]),
+      isCorrect: question.isCorrect
+    });
   }
 
   return (
