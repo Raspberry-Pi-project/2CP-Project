@@ -1,0 +1,1189 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Quiz Management API",
+    "version": "1.0.0",
+    "description": "API for managing quizzes, attempts and student results"
+  },
+  "host": "localhost:3000",
+  "schemes": [
+    "http"
+  ],
+  "tags": [
+    {
+      "name": "Students",
+      "description": "Operations for students"
+    },
+    {
+      "name": "Teachers",
+      "description": "Operations for teachers"
+    },
+    {
+      "name": "Auth",
+      "description": "Authentication operations"
+    },
+    {
+      "name": "Quizzes",
+      "description": "Quiz management"
+    },
+    {
+      "name": "Attempts",
+      "description": "Quiz attempts management"
+    }
+  ],
+  "paths": {
+    "/students/studentProfile": {
+      "security": [
+        {
+          "cookieAuth": []
+        }
+      ],
+      "get": {
+        "tags": [
+          "Students"
+        ],
+        "summary": "Get student profile information",
+        "description": "Retrieves student profile information with optional filtering by email or ID",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "email",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by email"
+          },
+          {
+            "in": "query",
+            "name": "id_student",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Filter by student ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Student profile retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id_student": {
+                      "type": "integer"
+                    },
+                    "first_name": {
+                      "type": "string"
+                    },
+                    "last_name": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email"
+                    },
+                    "annee": {
+                      "type": "integer"
+                    },
+                    "groupe_student": {
+                      "type": "integer"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Student not found"
+          },
+          "500": {
+            "description": "Error fetching student profile"
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Login user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "student",
+                      "teacher",
+                      "admin"
+                    ]
+                  }
+                },
+                "required": [
+                  "email",
+                  "password",
+                  "role"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "role": {
+                      "type": "string"
+                    },
+                    "userId": {
+                      "type": "integer"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Register a new user (Admin only)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "student",
+                      "teacher"
+                    ]
+                  },
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "year": {
+                    "type": "integer"
+                  },
+                  "groupe": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "email",
+                  "password",
+                  "role",
+                  "firstName",
+                  "lastName"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "userId": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Not authenticated or not an admin"
+          },
+          "400": {
+            "description": "Bad Request - Invalid input data"
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Logout user",
+        "responses": {
+          "200": {
+            "description": "Logout successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/teachers/getQuizzes": {
+      "security": [
+        {
+          "cookieAuth": []
+        }
+      ],
+      "get": {
+        "tags": [
+          "Teachers"
+        ],
+        "summary": "Get paginated quizzes with filters",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Page number for pagination"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Number of quizzes per page"
+          },
+          {
+            "in": "query",
+            "name": "id_quiz",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Filter by quiz ID"
+          },
+          {
+            "in": "query",
+            "name": "title",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter quizzes by title"
+          },
+          {
+            "in": "query",
+            "name": "id_teacher",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Filter by teacher ID"
+          },
+          {
+            "in": "query",
+            "name": "subject",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter quizzes by subject"
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter quizzes by status"
+          },
+          {
+            "in": "query",
+            "name": "for_year",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Filter quizzes by academic year"
+          },
+          {
+            "in": "query",
+            "name": "for_groupe",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Filter quizzes by group"
+          },
+          {
+            "in": "query",
+            "name": "correctionType",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter quizzes by correction type"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of quizzes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "page": {
+                      "type": "integer"
+                    },
+                    "limit": {
+                      "type": "integer"
+                    },
+                    "totalPages": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Quiz"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/teachers/createQuiz": {
+      "security": [
+        {
+          "cookieAuth": []
+        }
+      ],
+      "post": {
+        "tags": [
+          "Teachers"
+        ],
+        "summary": "Create a new quiz",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuizInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Quiz created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Quiz"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/teachers/deleteQuiz": {
+      "put": {
+        "tags": [
+          "Teachers"
+        ],
+        "summary": "Delete a quiz",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id_quiz": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "id_quiz"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Quiz deleted successfully"
+          }
+        }
+      }
+    },
+    "/students/submitAnswers": {
+      "security": [
+        {
+          "cookieAuth": []
+        }
+      ],
+      "post": {
+        "tags": [
+          "Students"
+        ],
+        "summary": "Submit answers for a quiz attempt",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id_attempt": {
+                    "type": "integer"
+                  },
+                  "answers": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id_question": {
+                          "type": "integer"
+                        },
+                        "student_answer_text": {
+                          "type": "string"
+                        },
+                        "correct": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  },
+                  "score": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "id_attempt",
+                  "answers",
+                  "score"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Answers submitted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/students/getAvailableQuizzes": {
+      "security": [
+        {
+          "cookieAuth": []
+        }
+      ],
+      "get": {
+        "tags": [
+          "Students"
+        ],
+        "summary": "Get available quizzes for student",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "id_student",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Filter by student ID"
+          },
+          {
+            "in": "query",
+            "name": "title",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter quizzes by title"
+          },
+          {
+            "in": "query",
+            "name": "subject",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter quizzes by subject"
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter quizzes by status"
+          },
+          {
+            "in": "query",
+            "name": "for_year",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Filter quizzes by academic year"
+          },
+          {
+            "in": "query",
+            "name": "for_groupe",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Filter quizzes by group"
+          },
+          {
+            "in": "query",
+            "name": "correctionType",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter quizzes by correction type"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of available quizzes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Quiz"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/students/getQuizDetails/{id_quiz}": {
+      "security": [
+        {
+          "cookieAuth": []
+        }
+      ],
+      "get": {
+        "tags": [
+          "Students"
+        ],
+        "summary": "Get detailed information about a specific quiz",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id_quiz",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID of the quiz to retrieve details for"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Quiz details retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Quiz"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/students/startAttempt": {
+      "security": [
+        {
+          "cookieAuth": []
+        }
+      ],
+      "post": {
+        "tags": [
+          "Students"
+        ],
+        "summary": "Start a new quiz attempt",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id_student": {
+                    "type": "integer"
+                  },
+                  "id_quiz": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "id_student",
+                  "id_quiz"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Attempt started successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "newAttempt": {
+                      "$ref": "#/components/schemas/Attempt"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Attempt limit reached"
+          },
+          "404": {
+            "description": "Quiz not found"
+          }
+        }
+      }
+    },
+    "/students/getQuizResults": {
+      "security": [
+        {
+          "cookieAuth": []
+        }
+      ],
+      "get": {
+        "tags": [
+          "Students"
+        ],
+        "summary": "Get quiz results for a student",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "id_student",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID of the student"
+          },
+          {
+            "in": "query",
+            "name": "id_quiz",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID of the quiz"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Quiz results retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id_attempt": {
+                        "type": "integer"
+                      },
+                      "id_student": {
+                        "type": "integer"
+                      },
+                      "id_quiz": {
+                        "type": "integer"
+                      },
+                      "score": {
+                        "type": "number"
+                      },
+                      "corrected": {
+                        "type": "integer"
+                      },
+                      "student_answers": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/StudentAnswer"
+                        }
+                      },
+                      "quiz": {
+                        "$ref": "#/components/schemas/Quiz"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/students/history": {
+      "security": [
+        {
+          "cookieAuth": []
+        }
+      ],
+      "get": {
+        "tags": [
+          "Students"
+        ],
+        "summary": "Get past quizzes taken by a student",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "id_student",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID of the student"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "Page number for pagination"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            },
+            "description": "Number of quizzes per page"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Student quiz history retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id_attempt": {
+                            "type": "integer"
+                          },
+                          "id_student": {
+                            "type": "integer"
+                          },
+                          "id_quiz": {
+                            "type": "integer"
+                          },
+                          "score": {
+                            "type": "number"
+                          },
+                          "corrected": {
+                            "type": "integer"
+                          },
+                          "quiz": {
+                            "$ref": "#/components/schemas/Quiz"
+                          }
+                        }
+                      }
+                    },
+                    "totale_attempts": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error fetching past quizzes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/students/profile": {
+      "security": [
+        {
+          "cookieAuth": []
+        }
+      ],
+      "get": {
+        "tags": [
+          "Students"
+        ],
+        "summary": "Get student profile information",
+        "description": "Retrieves student profile information with optional filtering and pagination",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "email",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by email (partial match)"
+          },
+          {
+            "in": "query",
+            "name": "id_student",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Filter by student ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Student profile information retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "page": {
+                      "type": "integer"
+                    },
+                    "limit": {
+                      "type": "integer"
+                    },
+                    "totalPages": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id_student": {
+                            "type": "integer"
+                          },
+                          "first_name": {
+                            "type": "string"
+                          },
+                          "last_name": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string"
+                          },
+                          "annee": {
+                            "type": "integer"
+                          },
+                          "groupe_student": {
+                            "type": "integer"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error getting students",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "token"
+      }
+    },
+    "securitySchemes": {
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "token",
+        "description": "JWT token stored in cookies for authentication"
+      }
+    },
+    "schemas": {
+      "Quiz": {
+        "type": "object",
+        "properties": {
+          "id_quiz": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "nb_attempts": {
+            "type": "integer"
+          },
+          "duration": {
+            "type": "integer"
+          },
+          "correctionType": {
+            "type": "string"
+          },
+          "score": {
+            "type": "number"
+          },
+          "for_year": {
+            "type": "integer"
+          },
+          "for_groupe": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "QuizInput": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "id_teacher": {
+            "type": "integer"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "nb_attempts": {
+            "type": "integer"
+          },
+          "duration": {
+            "type": "integer"
+          },
+          "correctionType": {
+            "type": "string"
+          },
+          "score": {
+            "type": "number"
+          },
+          "for_year": {
+            "type": "integer"
+          },
+          "for_groupe": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string"
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuestionInput"
+            }
+          }
+        },
+        "required": [
+          "title",
+          "id_teacher",
+          "questions"
+        ]
+      },
+      "QuestionInput": {
+        "type": "object",
+        "properties": {
+          "duration": {
+            "type": "integer"
+          },
+          "question_text": {
+            "type": "string"
+          },
+          "question_number": {
+            "type": "integer"
+          },
+          "question_type": {
+            "type": "string"
+          },
+          "points": {
+            "type": "number"
+          },
+          "answers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnswerInput"
+            }
+          }
+        }
+      },
+      "AnswerInput": {
+        "type": "object",
+        "properties": {
+          "answer_text": {
+            "type": "string"
+          },
+          "correct": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Attempt": {
+        "type": "object",
+        "properties": {
+          "id_attempt": {
+            "type": "integer"
+          },
+          "id_quiz": {
+            "type": "integer"
+          },
+          "id_student": {
+            "type": "integer"
+          },
+          "score": {
+            "type": "number"
+          },
+          "corrected": {
+            "type": "integer"
+          },
+          "quiz": {
+            "$ref": "#/components/schemas/Quiz"
+          }
+        }
+      },
+      "StudentAnswer": {
+        "type": "object",
+        "properties": {
+          "id_question": {
+            "type": "integer"
+          },
+          "student_answer_text": {
+            "type": "string"
+          },
+          "correct": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id_question",
+          "student_answer_text"
+        ]
+      }
+    }
+  }
+}
