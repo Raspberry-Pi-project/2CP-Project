@@ -14,6 +14,7 @@ import {
   Alert,
   Easing,
   Platform,
+  AppState,
 } from "react-native"
 import Icon from "react-native-vector-icons/Feather"
 import { LinearGradient } from "expo-linear-gradient"
@@ -25,6 +26,9 @@ const { width, height } = Dimensions.get("window")
 const AnimatedCircle = Animated.createAnimatedComponent(Circle)
 
 export default function QuizletScreen2({ navigation, route }) {
+  // AppState reference to track app state changes
+  const appState = useRef(AppState.currentState);
+
   // Check if quiz data exists in route params
   useEffect(() => {
     if (!route.params || !route.params.quiz) {
@@ -62,6 +66,55 @@ export default function QuizletScreen2({ navigation, route }) {
       .fill()
       .map(() => new Animated.Value(0)),
   ).current
+
+  // Reset quiz function to be called when app returns to foreground
+  const resetQuiz = () => {
+    // Reset all quiz state
+    setCurrentView("list")
+    setCurrentQuestion(0)
+    setSelectedAnswer(null)
+    setSelectedAnswers({})
+    setScore(0)
+    setAnswers({})
+    setTimeLeft(300) // Reset to 5 minutes
+    setCorrectCount(0)
+    setIncorrectCount(0)
+    
+    // Reset animations
+    fadeAnim.setValue(1)
+    questionAnim.setValue(0)
+    timerAnim.setValue(1) 
+    pulseAnim.setValue(1)
+    nextButtonAnim.setValue(0)
+    optionsAnim.forEach(anim => anim.setValue(0))
+    
+    // Alert user that quiz has been reset
+    Alert.alert(
+      "Quiz Reset",
+      "Your quiz progress was lost because you left the app. Please start over.",
+      [{ text: "OK" }]
+    )
+  }
+
+  // Listen for AppState changes
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", nextAppState => {
+      // If app goes from background to active, reset quiz
+      if (
+        appState.current.match(/inactive|background/) && 
+        nextAppState === "active"
+      ) {
+        resetQuiz();
+      }
+      
+      // Update app state reference
+      appState.current = nextAppState;
+    });
+    
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   // Timer settings
   const timerRadius = 25

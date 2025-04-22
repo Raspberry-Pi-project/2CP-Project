@@ -19,6 +19,7 @@ import StudentPrivateChartScreen from "./screens/StudentPrivateChartScreen"
 import notificationManager, { NotificationManager } from "./components/NotificationManager"
 import { LogBox } from "react-native"
 import ReviewQuestionScreen from "./screens/ReviewQuestionScreen"
+import OfflineOnly from "./components/OfflineOnly"
 
 // Ignore specific warnings that might be causing issues
 LogBox.ignoreLogs([
@@ -49,26 +50,28 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
-        <StatusBar style="light" />
-        <Stack.Navigator initialRouteName="First" screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="First" component={FirstScreen} />
-          <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="Home" component={HomeScreen} />
-          <Stack.Screen name="QuizInfo" component={QuizInfoScreen} />
-          <Stack.Screen name="Quizlet" component={QuizletScreen} />
-          <Stack.Screen name="Quizlet2" component={QuizletScreen2} />
-          <Stack.Screen name="Quiz" component={QuizScreen} />
-          <Stack.Screen name="QuizScore" component={QuizScoreScreen} />
-          <Stack.Screen name="Profile" component={ProfileScreen} />
-          <Stack.Screen name="Feedback" component={FeedbackScreen} />
-          <Stack.Screen name="StudentPrivateChart" component={StudentPrivateChartScreen} />
-          <Stack.Screen name="ReviewQuestion" component={ReviewQuestionScreen} />
-        </Stack.Navigator>
+      <OfflineOnly>
+        <NavigationContainer>
+          <StatusBar style="light" />
+          <Stack.Navigator initialRouteName="First" screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="First" component={FirstScreen} />
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen name="QuizInfo" component={QuizInfoScreen} />
+            <Stack.Screen name="Quizlet" component={QuizletScreen} />
+            <Stack.Screen name="Quizlet2" component={QuizletScreen2} />
+            <Stack.Screen name="Quiz" component={QuizScreen} />
+            <Stack.Screen name="QuizScore" component={QuizScoreScreen} />
+            <Stack.Screen name="Profile" component={ProfileScreen} />
+            <Stack.Screen name="Feedback" component={FeedbackScreen} />
+            <Stack.Screen name="StudentPrivateChart" component={StudentPrivateChartScreen} />
+            <Stack.Screen name="ReviewQuestion" component={ReviewQuestionScreen} />
+          </Stack.Navigator>
 
-        {/* Advanced Notification Manager with ref */}
-        <NotificationManager ref={notificationManager.ref} />
-      </NavigationContainer>
+          {/* Advanced Notification Manager with ref */}
+          <NotificationManager ref={notificationManager.ref} />
+        </NavigationContainer>
+      </OfflineOnly>
     </SafeAreaProvider>
   )
 }
