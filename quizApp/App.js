@@ -18,6 +18,7 @@ import FeedbackScreen from "./screens/FeedbackScreen"
 import StudentPrivateChartScreen from "./screens/StudentPrivateChartScreen"
 import notificationManager, { NotificationManager } from "./components/NotificationManager"
 import { LogBox } from "react-native"
+import ReviewQuestionScreen from "./screens/ReviewQuestionScreen"
 
 // Ignore specific warnings that might be causing issues
 LogBox.ignoreLogs([
@@ -62,6 +63,7 @@ export default function App() {
           <Stack.Screen name="Profile" component={ProfileScreen} />
           <Stack.Screen name="Feedback" component={FeedbackScreen} />
           <Stack.Screen name="StudentPrivateChart" component={StudentPrivateChartScreen} />
+          <Stack.Screen name="ReviewQuestion" component={ReviewQuestionScreen} />
         </Stack.Navigator>
 
         {/* Advanced Notification Manager with ref */}
