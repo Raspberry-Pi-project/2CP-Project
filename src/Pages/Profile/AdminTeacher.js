@@ -2,9 +2,62 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { NavProfile } from "./NavProfile";
 import styles from "./AdminTeacher.module.css"; // Importing the CSS module
+import { useState, useEffect } from "react";
+import { useAuth } from "../../context/AuthProvider";
+import axios from "axios";
 
 const AdminTeacher = () => {
-  const Teachers = [
+  const { user } = useAuth();
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [Teachers, setTeachers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingAdmin, setLoadingAdmin] = useState(true);
+  const [admin,setAdmin] = useState({}); // Initialize user state
+
+  useEffect(() => {
+    const fetchAdmin = async () => {
+    setLoadingAdmin(true);
+    try { 
+      const userr = await axios.post(
+        "http://localhost:3000/admins/getAdmin",
+        { id_admin: user.id },
+        { withCredentials: true }
+      )
+        setAdmin(userr.data.data);
+      
+    } catch (error) {
+
+    }
+    setLoadingAdmin(false);
+  }
+  fetchAdmin()
+  }, [user]);
+
+  useEffect(() => {
+    const getTeachers = async () => {
+     setLoading(true);
+      try {
+        const response = await axios.post(
+          "http://localhost:3000/teachers/getTeachers",
+          { page, limit },
+          { withCredentials: true }
+        );
+        setTeachers(response.data.data);
+        setTotalPages(response.data.totalPages);
+      } catch (error) {
+        console.error("Error fetching teachers:", error);
+      }
+      setLoading(false);
+    };
+    getTeachers();
+  }, [page, limit]);
+
+  useEffect(() => {
+    console.log("Teachers List:", Teachers); },[Teachers]);
+
+  const Teacherss = [
     { id: "148", name: "Bahri Assia", email: "Bahri_Assia@esi.dz" },
     { id: "754", name: "Bahri Assia", email: "Bahri_Assia@esi.dz" },
     { id: "234", name: "Bahri Assia", email: "Bahri_Assia@esi.dz" },
@@ -29,13 +82,23 @@ const AdminTeacher = () => {
         {/* Sidebar */}
         <div className={styles.sidebar}>
           <div className={styles.profileSection}>
-            <div className={styles.profileCircle}>MR</div>
-            <p className={styles.adminName}>Admin Name</p>
+            <div className={styles.profileCircle}>{loadingAdmin ? "" : admin.last_name[0] + admin.first_name[0]}</div>
+            <p className={styles.adminName}>{admin.last_name + " " + admin.first_name}</p>
           </div>
           <ul className={styles.sidebarMenu}>
-            <li className={styles.menuItem} onClick={() => navigate('/AdminDash')}>Dashboard</li>
+            <li
+              className={styles.menuItem}
+              onClick={() => navigate("/AdminDash")}
+            >
+              Dashboard
+            </li>
             <li className={`${styles.menuItem} ${styles.active}`}>Teachers</li>
-            <li className={styles.menuItem} onClick={() => navigate('/AdminStudent')}>Students</li>
+            <li
+              className={styles.menuItem}
+              onClick={() => navigate("/AdminStudent")}
+            >
+              Students
+            </li>
           </ul>
         </div>
 
@@ -53,16 +116,20 @@ const AdminTeacher = () => {
               </thead>
               <tbody>
                 {Teachers.map((teacher, index) => (
-                  <tr key={index} onClick={() => handleRowClick(teacher.id)} style={{ cursor: "pointer" }}>
+                  <tr
+                    key={index}
+                    onClick={() => handleRowClick(teacher.id)}
+                    style={{ cursor: "pointer" }}
+                  >
                     <td>
                       <div className={styles.teacherInfo}>
                         <div className={styles.teacherAvatar}>
-                          {teacher.name.split(" ").map((n) => n[0]).join("")}
+                          {loading ? "" : teacher.last_name[0] + teacher.first_name[0]}
                         </div>
-                        <span>{teacher.name}</span>
+                        <span>{teacher.last_name + " " + teacher.first_name}</span>
                       </div>
                     </td>
-                    <td>{teacher.id}</td>
+                    <td>{teacher.id_teacher}</td>
                     <td>{teacher.email}</td>
                   </tr>
                 ))}

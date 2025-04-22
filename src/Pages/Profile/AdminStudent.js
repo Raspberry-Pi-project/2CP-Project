@@ -52,22 +52,32 @@ const AdminStudent = () => {
   const [error, setError] = useState(null);
   const [loadingTeacher, setLoadingTeacher] = useState(true);
   useEffect(() => {
-    const fetchQuizzes = async () => {
+    const fetchTeacher = async () => {
       if (!user || !user.id) return;
 
       setLoadingTeacher(true);
       try {
-
-        const userr = await axios.post(
+        let userr = {};
+        userr.status = 200; // Initialize result status to 200
+       if (user.role === "teacher") {
+        userr = await axios.post(
           "http://localhost:3000/teachers/getTeachers",
           { id_teacher: user.id, page: 1, limit: 1000000 },
           { withCredentials: true }
         );
-
+      }
+      else if (user.role === "admin") {
+        userr = await axios.post(
+          "http://localhost:3000/admins/getAdmin",
+          { id_admin: user.id },
+          { withCredentials: true }
+        );
+      }
         if (userr.status !== 200) {
           throw new Error("Failed to fetch quizzes");
         } else {
-          setTeacher(userr.data.data[0]);
+
+         user.role == "teacher" ? setTeacher(userr.data.data[0]) : setTeacher(userr.data.data);
         }
       } catch (error) {
         console.error("Error fetching quizzes:", error);
@@ -77,7 +87,7 @@ const AdminStudent = () => {
       }
     };
 
-    fetchQuizzes();
+    fetchTeacher();
   }, [user]);
 
 
@@ -123,13 +133,13 @@ const AdminStudent = () => {
                   Dashboard
                 </li>
 
-                <li className={`${styles.menuItem} ${styles.active}`}>
+                <li className={`${styles.menuItem} `}>
                   Teachers
                 </li>
               </>
             )}
             <li
-              className={styles.menuItem}
+              className={`${styles.menuItem} ${styles.active}`}
               onClick={() => navigate("/AdminStudent")}
             >
               Students

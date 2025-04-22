@@ -21,31 +21,49 @@ const TeacherProfile = () => {
 
   // Check if user is logged in
 
-
   useEffect(() => {
     const fetchQuizzes = async () => {
       if (!user || !user.id) return;
 
       setLoading(true);
       try {
-        const result = await axios.post(
-          "http://localhost:3000/teachers/getQuizzes",
-          { id_teacher: user.id, page, limit, status: "published" },
-          { withCredentials: true }
-        );
+        let result = {};
+        result.status = 200; // Initialize result status to 200
+        if (user.role === "teacher") {
+          result = await axios.post(
+            "http://localhost:3000/teachers/getQuizzes",
+            { id_teacher: user.id, page, limit, status: "published" },
+            { withCredentials: true }
+          );
+        }
+        let userr;
+        if (user.role === "teacher") {
+          userr = await axios.post(
+            "http://localhost:3000/teachers/getTeachers",
+            { id_teacher: user.id, page: 1, limit: 1000000 },
+            { withCredentials: true }
+          );
+        } else if (user.role === "admin") {
+          userr = await axios.post(
+            "http://localhost:3000/admins/getAdmin",
+            { id_admin: user.id },
+            { withCredentials: true }
+          );
+        }
 
-        const userr = await axios.post(
-          "http://localhost:3000/teachers/getTeachers",
-          { id_teacher: user.id, page: 1, limit: 1000000 },
-          { withCredentials: true }
-        );
-
-        if (result.status !== 200) {
+        if (
+          (result.status !== 200 && userr.role === "teacher") ||
+          userr.status !== 200
+        ) {
           throw new Error("Failed to fetch quizzes");
         } else {
-          setQuizzes(result.data.data);
-          setTotalPages(result.data.totalPages);
-          setTeacher(userr.data.data[0]);
+          if (user.role === "teacher") {
+            setQuizzes(result.data.data);
+            setTotalPages(result.data.totalPages);
+            setTeacher(userr.data.data[0]);
+          } else if (user.role === "admin") {
+            setTeacher(userr.data.data);
+          }
         }
       } catch (error) {
         console.error("Error fetching quizzes:", error);
@@ -97,7 +115,7 @@ const TeacherProfile = () => {
         <div className={styles.sidebar}>
           <div className={styles.profileSection}>
             <div
-              className={styles.profileCircle}
+              className={`${styles.profileCircle} `}
               onClick={() => {
                 navigate("/TeacherProfile");
               }}
@@ -120,7 +138,8 @@ const TeacherProfile = () => {
                   Dashboard
                 </li>
 
-                <li className={`${styles.menuItem} ${styles.active}`}>
+                <li className={`${styles.menuItem} `}
+                onClick={() => navigate("/AdminTeacher")}>
                   Teachers
                 </li>
               </>
@@ -159,26 +178,33 @@ const TeacherProfile = () => {
                 <strong>Email Address:</strong> <br /> {teacher.email}
               </p>
               <p>
-                <strong>User Id:</strong> <br /> {teacher.id_teacher}
+                <strong>User Id:</strong> <br /> { user.role === "teacher" ? teacher.id_teacher : teacher.id_admin}
               </p>
             </div>
 
-            <div className={styles.quizzes}>
+            { user.role === "teacher" && <div className={styles.quizzes}>
               <h3>Quizzes:</h3>
               <div className={styles.quizCards}>
-                {quizzes.length === 0 ? "No Quizzes Created" : quizzes.map((quiz, index) => (
-                  <div className={styles.quizCard} key={index}>
-                    <h4>{quiz.title}</h4>
-                    <p>{quiz.subject}</p>
-                    <p>
-                      {quiz.totalQuestions} Question
-                      {quiz.totalQuestions === 1 ? "" : "s"}
-                    </p>
-                    <button className={styles.consultButton} onClick={() => handleConsult(quiz.id_quiz)} >CONSULT</button>
-                  </div>
-                ))}
+                {quizzes.length === 0
+                  ? "No Quizzes Created"
+                  : quizzes.map((quiz, index) => (
+                      <div className={styles.quizCard} key={index}>
+                        <h4>{quiz.title}</h4>
+                        <p>{quiz.subject}</p>
+                        <p>
+                          {quiz.totalQuestions} Question
+                          {quiz.totalQuestions === 1 ? "" : "s"}
+                        </p>
+                        <button
+                          className={styles.consultButton}
+                          onClick={() => handleConsult(quiz.id_quiz)}
+                        >
+                          CONSULT
+                        </button>
+                      </div>
+                    ))}
               </div>
-            </div>
+            </div>}
           </div>
         </div>
       </div>
