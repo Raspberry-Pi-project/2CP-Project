@@ -21,8 +21,12 @@ app.use(cors({
 }));
 
 // ✅ Routes
-app.use("/auth", authRoutes);
+app.get("/testConnection", (req, res) => {
+    res.json({ message: "Connection successful" });
+    res.status(200);
+})
 
+app.use("/auth", authRoutes);
 app.use("/admins",authenticateUser, authorizeRoles("admin"), adminsRoutes);
 app.use("/teachers",authenticateUser, authorizeRoles("teacher" , "admin"), teachersRoutes);
 app.use("/students",authenticateUser, authorizeRoles("student"), studentsRoutes);

@@ -5,6 +5,7 @@ const prisma = new PrismaClient();
 const {getTeachers , updateTeacher , deleteTeacher} = require("../controllers/teachersControllers");
 const {getStudents, updateStudent , deleteStudent} = require("../controllers/studentsControllers");
 const {register} = require("../controllers/authControllers");
+const {getAdmin} = require("../controllers/adminControllers");
 const router = express.Router();
 
 
@@ -12,6 +13,7 @@ const router = express.Router();
 router.post("/getTeachers" , getTeachers )
 router.put("/updateTeacher" , updateTeacher)
 router.delete("/deleteTeacher" , deleteTeacher)
+router.post("/getAdmin" , getAdmin)
 
 
 //Students routes
