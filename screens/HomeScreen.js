@@ -151,6 +151,9 @@ export default function HomeScreen({ navigation }) {
       console.log("Quizzes Response:", response.data.data);
       setQuizzes(response.data.data);
       console.log("Quizzes State After Fetch:", quizzes);
+
+
+      
     } catch (err) {
       console.error("Failed to fetch quizzes", err);
       setError("Failed to load quizzes. Please try again.");
@@ -190,20 +193,22 @@ export default function HomeScreen({ navigation }) {
     setIsExpanded(!isExpanded);
   };
 
+
   const handleQuizPress = async (quiz) => {
     console.log("Attempting to fetch details for quiz:", quiz.id_quiz); // Debug log
 
     try {
       const quizDetails = await getQuizDetails(quiz.id_quiz);
       navigation.navigate("QuizInfo", {
-        id_quiz: quiz.id_quiz,  // Required for fetching details
-        basicQuizData: {       // Basic info you already have
+        id_quiz: quiz.id_quiz,  
+        basicQuizData: {       
         id_quiz: quiz.id_quiz,
         title: quiz.title,
         description: quiz.description,
         duration: quiz.duration,
         nb_attempts: quiz.nb_attempts,
         subject: quiz.subject,
+        totalQuestions: quiz.totalQuestions,
         questions: quiz.questions || []
   }
       });

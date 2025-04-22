@@ -20,6 +20,21 @@ export const fetchHomeQuizzes = async () => {
   }
 };
 
+export const getAvailableQuizzes = async (page = 1, limit = 10, for_groupe, for_year) => {
+  try {
+    const response = await api.post('/students/getQuizzesStudent', {
+      page,
+      limit,
+      for_groupe,
+      for_year
+    });
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching quizzes:', error);
+    throw error;
+  }
+};
+
 // Function to get quiz details
 export const getQuizDetails = async (quizId) => {
   try {

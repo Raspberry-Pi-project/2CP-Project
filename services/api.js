@@ -42,6 +42,7 @@ api.interceptors.response.use(
 
 
 export const studentAPI = {
+
   getQuizzes: async (page = 1, limit = 10) => {
     try {
       const response = await api.post('/getAvailableQuizzes', { page, limit });
@@ -62,9 +63,9 @@ export const studentAPI = {
     }
   },
 
-  startAttempt: async (quizId) => {
+  startAttempt: async (id_quiz) => {
     try {
-      const response = await api.post('/startAttempt', { quizId });
+      const response = await api.post('/startAttempt', { id_quiz });
       return response.data;
     } catch (error) {
       console.error('Error starting attempt:', error);
@@ -72,9 +73,20 @@ export const studentAPI = {
     }
   },
 
+  getAttemptById: async (id_attempt) => {
+    try {
+      const response = await api.post('/getAttemptById', { id_attempt });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching attempt:', error);
+      throw error;
+    }
+  },
+
+
   submitAnswers: async (attemptId, answers) => {
     try {
-      const response = await api.post('/submitAnswers', { attemptId, answers });
+      const response = await api.post('/submitAnswers', { id_attempt: attemptId, answers });
       return response.data;
     } catch (error) {
       console.error('Error submitting answers:', error);
@@ -84,7 +96,7 @@ export const studentAPI = {
 
   getQuizResults: async (attemptId) => {
     try {
-      const response = await api.post('/getQuizResults', { attemptId });
+      const response = await api.post('/getQuizResults', { id_attempt: attemptId });
       return response.data;
     } catch (error) {
       console.error('Error fetching quiz results:', error);

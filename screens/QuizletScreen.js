@@ -68,6 +68,7 @@ export default function QuizletScreen({ navigation, route }) {
   const customInputAnim = useRef(new Animated.Value(0)).current
   const nextButtonAnim = useRef(new Animated.Value(0)).current
 
+
   // Create option animations for each question
   const optionsAnim = useRef(
     Array(5)

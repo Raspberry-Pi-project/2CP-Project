@@ -17,6 +17,7 @@ export default function QuizInfoScreen({ navigation, route }) {
         time: basicQuizData.duration,
         attempts: basicQuizData.nb_attempts,
         questions: basicQuizData.questions || [],
+        totalQuestions: basicQuizData.totalQuestions || (basicQuizData.questions ? basicQuizData.questions.length : 0)
       };
     }
     return null; 
@@ -44,6 +45,12 @@ export default function QuizInfoScreen({ navigation, route }) {
         { timeout: 10000 } // 10 seconds
       )
 
+
+  console.log("API Response Data:", response.data);
+  console.log("Questions array:", response.data.questions);
+  console.log("Questions length:", response.data.questions ? response.data.questions.length : 0);
+  console.log("totalQuestions from API:", response.data.totalQuestions);
+  
       
       if (response.data) {
         setQuiz({
@@ -51,7 +58,9 @@ export default function QuizInfoScreen({ navigation, route }) {
           ...response.data, // Override with detailed data
           time: response.data.duration,
           attempts: response.data.nb_attempts, 
-          questions: response.data.questions || []
+          questions: response.data.questions || [],
+          totalQuestions: response.data.totalQuestions || questionCount
+          //totalQuestions: response.data.totalQuestions  // 
          // id_quiz // Ensure ID is preserved
         });
       } else {
@@ -146,7 +155,7 @@ export default function QuizInfoScreen({ navigation, route }) {
       
       if (!quiz) return;
 
-      if (!quiz.questions || quiz.questions.length === 0) {
+      if ( quiz.totalQuestions === 0) {
         Alert.alert("No Questions", "This quiz doesn't contain any questions yet.");
         return;
       }
@@ -239,7 +248,7 @@ export default function QuizInfoScreen({ navigation, route }) {
 
               <View style={styles.detailItem}>
                 <Text style={styles.detailLabel}>Questions :</Text>
-                <Text style={styles.detailValue}>{quiz.questions ? quiz.questions.length : 0}</Text>
+                <Text style={styles.detailValue}>{quiz.totalQuestions || (quiz.questions && quiz.questions.length) || 0}</Text>
               </View>
             </View>
           </View>
