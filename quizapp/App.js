@@ -13,6 +13,7 @@ import ProfileScreen from "./screens/ProfileScreen"
 import QuizInfoScreen from "./screens/QuizInfoScreen"
 import { LogBox } from "react-native"
 
+
 // Ignore specific warnings that might be causing issues
 LogBox.ignoreLogs([
   "Animated: `useNativeDriver` was not specified",
@@ -22,7 +23,7 @@ LogBox.ignoreLogs([
 
 const Stack = createNativeStackNavigator()
 
-export default function App() {
+export default function App(  ) {
   return (
     <SafeAreaProvider>
       <NavigationContainer>
