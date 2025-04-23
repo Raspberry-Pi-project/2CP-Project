@@ -297,13 +297,14 @@ export default function QuizletScreen2({ navigation, route }) {
     }))
   }
 
-  const navigateToResults = () => {
+
     // Calculate score
     const answeredQuestions = Object.values(answers);
     const correctCount = answeredQuestions.filter(a => a.isCorrect).length;
     const incorrectCount = answeredQuestions.filter(a => !a.isCorrect).length;
     
     // Navigate to Quiz with complete information
+
     navigation.navigate("Quiz", {
       quizResults: {
         score: correctCount,
@@ -319,11 +320,13 @@ export default function QuizletScreen2({ navigation, route }) {
           id: index + 1,
           text: `Question ${index + 1}`, // Simple numbered format for QuizScreen
           isCorrect: answers[index]?.isCorrect || false,
+
           selections: answers[index]?.selections || [],
           answer: answers[index]?.answer,
           // Link to original data for ReviewQuestionScreen
           originalIndex: index,
           quizId: physicsQuiz.id
+
         })),
       },
     });
