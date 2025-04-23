@@ -19,7 +19,6 @@ import StudentPrivateChartScreen from "./screens/StudentPrivateChartScreen"
 import notificationManager, { NotificationManager } from "./components/NotificationManager"
 import { LogBox } from "react-native"
 import ReviewQuestionScreen from "./screens/ReviewQuestionScreen"
-import OfflineOnly from "./components/OfflineOnly"
 
 // Ignore specific warnings that might be causing issues
 LogBox.ignoreLogs([
@@ -50,7 +49,8 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <OfflineOnly>
+      {/* Temporarily disabled OfflineOnly component to work online */}
+      <>
         <NavigationContainer>
           <StatusBar style="light" />
           <Stack.Navigator initialRouteName="First" screenOptions={{ headerShown: false }}>
@@ -60,7 +60,16 @@ export default function App() {
             <Stack.Screen name="QuizInfo" component={QuizInfoScreen} />
             <Stack.Screen name="Quizlet" component={QuizletScreen} />
             <Stack.Screen name="Quizlet2" component={QuizletScreen2} />
-            <Stack.Screen name="Quiz" component={QuizScreen} />
+            <Stack.Screen 
+              name="Quiz" 
+              component={QuizScreen} 
+              options={({ route }) => ({
+                headerShown: false,
+                gestureEnabled: false, // Disable swipe back
+                // Only return to the specific screen if not prevented
+                presentation: route.params?.quizResults?.preventBackNavigation ? 'modal' : 'card',
+              })}
+            />
             <Stack.Screen name="QuizScore" component={QuizScoreScreen} />
             <Stack.Screen name="Profile" component={ProfileScreen} />
             <Stack.Screen name="Feedback" component={FeedbackScreen} />
@@ -71,7 +80,7 @@ export default function App() {
           {/* Advanced Notification Manager with ref */}
           <NotificationManager ref={notificationManager.ref} />
         </NavigationContainer>
-      </OfflineOnly>
+      </>
     </SafeAreaProvider>
   )
 }

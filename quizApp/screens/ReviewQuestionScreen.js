@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useRef, useMemo } from "react"
 import {
   View,
   Text,
@@ -105,11 +105,18 @@ const FloatingBubbles = () => {
 }
 
 const ReviewQuestionScreen = ({ navigation, route }) => {
-  // Get the basic info from route params
-  const { simplifiedQuestion, quizId } = route.params;
+  // Get the basic info from route params and memoize them to prevent resets during scrolling
+  const { simplifiedQuestion, quizId, selectedAnswer: initialSelectedAnswer } = route.params;
+  
+  // Store answers in a ref to prevent them from being lost during re-renders
+  const answersRef = useRef({
+    simplifiedQuestion,
+    quizId,
+    selectedAnswer: initialSelectedAnswer
+  });
   
   // Find the exact quiz directly from QUIZ_DATA
-  const quiz = QUIZ_DATA.find(q => q.id === quizId);
+  const quiz = useMemo(() => QUIZ_DATA.find(q => q.id === quizId), [quizId]);
   
   // If no quiz found by ID, show error and go back
   useEffect(() => {
@@ -120,17 +127,55 @@ const ReviewQuestionScreen = ({ navigation, route }) => {
         [{ text: "Go Back", onPress: () => navigation.goBack() }]
       );
     }
-  }, [quiz]);
+  }, [quiz, navigation]);
   
   // Get the original question index
-  const questionIndex = simplifiedQuestion?.originalIndex || 0;
+  const questionIndex = useMemo(() => 
+    simplifiedQuestion?.originalIndex || 0, 
+    [simplifiedQuestion]
+  );
   
   // Get the EXACT question from the quiz data
-  const originalQuestion = quiz?.questions[questionIndex];
+  const originalQuestion = useMemo(() => 
+    quiz?.questions[questionIndex],
+    [quiz, questionIndex]
+  );
   
-  // Get the user's selected answer
-  const selectedAnswer = route.params?.selectedAnswer;
+  // Get the user's selected answer - handle different formats
+  const selectedAnswer = useMemo(() => {
+    // Use the stored ref value to ensure we don't lose the answer
+    const stored = answersRef.current.selectedAnswer;
+    if (stored !== undefined && stored !== null) {
+      return stored;
+    }
+    
+    // Different places might store the selected answer differently
+    const answerFromParams = initialSelectedAnswer;
+    
+    // Check if it's directly stored
+    if (answerFromParams !== undefined && answerFromParams !== null) {
+      return answerFromParams;
+    }
+    
+    // Check if it's stored in the simplified question
+    if (simplifiedQuestion?.answer !== undefined) {
+      return simplifiedQuestion.answer;
+    }
+
+    // Check if it's stored as selections array
+    if (simplifiedQuestion?.selections && simplifiedQuestion.selections.length > 0) {
+      return simplifiedQuestion.selections[0];
+    }
+    
+    // No selected answer found
+    return null;
+  }, [initialSelectedAnswer, simplifiedQuestion]);
   
+  // Update ref when selectedAnswer changes
+  useEffect(() => {
+    answersRef.current.selectedAnswer = selectedAnswer;
+  }, [selectedAnswer]);
+
   // Setup animations
   const questionAnim = useRef(new Animated.Value(0)).current;
   const optionsAnim = useRef(
@@ -160,6 +205,12 @@ const ReviewQuestionScreen = ({ navigation, route }) => {
         })
       )
     ).start();
+    
+    return () => {
+      // Cleanup animations when component unmounts
+      questionAnim.stopAnimation();
+      optionsAnim.forEach(anim => anim.stopAnimation());
+    };
   }, []);
   
   // If question not found, show error
@@ -232,6 +283,7 @@ const ReviewQuestionScreen = ({ navigation, route }) => {
                 const isCorrectOption = index === originalQuestion.correctAnswer;
                 const isSelectedOption = selectedAnswer === index;
                 const isWrongSelection = isSelectedOption && !isCorrectOption;
+                const noSelectionMade = selectedAnswer === null || selectedAnswer === undefined;
                 
                 return (
                   <Animated.View
@@ -251,17 +303,27 @@ const ReviewQuestionScreen = ({ navigation, route }) => {
                     <View
                       style={[
                         styles.option,
+                        // Highlight as correct answer (always show in green)
                         isCorrectOption && styles.correctOption,
+                        // Highlight as wrong selection
                         isWrongSelection && styles.incorrectOption,
+                        // Only apply selectedOption style if not correct and not wrong
+                        (!isCorrectOption && !isWrongSelection && isSelectedOption) && styles.selectedOption,
                       ]}
                     >
                       <Text style={[
                         styles.optionText,
-                        isCorrectOption && styles.correctOptionText
+                        // Always show correct answer in green
+                        isCorrectOption && styles.correctOptionText,
+                        // Only apply incorrectOptionText if wrong selection
+                        isWrongSelection && styles.incorrectOptionText,
+                        // Only apply selectedOptionText if not correct and not wrong
+                        (!isCorrectOption && !isWrongSelection && isSelectedOption) && styles.selectedOptionText,
                       ]}>
                         {option}
                       </Text>
 
+                      {/* Checkmark for correct answer or correct selection */}
                       {isCorrectOption && (
                         <View style={styles.checkmark}>
                           <Svg width={20} height={20} viewBox="0 0 24 24">
@@ -270,6 +332,7 @@ const ReviewQuestionScreen = ({ navigation, route }) => {
                         </View>
                       )}
                       
+                      {/* X mark for wrong selection */}
                       {isWrongSelection && (
                         <View style={styles.crossmark}>
                           <Svg width={20} height={20} viewBox="0 0 24 24">
@@ -280,10 +343,43 @@ const ReviewQuestionScreen = ({ navigation, route }) => {
                           </Svg>
                         </View>
                       )}
+
+                      {/* Circle indicator for user selection (only show for non-correct selections that aren't wrong) */}
+                      {isSelectedOption && !isCorrectOption && !isWrongSelection && (
+                        <View style={styles.selectedIndicator}>
+                          <Svg width={20} height={20} viewBox="0 0 24 24">
+                            <Path
+                              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"
+                              fill="#A42FC1"
+                            />
+                          </Svg>
+                        </View>
+                      )}
                     </View>
                   </Animated.View>
                 );
               })}
+              
+              {/* Add legend for the user */}
+              <View style={styles.legendContainer}>
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendIcon, { backgroundColor: "#4ADE80" }]}>
+                    <Svg width={16} height={16} viewBox="0 0 24 24">
+                      <Path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="white" />
+                    </Svg>
+                  </View>
+                  <Text style={styles.legendText}>Correct Answer</Text>
+                </View>
+                
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendIcon, { backgroundColor: "#FF5252" }]}>
+                    <Svg width={16} height={16} viewBox="0 0 24 24">
+                      <Circle cx="12" cy="12" r="10" fill="white" />
+                    </Svg>
+                  </View>
+                  <Text style={styles.legendText}>Your Selection</Text>
+                </View>
+              </View>
               
               {/* Back to Results Button */}
               <View style={styles.navigationButtons}>
@@ -391,7 +487,7 @@ const styles = StyleSheet.create({
   },
   correctOption: {
     borderColor: "#4ADE80",
-    backgroundColor: "rgba(74, 222, 128, 0.05)",
+    backgroundColor: "rgba(74, 222, 128, 0.1)",
     transform: [{ scale: 1.02 }], // Match the subtle scale effect
   },
   incorrectOption: {
@@ -404,8 +500,8 @@ const styles = StyleSheet.create({
     color: "#333333",
   },
   correctOptionText: {
-    fontWeight: "500",
-    color: "#4ADE80",
+    fontWeight: "600",
+    color: "#2E8B57", // Darker green for better contrast
   },
   incorrectOptionText: {
     fontWeight: "500",
@@ -470,6 +566,46 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  selectedOption: {
+    borderColor: "#FF5252",
+    backgroundColor: "rgba(255, 82, 82, 0.05)",
+    transform: [{ scale: 1.02 }],
+  },
+  selectedOptionText: {
+    fontWeight: "500",
+    color: "#FF5252",
+  },
+  selectedIndicator: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "#FF5252",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  legendContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  legendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  legendIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 8,
+  },
+  legendText: {
+    color: "#333333",
+    fontSize: 14,
+    fontWeight: "500",
   },
 })
 

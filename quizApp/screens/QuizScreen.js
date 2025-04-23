@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import React, { useEffect, useRef, useCallback, useMemo } from "react"
 import {
   View,
   Text,
@@ -12,10 +12,12 @@ import {
   FlatList,
   Platform,
   Alert,
+  BackHandler,
 } from "react-native"
 import Icon from "react-native-vector-icons/Feather"
 import { LinearGradient } from "expo-linear-gradient"
 import Svg, { Circle, Path, Defs, LinearGradient as SvgLinearGradient, Stop } from "react-native-svg"
+import { useFocusEffect } from "@react-navigation/native"
 
 const { width, height } = Dimensions.get("window")
 const AnimatedCircle = Animated.createAnimatedComponent(Circle)
@@ -241,8 +243,8 @@ const ScoreCircle = ({ score, total }) => {
   )
 }
 
-// Question item component with animations
-const QuestionItem = ({ question, index, isCorrect, onPress, animationDelay }) => {
+// Question item component with animations - making it a memoized component
+const QuestionItem = React.memo(({ question, index, isCorrect, onPress, animationDelay }) => {
   const scaleAnim = useRef(new Animated.Value(0)).current
   const bounceAnim = useRef(new Animated.Value(1)).current
 
@@ -261,7 +263,7 @@ const QuestionItem = ({ question, index, isCorrect, onPress, animationDelay }) =
     }
   }, [])
 
-  const handlePress = () => {
+  const handlePress = useCallback(() => {
     // Bounce animation on press
     Animated.sequence([
       Animated.timing(bounceAnim, {
@@ -277,7 +279,7 @@ const QuestionItem = ({ question, index, isCorrect, onPress, animationDelay }) =
     ]).start()
 
     onPress && onPress(question)
-  }
+  }, [onPress, question])
 
   // Determine border color based on correct/incorrect
   const borderColor = isCorrect === true ? "#4ADE80" : isCorrect === false ? "#FF5252" : "#7B5CFF"
@@ -318,26 +320,77 @@ const QuestionItem = ({ question, index, isCorrect, onPress, animationDelay }) =
       </TouchableOpacity>
     </Animated.View>
   )
-}
+})
 
 export default function QuizScreen({ navigation, route }) {
-  // Get quiz results from route params or use sample data
-  const quizResults = route.params?.quizResults || SAMPLE_QUIZ_DATA
+  // Get quiz results from route params or use sample data and keep it stable with useRef
+  const quizResultsRef = useRef(route.params?.quizResults || SAMPLE_QUIZ_DATA);
+  const quizResults = quizResultsRef.current;
 
   // Ensure score is out of 20
-  const normalizedScore = {
+  const normalizedScore = useRef({
     ...quizResults,
     total: 20,
     score: Math.min(quizResults.score, 20), // Ensure score doesn't exceed 20
-  }
+  }).current;
+  
+  // Create a persistent reference to all questions
+  const questionsRef = useRef(normalizedScore.questions);
+  const questions = questionsRef.current;
 
   // Animation refs
   const headerAnim = useRef(new Animated.Value(0)).current
   const contentAnim = useRef(new Animated.Value(0)).current
+  
+  // Track mount state to prevent state updates after unmount
+  const isMounted = useRef(true);
+  
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+  
+  // Disable going back to quiz questions
+  useFocusEffect(
+    useCallback(() => {
+      // Prevent hardware back button from working
+      const onBackPress = () => {
+        // Show an alert telling the user they can't go back
+        Alert.alert(
+          "Quiz Completed",
+          "You can't go back to the questions. Use the home button to return to the main screen.",
+          [{ text: "OK" }]
+        );
+        return true; // Returning true prevents default behavior
+      };
+      
+      // Add the event listener
+      BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      
+      // Disable swipe back gesture (only applies to iOS)
+      navigation.setOptions({
+        gestureEnabled: false,
+      });
+      
+      // Clean up the event listener on unmount
+      return () => {
+        BackHandler.removeEventListener('hardwareBackPress', onBackPress);
+      };
+    }, [navigation])
+  );
+
+  const goToHome = useCallback(() => {
+    // Reset the entire navigation stack and go to Home screen
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Home' }],
+    });
+  }, [navigation]);
 
   useEffect(() => {
     // Animate header and content with sequence
-    Animated.stagger(300, [
+    const animationSequence = Animated.stagger(300, [
       Animated.timing(headerAnim, {
         toValue: 1,
         duration: 800,
@@ -348,25 +401,23 @@ export default function QuizScreen({ navigation, route }) {
         duration: 800,
         useNativeDriver: true,
       }),
-    ]).start()
+    ]);
+    
+    animationSequence.start();
 
     return () => {
-      headerAnim.stopAnimation()
-      contentAnim.stopAnimation()
+      if (animationSequence.stop) {
+        animationSequence.stop();
+      }
+      headerAnim.stopAnimation();
+      contentAnim.stopAnimation();
     }
-  }, [])
+  }, []);
 
-  const handleQuestionPress = (question) => {
+  const handleQuestionPress = useCallback((question) => {
     // Get the original quiz data from the route params
-    const originalQuiz = route.params?.quizResults?.originalQuiz;
-    const quizId = route.params?.quizResults?.quizId;
-    
-    // Add logging for debugging
-    console.log("Quiz data:", { 
-      hasOriginalQuiz: !!originalQuiz, 
-      quizId: quizId || 'missing', 
-      questionIndex: question?.originalIndex 
-    });
+    const originalQuiz = quizResultsRef.current.originalQuiz;
+    const quizId = quizResultsRef.current.quizId;
     
     // Validate required data exists
     if (!originalQuiz || !quizId) {
@@ -408,7 +459,21 @@ export default function QuizScreen({ navigation, route }) {
       selectedAnswer: question.answer || (question.selections && question.selections[0]),
       isCorrect: question.isCorrect
     });
-  }
+  }, [navigation]);
+
+  // Item extractor for FlatList to prevent re-renders
+  const keyExtractor = useCallback((item) => item.id.toString(), []);
+  
+  // Render item function for FlatList
+  const renderItem = useCallback(({ item, index }) => (
+    <QuestionItem
+      question={item}
+      index={index}
+      isCorrect={item.isCorrect}
+      onPress={handleQuestionPress}
+      animationDelay={500} // Start after main animations
+    />
+  ), [handleQuestionPress]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -441,13 +506,7 @@ export default function QuizScreen({ navigation, route }) {
             {/* Remove the existing back button and add only home button */}
             <TouchableOpacity 
               style={styles.backButton} // Keep using the same style for consistency
-              onPress={() => {
-                // Reset the entire navigation stack and go to Home screen
-                navigation.reset({
-                  index: 0,
-                  routes: [{ name: 'Home' }],
-                });
-              }}
+              onPress={goToHome}
             >
               <Icon name="home" size={24} color="white" />
             </TouchableOpacity>
@@ -511,19 +570,15 @@ export default function QuizScreen({ navigation, route }) {
         ]}
       >
         <FlatList
-          data={normalizedScore.questions}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item, index }) => (
-            <QuestionItem
-              question={item}
-              index={index}
-              isCorrect={item.isCorrect}
-              onPress={handleQuestionPress}
-              animationDelay={500} // Start after main animations
-            />
-          )}
+          data={questions}
+          keyExtractor={keyExtractor}
+          renderItem={renderItem}
           contentContainerStyle={styles.questionsContainer}
           showsVerticalScrollIndicator={false}
+          removeClippedSubviews={false} // Prevents components from being unmounted when off-screen
+          maxToRenderPerBatch={20} // Render all items at once
+          windowSize={21} // Keep more items in memory
+          initialNumToRender={20} // Render all items initially
         />
       </Animated.View>
     </SafeAreaView>

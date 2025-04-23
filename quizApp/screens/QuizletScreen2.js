@@ -266,10 +266,12 @@ export default function QuizletScreen2({ navigation, route }) {
     
     // If the question has a single correct answer
     if (typeof question.correctAnswer === 'number') {
-      isCorrect = currentSelections.includes(question.correctAnswer)
+      // For single answer questions: ONLY correct if EXACTLY the correct answer is selected and nothing else
+      isCorrect = currentSelections.length === 1 && currentSelections[0] === question.correctAnswer
     } 
-    // If the question has multiple correct answers (future feature)
+    // If the question has multiple correct answers
     else if (Array.isArray(question.correctAnswer)) {
+      // For multiple correct answers: ALL correct answers must be selected AND NO incorrect answers can be selected
       const allCorrectSelected = question.correctAnswer.every(ans => currentSelections.includes(ans))
       const onlyCorrectSelected = currentSelections.every(ans => question.correctAnswer.includes(ans))
       isCorrect = allCorrectSelected && onlyCorrectSelected
@@ -298,10 +300,37 @@ export default function QuizletScreen2({ navigation, route }) {
   }
 
   const navigateToResults = () => {
-    // Calculate score
+    // Calculate score - applying strict rules for correctness
     const answeredQuestions = Object.values(answers);
-    const correctCount = answeredQuestions.filter(a => a.isCorrect).length;
-    const incorrectCount = answeredQuestions.filter(a => !a.isCorrect).length;
+    
+    // Recalculate scores to ensure consistent handling
+    const quizQuestions = physicsQuiz.questions;
+    
+    // Process each question
+    const results = Object.entries(answers).map(([qIndex, answer]) => {
+      const question = quizQuestions[qIndex];
+      const selections = answer.selections || [];
+      
+      let isCorrect = false;
+      // For single answer questions
+      if (typeof question.correctAnswer === 'number') {
+        isCorrect = selections.length === 1 && selections[0] === question.correctAnswer;
+      }
+      // For multiple answer questions
+      else if (Array.isArray(question.correctAnswer)) {
+        isCorrect = question.correctAnswer.every(ans => selections.includes(ans)) && 
+                    selections.every(ans => question.correctAnswer.includes(ans));
+      }
+      
+      return {
+        questionIndex: qIndex,
+        isCorrect,
+        selections
+      };
+    });
+    
+    const correctCount = results.filter(r => r.isCorrect).length;
+    const incorrectCount = results.filter(r => !r.isCorrect).length;
     
     // Navigate to Quiz with complete information
     navigation.navigate("Quiz", {
@@ -315,16 +344,32 @@ export default function QuizletScreen2({ navigation, route }) {
         quizId: physicsQuiz.id,
         originalQuiz: physicsQuiz,
         // Create simplified questions list for QuizScreen display
-        questions: physicsQuiz.questions.map((q, index) => ({
-          id: index + 1,
-          text: `Question ${index + 1}`, // Simple numbered format for QuizScreen
-          isCorrect: answers[index]?.isCorrect || false,
-          selections: answers[index]?.selections || [],
-          answer: answers[index]?.answer,
-          // Link to original data for ReviewQuestionScreen
-          originalIndex: index,
-          quizId: physicsQuiz.id
-        })),
+        questions: physicsQuiz.questions.map((q, index) => {
+          const userAnswer = answers[index];
+          const selections = userAnswer?.selections || [];
+          
+          // Determine if correct - strict evaluation
+          let isCorrect = false;
+          if (typeof q.correctAnswer === 'number') {
+            isCorrect = selections.length === 1 && selections[0] === q.correctAnswer;
+          } else if (Array.isArray(q.correctAnswer)) {
+            isCorrect = q.correctAnswer.every(ans => selections.includes(ans)) && 
+                        selections.every(ans => q.correctAnswer.includes(ans));
+          }
+          
+          return {
+            id: index + 1,
+            text: `Question ${index + 1}`, // Simple numbered format for QuizScreen
+            isCorrect: isCorrect,
+            selections: selections,
+            answer: userAnswer?.answer,
+            // Link to original data for ReviewQuestionScreen
+            originalIndex: index,
+            quizId: physicsQuiz.id
+          };
+        }),
+        // Add preventBackNavigation flag to indicate that back navigation should be disabled
+        preventBackNavigation: true
       },
     });
   }

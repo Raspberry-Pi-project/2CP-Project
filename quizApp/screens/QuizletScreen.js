@@ -65,7 +65,7 @@ export default function QuizletScreen({ navigation, route }) {
   const [correctAnswers, setCorrectAnswers] = useState(5) // Example starting values
   const [incorrectAnswers, setIncorrectAnswers] = useState(7)
   const [timerActive, setTimerActive] = useState(true)
-  const [selectedAnswers, setSelectedAnswers] = useState(Array(questions.length).fill([]))
+  const [selectedAnswers, setSelectedAnswers] = useState({})
 
   // Animation refs
   const progressAnim = useRef(new Animated.Value(0)).current
@@ -84,6 +84,18 @@ export default function QuizletScreen({ navigation, route }) {
       .map(() => new Animated.Value(0)),
   ).current
 
+  // Initialize state for multi-select mode
+  const [isQuizMultiSelect, setIsQuizMultiSelect] = useState(false);
+  
+  // Check if any questions have multiple correct answers and update the multi-select mode
+  useEffect(() => {
+    // Check if any question has an array for correctAnswer
+    const hasMultiSelectQuestions = questions.some(q => Array.isArray(q.correctAnswer));
+    setIsQuizMultiSelect(hasMultiSelectQuestions);
+    
+    console.log("Quiz has multi-select questions:", hasMultiSelectQuestions);
+  }, [questions]);
+
   // Reset quiz function to be called when app returns to foreground
   const resetQuiz = () => {
     // Reset all quiz state
@@ -97,7 +109,7 @@ export default function QuizletScreen({ navigation, route }) {
     setCorrectAnswers(5)
     setIncorrectAnswers(7)
     setTimerActive(true)
-    setSelectedAnswers(Array(questions.length).fill([]))
+    setSelectedAnswers({})
     
     // Reset animations
     questionAnim.setValue(0)
@@ -326,9 +338,8 @@ export default function QuizletScreen({ navigation, route }) {
       }),
     ]).start()
 
-    // Multiple selection logic
-    const newSelectedAnswers = [...selectedAnswers]
-    const currentSelections = [...(newSelectedAnswers[currentQuestion] || [])]
+    // Get current selections for this question
+    const currentSelections = [...(selectedAnswers[currentQuestion] || [])]
     
     // Toggle selection - if already selected, remove it; if not, add it
     const selectionIndex = currentSelections.indexOf(index)
@@ -338,16 +349,51 @@ export default function QuizletScreen({ navigation, route }) {
       currentSelections.push(index)
     }
     
-    newSelectedAnswers[currentQuestion] = currentSelections
-    setSelectedAnswers(newSelectedAnswers)
+    // Update selectedAnswers state
+    setSelectedAnswers({
+      ...selectedAnswers,
+      [currentQuestion]: currentSelections
+    })
     
-    // For backward compatibility, set the most recent selection
-    setSelectedAnswer(index)
+    // For backward compatibility with selectedAnswer
+    // If deselecting the current selection, set to null
+    // Otherwise set to the current selection
+    if (selectedAnswer === index && selectionIndex >= 0) {
+      setSelectedAnswer(null)
+    } else if (selectionIndex < 0) {
+      setSelectedAnswer(index)
+    }
+    
+    // Check if any option is selected after this operation
+    if (currentSelections.length === 0) {
+      return // Don't update score or answers if nothing is selected
+    }
+    
+    // Update the answers state with the selected options
+    const question = questions[currentQuestion]
+    let isCorrect = false
+    
+    // If the question has a single correct answer
+    if (typeof question.correctAnswer === 'number') {
+      isCorrect = currentSelections.includes(question.correctAnswer)
+    } 
+    // If the question has multiple correct answers
+    else if (Array.isArray(question.correctAnswer)) {
+      const allCorrectSelected = question.correctAnswer.every(ans => currentSelections.includes(ans))
+      const onlyCorrectSelected = currentSelections.every(ans => question.correctAnswer.includes(ans))
+      isCorrect = allCorrectSelected && onlyCorrectSelected
+    }
     
     // Update the answers array for scoring
-    const newAnswers = [...answers]
-    newAnswers[currentQuestion] = currentSelections
-    setAnswers(newAnswers)
+    setAnswers(prev => {
+      const newAnswers = [...prev];
+      newAnswers[currentQuestion] = {
+        answer: index, // Keep for backward compatibility
+        selections: currentSelections,
+        isCorrect
+      };
+      return newAnswers;
+    });
   }
 
   const handleCustomAnswer = () => {
@@ -434,7 +480,13 @@ export default function QuizletScreen({ navigation, route }) {
             id: q.id || index + 1,
             text: `Question ${index + 1}`,
             isCorrect: selectedAnswers[index]?.includes(q.correctAnswer) || false,
+            originalIndex: index,
           })),
+          // Add quiz id and original quiz data for reference
+          quizId: quiz.id || "default",
+          originalQuiz: quiz,
+          // Add preventBackNavigation flag to indicate that back navigation should be disabled
+          preventBackNavigation: true
         },
       });
     }
@@ -563,55 +615,54 @@ export default function QuizletScreen({ navigation, route }) {
                 </Animated.View>
               ) : (
                 (currentQuestionData.options || []).map(
-                  (option, index) =>
-                    (
-                      <Animated.View
-                    key={index}
-                    style={{
-                      opacity: optionsAnim[index],
-                      transform: [
-                        {
-                          translateY: optionsAnim[index].interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [20, 0],
-                          }),
-                        },
-                      ],
-                    }}
-                  >
-                    <TouchableOpacity
-                      style={[
-                        styles.option, 
-                        selectedAnswers[currentQuestion]?.includes(index) && styles.selectedOption
-                      ]}
-                      onPress={() => handleAnswer(index)}
-                      disabled={showCustomInput}
-                      activeOpacity={0.7}
+                  (option, index) => (
+                    <Animated.View
+                      key={index}
+                      style={{
+                        opacity: optionsAnim[index],
+                        transform: [
+                          {
+                            translateY: optionsAnim[index].interpolate({
+                              inputRange: [0, 1],
+                              outputRange: [20, 0],
+                            }),
+                          },
+                        ],
+                      }}
                     >
-                      <Text style={[
-                        styles.optionText, 
-                        selectedAnswers[currentQuestion]?.includes(index) && styles.selectedOptionText
-                      ]}>
-                        {option}
-                      </Text>
+                      <TouchableOpacity
+                        style={[
+                          styles.option, 
+                          selectedAnswers[currentQuestion]?.includes(index) && styles.selectedOption
+                        ]}
+                        onPress={() => handleAnswer(index)}
+                        disabled={showCustomInput}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={[
+                          styles.optionText, 
+                          selectedAnswers[currentQuestion]?.includes(index) && styles.selectedOptionText
+                        ]}>
+                          {option}
+                        </Text>
 
-                      {selectedAnswers[currentQuestion]?.includes(index) && (
-                        <View style={styles.selectionIndicator}>
-                          <Svg width={20} height={20} viewBox="0 0 24 24">
-                            <Path
-                              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"
-                              fill="#A42FC1"
-                            />
-                            <Path
-                              d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"
-                              fill="#A42FC1"
-                            />
-                          </Svg>
-                        </View>
-                      )}
-                    </TouchableOpacity>
-                  </Animated.View>
-                    ),
+                        {selectedAnswers[currentQuestion]?.includes(index) && (
+                          <View style={styles.selectionIndicator}>
+                            <Svg width={20} height={20} viewBox="0 0 24 24">
+                              <Path
+                                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"
+                                fill="#A42FC1"
+                              />
+                              <Path
+                                d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"
+                                fill="#A42FC1"
+                              />
+                            </Svg>
+                          </View>
+                        )}
+                      </TouchableOpacity>
+                    </Animated.View>
+                  )
                 )
               )}
             </View>
