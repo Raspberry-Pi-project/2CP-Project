@@ -14,6 +14,7 @@ import {
   Alert,
   Easing,
   Platform,
+  AppState,
 } from "react-native"
 import Icon from "react-native-vector-icons/Feather"
 import { LinearGradient } from "expo-linear-gradient"
@@ -25,6 +26,9 @@ const { width, height } = Dimensions.get("window")
 const AnimatedCircle = Animated.createAnimatedComponent(Circle)
 
 export default function QuizletScreen2({ navigation, route }) {
+  // AppState reference to track app state changes
+  const appState = useRef(AppState.currentState);
+
   // Check if quiz data exists in route params
   useEffect(() => {
     if (!route.params || !route.params.quiz) {
@@ -62,6 +66,55 @@ export default function QuizletScreen2({ navigation, route }) {
       .fill()
       .map(() => new Animated.Value(0)),
   ).current
+
+  // Reset quiz function to be called when app returns to foreground
+  const resetQuiz = () => {
+    // Reset all quiz state
+    setCurrentView("list")
+    setCurrentQuestion(0)
+    setSelectedAnswer(null)
+    setSelectedAnswers({})
+    setScore(0)
+    setAnswers({})
+    setTimeLeft(300) // Reset to 5 minutes
+    setCorrectCount(0)
+    setIncorrectCount(0)
+    
+    // Reset animations
+    fadeAnim.setValue(1)
+    questionAnim.setValue(0)
+    timerAnim.setValue(1) 
+    pulseAnim.setValue(1)
+    nextButtonAnim.setValue(0)
+    optionsAnim.forEach(anim => anim.setValue(0))
+    
+    // Alert user that quiz has been reset
+    Alert.alert(
+      "Quiz Reset",
+      "Your quiz progress was lost because you left the app. Please start over.",
+      [{ text: "OK" }]
+    )
+  }
+
+  // Listen for AppState changes
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", nextAppState => {
+      // If app goes from background to active, reset quiz
+      if (
+        appState.current.match(/inactive|background/) && 
+        nextAppState === "active"
+      ) {
+        resetQuiz();
+      }
+      
+      // Update app state reference
+      appState.current = nextAppState;
+    });
+    
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   // Timer settings
   const timerRadius = 25
@@ -244,28 +297,39 @@ export default function QuizletScreen2({ navigation, route }) {
     }))
   }
 
-  const navigateToResults = () => {
-    // Calculate the final score based on the current answers
-    const answeredQuestions = Object.values(answers)
-    const correctCount = answeredQuestions.filter(a => a.isCorrect).length
-    const incorrectCount = answeredQuestions.filter(a => !a.isCorrect).length
+
+    // Calculate score
+    const answeredQuestions = Object.values(answers);
+    const correctCount = answeredQuestions.filter(a => a.isCorrect).length;
+    const incorrectCount = answeredQuestions.filter(a => !a.isCorrect).length;
     
-    // Navigate to "Quiz" with the parameters updated for multiple answers
+    // Navigate to Quiz with complete information
+
     navigation.navigate("Quiz", {
       quizResults: {
         score: correctCount,
         total: physicsQuiz.questions.length,
         correctCount: correctCount,
         incorrectCount: incorrectCount,
+        timeSpent: 300 - timeLeft,
+        // Include quiz identifiers and full data
+        quizId: physicsQuiz.id,
+        originalQuiz: physicsQuiz,
+        // Create simplified questions list for QuizScreen display
         questions: physicsQuiz.questions.map((q, index) => ({
           id: index + 1,
-          text: `Question ${index + 1}`, // Use generic question text
+          text: `Question ${index + 1}`, // Simple numbered format for QuizScreen
           isCorrect: answers[index]?.isCorrect || false,
-          // Include the selections for potential future use
-          selections: answers[index]?.selections || []
+
+          selections: answers[index]?.selections || [],
+          answer: answers[index]?.answer,
+          // Link to original data for ReviewQuestionScreen
+          originalIndex: index,
+          quizId: physicsQuiz.id
+
         })),
       },
-    })
+    });
   }
 
   // Progress bar component

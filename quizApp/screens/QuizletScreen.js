@@ -15,6 +15,7 @@ import {
   Alert,
   Platform,
   TextInput,
+  AppState,
 } from "react-native"
 import Icon from "react-native-vector-icons/Feather"
 import QuizBackground from "../components/QuizBackground"
@@ -25,6 +26,9 @@ const { width, height } = Dimensions.get("window")
 const AnimatedCircle = Animated.createAnimatedComponent(Circle)
 
 export default function QuizletScreen({ navigation, route }) {
+  // AppState reference to track app state changes
+  const appState = useRef(AppState.currentState);
+
   // Check if quiz data exists in route params
   useEffect(() => {
     if (!route.params || !route.params.quiz) {
@@ -79,6 +83,90 @@ export default function QuizletScreen({ navigation, route }) {
       .fill()
       .map(() => new Animated.Value(0)),
   ).current
+
+  // Reset quiz function to be called when app returns to foreground
+  const resetQuiz = () => {
+    // Reset all quiz state
+    setCurrentQuestion(0)
+    setSelectedAnswer(null)
+    setCustomAnswer("")
+    setScore(0)
+    setAnswers(Array(questions.length).fill(null))
+    setTimeLeft(15)
+    setShowCustomInput(false)
+    setCorrectAnswers(5)
+    setIncorrectAnswers(7)
+    setTimerActive(true)
+    setSelectedAnswers(Array(questions.length).fill([]))
+    
+    // Reset animations
+    questionAnim.setValue(0)
+    timerProgress.setValue(1)
+    timerOpacity.setValue(1)
+    pulseAnim.setValue(1)
+    nextButtonAnim.setValue(0)
+    progressAnim.setValue(0)
+    optionsAnim.forEach(anim => anim.setValue(0))
+    customInputAnim.setValue(0)
+    shakeAnim.setValue(0)
+    
+    // Start animations for first question
+    Animated.parallel([
+      Animated.timing(progressAnim, {
+        toValue: 1 / questions.length,
+        duration: 600,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: false,
+      }),
+      Animated.timing(questionAnim, {
+        toValue: 1,
+        duration: 500,
+        easing: Easing.out(Easing.back(1.5)),
+        useNativeDriver: true,
+      }),
+    ]).start()
+    
+    // Animate options with staggered effect
+    const numOptions = questions[0]?.options?.length + 1 || 1
+    Animated.stagger(
+      100,
+      optionsAnim.slice(0, numOptions).map((anim) =>
+        Animated.timing(anim, {
+          toValue: 1,
+          duration: 400,
+          easing: Easing.out(Easing.back(1.5)),
+          useNativeDriver: true,
+        }),
+      ),
+    ).start()
+    
+    // Alert user that quiz has been reset
+    Alert.alert(
+      "Quiz Reset",
+      "Your quiz progress was lost because you left the app. Please start over.",
+      [{ text: "OK" }]
+    )
+  }
+
+  // Listen for AppState changes
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", nextAppState => {
+      // If app goes from background to active, reset quiz
+      if (
+        appState.current.match(/inactive|background/) && 
+        nextAppState === "active"
+      ) {
+        resetQuiz();
+      }
+      
+      // Update app state reference
+      appState.current = nextAppState;
+    });
+    
+    return () => {
+      subscription.remove();
+    };
+  }, [questions]);
 
   // Timer settings
   const timerRadius = 25

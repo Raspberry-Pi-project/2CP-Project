@@ -148,12 +148,17 @@ const styles = StyleSheet.create({
   inner: {
     flex: 1,
     padding: 24,
+    justifyContent: "center",
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 30,
+    position: "absolute",
+    top: 24,
+    left: 24,
+    right: 24,
   },
   backButton: {
     padding: 8,
@@ -169,28 +174,18 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignItems: "center",
     marginBottom: 40,
+    height: 74,
   },
-  logoText: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#333",
+  logoImage: {
+    width: 274,
+    height: 74,
   },
-  // Replace the logoText style with these:
-logoContainer: {
-  alignItems: "center",
-  marginBottom: 40,
-  height: 74, // Match image height
-},
-logoImage: {
-  width: 274, // Image width from dimensions
-  height: 74, // Image height from dimensions
-},
   formContainer: {
     width: "100%",
   },
   formTitle: {
     fontSize: 16,
-    color: "#FF6B6B",
+    color: colors.primary,
     marginBottom: 25,
     textAlign: "center",
   },
