@@ -375,7 +375,8 @@ export default function QuizletScreen({ navigation, route }) {
     
     // If the question has a single correct answer
     if (typeof question.correctAnswer === 'number') {
-      isCorrect = currentSelections.includes(question.correctAnswer)
+      // ONLY correct if EXACTLY the correct answer is selected and nothing else
+      isCorrect = currentSelections.length === 1 && currentSelections[0] === question.correctAnswer
     } 
     // If the question has multiple correct answers
     else if (Array.isArray(question.correctAnswer)) {
@@ -456,7 +457,8 @@ export default function QuizletScreen({ navigation, route }) {
         
         // If there's only one correct answer
         if (typeof correctAnswer === 'number') {
-          return userAnswers.includes(correctAnswer) ? totalScore + 1 : totalScore;
+          // Only count as correct if EXACTLY the correct answer is selected and nothing else
+          return (userAnswers.length === 1 && userAnswers[0] === correctAnswer) ? totalScore + 1 : totalScore;
         } 
         // If there are multiple correct answers (assuming correctAnswer is an array)
         else if (Array.isArray(correctAnswer)) {
@@ -479,7 +481,22 @@ export default function QuizletScreen({ navigation, route }) {
           questions: questions.map((q, index) => ({
             id: q.id || index + 1,
             text: `Question ${index + 1}`,
-            isCorrect: selectedAnswers[index]?.includes(q.correctAnswer) || false,
+            isCorrect: (() => {
+              const userAnswers = selectedAnswers[index] || [];
+              // For single answer questions
+              if (typeof q.correctAnswer === 'number') {
+                return userAnswers.length === 1 && userAnswers[0] === q.correctAnswer;
+              }
+              // For multiple answer questions
+              else if (Array.isArray(q.correctAnswer)) {
+                const allCorrectSelected = q.correctAnswer.every(ans => userAnswers.includes(ans));
+                const onlyCorrectSelected = userAnswers.every(ans => q.correctAnswer.includes(ans));
+                return allCorrectSelected && onlyCorrectSelected;
+              }
+              return false;
+            })(),
+            selections: selectedAnswers[index] || [],
+            answer: selectedAnswers[index]?.[0], // For backward compatibility
             originalIndex: index,
           })),
           // Add quiz id and original quiz data for reference

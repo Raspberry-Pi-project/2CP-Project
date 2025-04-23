@@ -141,40 +141,37 @@ const ReviewQuestionScreen = ({ navigation, route }) => {
     [quiz, questionIndex]
   );
   
-  // Get the user's selected answer - handle different formats
-  const selectedAnswer = useMemo(() => {
-    // Use the stored ref value to ensure we don't lose the answer
-    const stored = answersRef.current.selectedAnswer;
-    if (stored !== undefined && stored !== null) {
-      return stored;
+  // Get the user's selected answers - support multiple selections
+  const selectedAnswers = useMemo(() => {
+    // First check for selections array in simplifiedQuestion or params
+    if (simplifiedQuestion?.selections && Array.isArray(simplifiedQuestion.selections)) {
+      return simplifiedQuestion.selections;
     }
     
-    // Different places might store the selected answer differently
-    const answerFromParams = initialSelectedAnswer;
-    
-    // Check if it's directly stored
-    if (answerFromParams !== undefined && answerFromParams !== null) {
-      return answerFromParams;
+    // Check if we have a selectedAnswers array passed in params
+    if (route.params.selectedAnswers && Array.isArray(route.params.selectedAnswers)) {
+      return route.params.selectedAnswers;
     }
     
-    // Check if it's stored in the simplified question
-    if (simplifiedQuestion?.answer !== undefined) {
-      return simplifiedQuestion.answer;
-    }
-
-    // Check if it's stored as selections array
-    if (simplifiedQuestion?.selections && simplifiedQuestion.selections.length > 0) {
-      return simplifiedQuestion.selections[0];
+    // Fallback to single answer as an array
+    const singleAnswer = answersRef.current.selectedAnswer;
+    if (singleAnswer !== undefined && singleAnswer !== null) {
+      return [singleAnswer];
     }
     
-    // No selected answer found
-    return null;
-  }, [initialSelectedAnswer, simplifiedQuestion]);
+    // Check other potential sources of answers
+    if (simplifiedQuestion?.answer !== undefined && simplifiedQuestion.answer !== null) {
+      return [simplifiedQuestion.answer];
+    }
+    
+    // No selected answers found
+    return [];
+  }, [simplifiedQuestion, route.params]);
   
-  // Update ref when selectedAnswer changes
+  // Update ref when selectedAnswers changes
   useEffect(() => {
-    answersRef.current.selectedAnswer = selectedAnswer;
-  }, [selectedAnswer]);
+    answersRef.current.selectedAnswer = selectedAnswers[0]; // Keep backward compatibility
+  }, [selectedAnswers]);
 
   // Setup animations
   const questionAnim = useRef(new Animated.Value(0)).current;
@@ -280,10 +277,12 @@ const ReviewQuestionScreen = ({ navigation, route }) => {
             <View style={styles.optionsContainer}>
               {originalQuestion.options.map((option, index) => {
                 // Determine option state
-                const isCorrectOption = index === originalQuestion.correctAnswer;
-                const isSelectedOption = selectedAnswer === index;
+                const isCorrectOption = typeof originalQuestion.correctAnswer === 'number' 
+                  ? index === originalQuestion.correctAnswer
+                  : Array.isArray(originalQuestion.correctAnswer) && originalQuestion.correctAnswer.includes(index);
+                
+                const isSelectedOption = selectedAnswers.includes(index);
                 const isWrongSelection = isSelectedOption && !isCorrectOption;
-                const noSelectionMade = selectedAnswer === null || selectedAnswer === undefined;
                 
                 return (
                   <Animated.View
@@ -323,7 +322,7 @@ const ReviewQuestionScreen = ({ navigation, route }) => {
                         {option}
                       </Text>
 
-                      {/* Checkmark for correct answer or correct selection */}
+                      {/* Checkmark for correct answer */}
                       {isCorrectOption && (
                         <View style={styles.checkmark}>
                           <Svg width={20} height={20} viewBox="0 0 24 24">
@@ -335,7 +334,7 @@ const ReviewQuestionScreen = ({ navigation, route }) => {
                       {/* X mark for wrong selection */}
                       {isWrongSelection && (
                         <View style={styles.crossmark}>
-                          <Svg width={20} height={20} viewBox="0 0 24 24">
+                          <Svg width={16} height={16} viewBox="0 0 24 24">
                             <Path
                               d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"
                               fill="white"
@@ -374,10 +373,13 @@ const ReviewQuestionScreen = ({ navigation, route }) => {
                 <View style={styles.legendItem}>
                   <View style={[styles.legendIcon, { backgroundColor: "#FF5252" }]}>
                     <Svg width={16} height={16} viewBox="0 0 24 24">
-                      <Circle cx="12" cy="12" r="10" fill="white" />
+                      <Path
+                        d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"
+                        fill="white"
+                      />
                     </Svg>
                   </View>
-                  <Text style={styles.legendText}>Your Selection</Text>
+                  <Text style={styles.legendText}>Wrong Selection</Text>
                 </View>
               </View>
               

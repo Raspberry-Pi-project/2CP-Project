@@ -431,7 +431,7 @@ export default function QuizScreen({ navigation, route }) {
             simplifiedQuestion: question,
             originalQuestion: fallbackQuiz.questions[question.originalIndex || 0],
             quizId: quizId,
-            selectedAnswer: question.answer || (question.selections && question.selections[0]),
+            selectedAnswers: question.selections || [question.answer].filter(Boolean),
             isCorrect: question.isCorrect
           });
           return;
@@ -456,7 +456,7 @@ export default function QuizScreen({ navigation, route }) {
       simplifiedQuestion: question,
       originalQuestion: originalQuestion,
       quizId: quizId,
-      selectedAnswer: question.answer || (question.selections && question.selections[0]),
+      selectedAnswers: question.selections || [question.answer].filter(Boolean),
       isCorrect: question.isCorrect
     });
   }, [navigation]);
