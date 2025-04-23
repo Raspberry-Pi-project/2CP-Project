@@ -113,7 +113,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 24,
     zIndex: 2,
-    height: 74,
   },
   navItem: {
     alignItems: "center",
@@ -134,10 +133,6 @@ const styles = StyleSheet.create({
   },
   addButton: {
     marginTop: -32,
-    position: 'absolute',
-    left: '50%',
-    marginLeft: -30, // Half of the button width to center it
-    bottom: 32, // Position from the bottom
   },
   addButtonInner: {
     backgroundColor: colors.primary,
