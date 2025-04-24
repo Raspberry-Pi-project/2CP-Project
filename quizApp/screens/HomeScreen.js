@@ -235,10 +235,18 @@ export default function HomeScreen({ navigation }) {
   })
 
   const handleHistoryQuizPress = (item) => {
-    navigation.navigate("QuizScore", {
-      score: (item.score * item.totalQuestions) / 100, // Convert percentage to actual score
+    navigation.navigate("QuizHistoryScreen", { 
+      quiz: {
+        id: item.id,
+        title: item.title,
+        description: "Your previous quiz attempt. View your results.",
+        time: "30 minutes",
+        attempts: 1,
+        questions: item.totalQuestions || 10
+      },
+      score: item.score,
       totalQuestions: item.totalQuestions,
-      timeSpent: item.timeSpent,
+      timeSpent: item.timeSpent
     })
   }
 

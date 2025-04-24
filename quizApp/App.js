@@ -4,7 +4,7 @@ import { NavigationContainer } from "@react-navigation/native"
 import { createNativeStackNavigator } from "@react-navigation/native-stack"
 import { StatusBar } from "expo-status-bar"
 import { SafeAreaProvider } from "react-native-safe-area-context"
-import { useState, useEffect } from "react"
+import { useState, useEffect, createContext } from "react"
 import FirstScreen from "./screens/FirstScreen"
 import LoginScreen from "./screens/LoginScreen"
 import HomeScreen from "./screens/HomeScreen"
@@ -14,6 +14,7 @@ import QuizScreen from "./screens/QuizScreen"
 import QuizScoreScreen from "./screens/QuizScoreScreen"
 import ProfileScreen from "./screens/ProfileScreen"
 import QuizInfoScreen from "./screens/QuizInfoScreen"
+import QuizHistoryScreen from "./screens/QuizHistoryScreen"
 import FeedbackScreen from "./screens/FeedbackScreen"
 import StudentPrivateChartScreen from "./screens/StudentPrivateChartScreen"
 import notificationManager, { NotificationManager } from "./components/NotificationManager"
@@ -29,8 +30,12 @@ LogBox.ignoreLogs([
 
 const Stack = createNativeStackNavigator()
 
+// Create UserContext for global user data
+export const UserContext = createContext(null);
+
 export default function App() {
   const [showNotification, setShowNotification] = useState(false)
+  const [userData, setUserData] = useState(null)
 
   useEffect(() => {
     // Show notification after a short delay to ensure app is fully loaded
@@ -48,39 +53,61 @@ export default function App() {
   }, [])
 
   return (
-    <SafeAreaProvider>
-      {/* Temporarily disabled OfflineOnly component to work online */}
-      <>
-        <NavigationContainer>
-          <StatusBar style="light" />
-          <Stack.Navigator initialRouteName="First" screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="First" component={FirstScreen} />
-            <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="Home" component={HomeScreen} />
-            <Stack.Screen name="QuizInfo" component={QuizInfoScreen} />
-            <Stack.Screen name="Quizlet" component={QuizletScreen} />
-            <Stack.Screen name="Quizlet2" component={QuizletScreen2} />
-            <Stack.Screen 
-              name="Quiz" 
-              component={QuizScreen} 
-              options={({ route }) => ({
-                headerShown: false,
-                gestureEnabled: false, // Disable swipe back
-                // Only return to the specific screen if not prevented
-                presentation: route.params?.quizResults?.preventBackNavigation ? 'modal' : 'card',
-              })}
-            />
-            <Stack.Screen name="QuizScore" component={QuizScoreScreen} />
-            <Stack.Screen name="Profile" component={ProfileScreen} />
-            <Stack.Screen name="Feedback" component={FeedbackScreen} />
-            <Stack.Screen name="StudentPrivateChart" component={StudentPrivateChartScreen} />
-            <Stack.Screen name="ReviewQuestion" component={ReviewQuestionScreen} />
-          </Stack.Navigator>
+    <UserContext.Provider value={{ userData, setUserData }}>
+      <SafeAreaProvider>
+        {/* Temporarily disabled OfflineOnly component to work online */}
+        <>
+          <NavigationContainer>
+            <StatusBar style="light" />
+            <Stack.Navigator 
+              initialRouteName="First" 
+              screenOptions={{ headerShown: false }}
+              screenListeners={{
+                // This will handle the navigation to intercept ResultsQuiz navigation
+                beforeRemove: (e) => {
+                  // We don't do anything on beforeRemove, this is just a placeholder
+                },
+              }}
+            >
+              <Stack.Screen name="First" component={FirstScreen} />
+              <Stack.Screen name="Login" component={LoginScreen} />
+              <Stack.Screen name="Home" component={HomeScreen} />
+              <Stack.Screen name="QuizInfo" component={QuizInfoScreen} />
+              <Stack.Screen name="QuizHistoryScreen" component={QuizHistoryScreen} />
+              <Stack.Screen name="Quizlet" component={QuizletScreen} />
+              <Stack.Screen name="Quizlet2" component={QuizletScreen2} />
+              <Stack.Screen 
+                name="Quiz" 
+                component={QuizScreen} 
+                options={({ route }) => ({
+                  headerShown: false,
+                  gestureEnabled: false, // Disable swipe back
+                  // Only return to the specific screen if not prevented
+                  presentation: route.params?.quizResults?.preventBackNavigation ? 'modal' : 'card',
+                })}
+              />
+              <Stack.Screen name="QuizScore" component={QuizScoreScreen} />
+              <Stack.Screen name="Profile" component={ProfileScreen} />
+              <Stack.Screen name="Feedback" component={FeedbackScreen} />
+              <Stack.Screen name="StudentPrivateChart" component={StudentPrivateChartScreen} />
+              <Stack.Screen name="ReviewQuestion" component={ReviewQuestionScreen} />
+              <Stack.Screen 
+                name="ResultsQuiz" 
+                component={QuizHistoryScreen}
+                options={{
+                  headerShown: false
+                }}
+                initialParams={{
+                  fromHistory: true
+                }}
+              />
+            </Stack.Navigator>
 
-          {/* Advanced Notification Manager with ref */}
-          <NotificationManager ref={notificationManager.ref} />
-        </NavigationContainer>
-      </>
-    </SafeAreaProvider>
+            {/* Advanced Notification Manager with ref */}
+            <NotificationManager ref={notificationManager.ref} />
+          </NavigationContainer>
+        </>
+      </SafeAreaProvider>
+    </UserContext.Provider>
   )
 }
