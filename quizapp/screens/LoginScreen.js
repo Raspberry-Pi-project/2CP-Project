@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -19,6 +19,7 @@ import { colors } from "../constants/colors";
 import Svg, { Path } from "react-native-svg";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { API_URL } from "../services/config";
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
@@ -32,19 +33,16 @@ export default function LoginScreen({ navigation }) {
     }
 
     try {
-      console.log("Attempting login to:", "http://172.20.10.2:3000/auth/login");
+      console.log("API URL:", API_URL);
+      console.log("Attempting login to:", `${API_URL}/auth/login`);
       console.log("Request Payload:", { email, password, role: "student" });
 
       // Step 1: Login and get userId
-      const response = await axios.post(
-        "http://172.20.10.2:3000/auth/login",
-        {
-          email,
-          password,
-          role: "student",
-        },
-        { timeout: 10000 } // 10 seconds timeout
-      );
+      const response = await axios.post(`${API_URL}/auth/login`, {
+        email,
+        password,
+        role: "student",
+      });
 
       console.log("Response:", response.data);
 
@@ -64,9 +62,9 @@ export default function LoginScreen({ navigation }) {
 
       // Step 2: Fetch additional details using userId
       const userDetailsResponse = await axios.post(
-        `http://172.20.10.2:3000/students/${userId}`
+        `${API_URL}/students/${userId}`
       );
-// jknjkn
+      // jknjkn
       const { groupe_student: studentGroup, annee: studentYear } =
         userDetailsResponse.data;
 
@@ -92,10 +90,14 @@ export default function LoginScreen({ navigation }) {
       console.error("Login error:", error);
       if (error.response) {
         console.error("Error data:", error.response.data);
-        alert(`Login failed: ${error.response.data.message || "Unknown error"}`);
+        alert(
+          `Login failed: ${error.response.data.message || "Unknown error"}`
+        );
       } else if (error.request) {
         console.error("No response received:", error.request);
-        alert("Server is not responding. Check your connection or server status.");
+        alert(
+          "Server is not responding. Check your connection or server status."
+        );
       } else {
         console.error("Error message:", error.message);
         alert(`Error: ${error.message}`);
@@ -247,12 +249,17 @@ const styles = StyleSheet.create({
   inner: {
     flex: 1,
     padding: 24,
+    justifyContent: "center",
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 30,
+    position: "absolute",
+    top: 24,
+    left: 24,
+    right: 24,
   },
   backButton: {
     padding: 8,
@@ -268,18 +275,18 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignItems: "center",
     marginBottom: 40,
-    height: 74, // Match image height
+    height: 74,
   },
   logoImage: {
-    width: 274, // Image width from dimensions
-    height: 74, // Image height from dimensions
+    width: 274,
+    height: 74,
   },
   formContainer: {
     width: "100%",
   },
   formTitle: {
     fontSize: 16,
-    color: "#FF6B6B",
+    color: colors.primary,
     marginBottom: 25,
     textAlign: "center",
   },

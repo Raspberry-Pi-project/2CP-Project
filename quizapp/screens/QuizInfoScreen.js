@@ -1,15 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar, Image, Dimensions } from "react-native"
-import { LinearGradient } from "expo-linear-gradient"
-import Icon from "react-native-vector-icons/Feather"
-import { ActivityIndicator, Alert } from 'react-native';
-
-import axios from 'axios'
-const { width } = Dimensions.get("window")
-import { useNavigation, useRoute } from '@react-navigation/native';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  SafeAreaView,
+  StatusBar,
+  Image,
+  Dimensions,
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import Icon from "react-native-vector-icons/Feather";
+import { ActivityIndicator, Alert } from "react-native";
+import axios from "axios";
+import { API_URL } from "../services/config";
+const { width } = Dimensions.get("window");
+import { useNavigation, useRoute } from "@react-navigation/native";
 
 export default function QuizInfoScreen({ navigation, route }) {
-  const { id_quiz, basicQuizData  } = route.params || {} // Get quizId from route params
+  const { id_quiz, basicQuizData } = route.params || {}; // Get quizId from route params
   const [quiz, setQuiz] = useState(() => {
     if (basicQuizData) {
       return {
@@ -17,21 +26,19 @@ export default function QuizInfoScreen({ navigation, route }) {
         time: basicQuizData.duration,
         attempts: basicQuizData.nb_attempts,
         questions: basicQuizData.questions || [],
-        totalQuestions: basicQuizData.totalQuestions || (basicQuizData.questions ? basicQuizData.questions.length : 0)
+        totalQuestions:
+          basicQuizData.totalQuestions ||
+          (basicQuizData.questions ? basicQuizData.questions.length : 0),
       };
     }
-    return null; 
-  }) 
+    return null;
+  });
 
-
-  const [loading, setLoading] = useState(!basicQuizData) // State to manage loading
-  const [error, setError] = useState(null) // State to manage errors
+  const [loading, setLoading] = useState(!basicQuizData); // State to manage loading
+  const [error, setError] = useState(null); // State to manage errors
   const [quizData, setQuizData] = useState(null);
 
-  
-
   const fetchQuizDetails = async () => {
-    
     if (!id_quiz) {
       setError("Missing quiz ID");
       setLoading(false);
@@ -39,48 +46,50 @@ export default function QuizInfoScreen({ navigation, route }) {
     }
 
     try {
-
-      const response = await axios.post(`http://172.20.10.2:3000/students/getQuizDetails`, 
+      const response = await axios.post(
+        `${API_URL}/students/getQuizDetails`,
         { id_quiz },
         { timeout: 10000 } // 10 seconds
-      )
+      );
 
+      console.log("API Response Data:", response.data);
+      console.log("Questions array:", response.data.questions);
+      console.log(
+        "Questions length:",
+        response.data.questions ? response.data.questions.length : 0
+      );
+      console.log("totalQuestions from API:", response.data.totalQuestions);
 
-  console.log("API Response Data:", response.data);
-  console.log("Questions array:", response.data.questions);
-  console.log("Questions length:", response.data.questions ? response.data.questions.length : 0);
-  console.log("totalQuestions from API:", response.data.totalQuestions);
-  
-      
       if (response.data) {
         setQuiz({
           //...basicQuizData, // Keep basic data as fallback
           ...response.data, // Override with detailed data
           time: response.data.duration,
-          attempts: response.data.nb_attempts, 
+          attempts: response.data.nb_attempts,
           questions: response.data.questions || [],
-          totalQuestions: response.data.totalQuestions || questionCount
-          //totalQuestions: response.data.totalQuestions  // 
-         // id_quiz // Ensure ID is preserved
+          totalQuestions: response.data.totalQuestions || questionCount,
+          //totalQuestions: response.data.totalQuestions  //
+          // id_quiz // Ensure ID is preserved
         });
       } else {
         setError("No quiz data received");
       }
 
       //setQuiz(response.data) // Update the state with the fetched quiz details
-      }catch (err) {
-        console.error("API Error:", err.response?.data || err.message);
-        setError(err.response?.data?.error || err.message || "Failed to load quiz");
-      } finally {
-      setLoading(false) // 
+    } catch (err) {
+      console.error("API Error:", err.response?.data || err.message);
+      setError(
+        err.response?.data?.error || err.message || "Failed to load quiz"
+      );
+    } finally {
+      setLoading(false); //
     }
-  }
+  };
 
   useEffect(() => {
     if (!basicQuizData && id_quiz) {
       fetchQuizDetails();
-    } 
-    
+    }
   }, [id_quiz, basicQuizData]);
 
   /*useEffect(() => {
@@ -114,33 +123,33 @@ export default function QuizInfoScreen({ navigation, route }) {
 
     switch (quiz.id) {
       case "1": // English
-        return "book"
+        return "book";
       case "2": // Math
-        return "bar-chart-2"
+        return "bar-chart-2";
       case "3": // Science
-        return "thermometer"
+        return "thermometer";
       case "4": // Physics
-        return "zap"
+        return "zap";
       default:
-        return "help-circle"
+        return "help-circle";
     }
-  }
+  };
 
   // Get the appropriate image based on quiz type
   const getQuizImage = () => {
     switch (quiz.id) {
       case "3": // Science
-        return require("../assets/science.png")
+        return require("../assets/science.png");
       case "4": // Physics
-        return require("../assets/physics.png")
+        return require("../assets/physics.png");
       default:
-        return null
+        return null;
     }
-  }
+  };
 
   // Check if we should show an image
-  const shouldShowImage = ["3", "4"].includes(quiz.id)
-  const quizImage = getQuizImage()
+  const shouldShowImage = ["3", "4"].includes(quiz.id);
+  const quizImage = getQuizImage();
 
   const handleStartQuiz = () => {
     // Navigate to the appropriate quiz screen based on quiz ID
@@ -150,28 +159,34 @@ export default function QuizInfoScreen({ navigation, route }) {
       navigation.navigate("Quizlet", { quiz })
     } */
 
-      /*const quizId = String(quiz.id_quiz || quiz.id); // fallback
+    /*const quizId = String(quiz.id_quiz || quiz.id); // fallback
       navigation.navigate("Quizlet", { quizId, quiz }); */
-      
-      if (!quiz) return;
 
-      if ( quiz.totalQuestions === 0) {
-        Alert.alert("No Questions", "This quiz doesn't contain any questions yet.");
-        return;
-      }
+    if (!quiz) return;
 
-      navigation.navigate("Quizlet", { 
-        quizId: quiz.id_quiz,
-        quizTitle: quiz.title,
-        quizData: quiz
-      });
-  }
+    if (quiz.totalQuestions === 0) {
+      Alert.alert(
+        "No Questions",
+        "This quiz doesn't contain any questions yet."
+      );
+      return;
+    }
+
+    navigation.navigate("Quizlet", {
+      quizId: quiz.id_quiz,
+      quizTitle: quiz.title,
+      quizData: quiz,
+    });
+  };
 
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="light-content" />
-        <LinearGradient colors={["#7B5CFF", "#A42FC1"]} style={StyleSheet.absoluteFill} />
+        <LinearGradient
+          colors={["#7B5CFF", "#A42FC1"]}
+          style={StyleSheet.absoluteFill}
+        />
         <ActivityIndicator size="large" color="white" style={styles.loader} />
       </SafeAreaView>
     );
@@ -181,27 +196,39 @@ export default function QuizInfoScreen({ navigation, route }) {
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="light-content" />
-        <LinearGradient colors={["#7B5CFF", "#A42FC1"]} style={StyleSheet.absoluteFill} />
+        <LinearGradient
+          colors={["#7B5CFF", "#A42FC1"]}
+          style={StyleSheet.absoluteFill}
+        />
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error || "Quiz information not available"}</Text>
-          <TouchableOpacity style={styles.backButtonLarge} onPress={() => navigation.goBack()}>
+          <Text style={styles.errorText}>
+            {error || "Quiz information not available"}
+          </Text>
+          <TouchableOpacity
+            style={styles.backButtonLarge}
+            onPress={() => navigation.goBack()}
+          >
             <Text style={styles.backButtonText}>Go Back</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
   }
-  
-
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
-      <LinearGradient colors={["#7B5CFF", "#A42FC1"]} style={StyleSheet.absoluteFill} />
+      <LinearGradient
+        colors={["#7B5CFF", "#A42FC1"]}
+        style={StyleSheet.absoluteFill}
+      />
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
           <Icon name="arrow-left" size={24} color="white" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.settingsButton}>
@@ -214,7 +241,11 @@ export default function QuizInfoScreen({ navigation, route }) {
         {/* Quiz Image (for Science and Physics only) */}
         {shouldShowImage && quizImage && (
           <View style={styles.imageContainer}>
-            <Image source={quizImage} style={styles.quizImage} resizeMode="contain" />
+            <Image
+              source={quizImage}
+              style={styles.quizImage}
+              resizeMode="contain"
+            />
           </View>
         )}
 
@@ -243,24 +274,32 @@ export default function QuizInfoScreen({ navigation, route }) {
 
               <View style={styles.detailItem}>
                 <Text style={styles.detailLabel}>Number of attempts :</Text>
-                <Text style={styles.detailValue}>{quiz.nb_attempts }</Text>
+                <Text style={styles.detailValue}>{quiz.nb_attempts}</Text>
               </View>
 
               <View style={styles.detailItem}>
                 <Text style={styles.detailLabel}>Questions :</Text>
-                <Text style={styles.detailValue}>{quiz.totalQuestions || (quiz.questions && quiz.questions.length) || 0}</Text>
+                <Text style={styles.detailValue}>
+                  {quiz.totalQuestions ||
+                    (quiz.questions && quiz.questions.length) ||
+                    0}
+                </Text>
               </View>
             </View>
           </View>
 
           {/* Start Button */}
-          <TouchableOpacity style={styles.startButton} onPress={handleStartQuiz} activeOpacity={0.8}>
+          <TouchableOpacity
+            style={styles.startButton}
+            onPress={handleStartQuiz}
+            activeOpacity={0.8}
+          >
             <Text style={styles.startButtonText}>Start Attempt</Text>
           </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -411,4 +450,4 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
   },
-})
+});

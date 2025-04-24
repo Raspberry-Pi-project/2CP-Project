@@ -11,18 +11,22 @@ import {
   FlatList,
   Dimensions,
   Animated,
+  TextInput,
+  RefreshControl, // Add this import
   ActivityIndicator,
 } from "react-native";
 import { colors } from "../constants/colors";
 import CustomStatusBar from "../components/CustomStatusBar";
 import BottomNavigation from "../components/BottomNavigation";
+import { Feather } from "@expo/vector-icons";
 import Svg, { Path } from "react-native-svg";
 import { LinearGradient } from "expo-linear-gradient";
 import { getQuizDetails } from "../services/quizService";
 import { studentAPI } from "../services/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
-import  api  from "../services/api";
+import api from "../services/api";
+import { API_URL } from "../services/config";
 // jhhg
 const { width, height } = Dimensions.get("window");
 
@@ -53,11 +57,17 @@ const SimpleBackground = React.memo(() => {
 
 const SimpleQuizCard = ({ quiz, onPress }) => {
   return (
-    <TouchableOpacity style={styles.quizCard} activeOpacity={0.8} onPress={() => onPress(quiz)}>
+    <TouchableOpacity
+      style={styles.quizCard}
+      activeOpacity={0.8}
+      onPress={() => onPress(quiz)}
+    >
       <View style={styles.quizCardContent}>
         <View style={styles.quizCardIconContainer}>
           <View style={styles.quizCardIcon}>
-            <Text style={styles.quizCardIconText}>{quiz.icon === "book" ? "📚" : "📊"}</Text>
+            <Text style={styles.quizCardIconText}>
+              {quiz.icon === "book" ? "📚" : "📊"}
+            </Text>
           </View>
         </View>
         <View style={styles.quizCardTextContainer}>
@@ -74,16 +84,23 @@ const SimpleQuizCard = ({ quiz, onPress }) => {
 
 const SimpleHistoryCard = ({ title, date, icon }) => {
   return (
-    <View style={styles.historyCard}>
+    <TouchableOpacity style={styles.historyCard} onPress={onPress}>
       <View style={styles.historyCardContent}>
         <View style={styles.historyCardIconContainer}>
           <View
             style={[
               styles.historyCardIcon,
-              { backgroundColor: icon === "math" ? "rgba(123, 92, 255, 0.1)" : "rgba(255, 157, 157, 0.1)" },
+              {
+                backgroundColor:
+                  icon === "math"
+                    ? "rgba(123, 92, 255, 0.1)"
+                    : "rgba(255, 157, 157, 0.1)",
+              },
             ]}
           >
-            <Text style={styles.historyCardIconText}>{icon === "math" ? "📊" : "📚"}</Text>
+            <Text style={styles.historyCardIconText}>
+              {icon === "math" ? "📊" : "📚"}
+            </Text>
           </View>
         </View>
         <View style={styles.historyCardTextContainer}>
@@ -94,25 +111,81 @@ const SimpleHistoryCard = ({ title, date, icon }) => {
           <Text style={styles.historyCardScore}>85%</Text>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 
 export default function HomeScreen({ navigation }) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isSearchActive, setIsSearchActive] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const [refreshing, setRefreshing] = useState(false); // Add refreshing state
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const panelAnimation = useRef(new Animated.Value(0)).current;
+  const searchInputRef = useRef(null);
 
+  // Add refresh function
+  const onRefresh = () => {
+    setRefreshing(true);
+
+    // Simulate API call with a timeout
+    setTimeout(() => {
+      // Simulate getting new data by shuffling the existing quizzes
+      const shuffledQuizzes = [...QUIZ_DATA].sort(() => Math.random() - 0.5);
+      setQuizzes(shuffledQuizzes);
+      setRefreshing(false);
+    }, 1500);
+  };
+
+  // History data
   const historyData = [
-    { id: "1", title: "Math Quiz", date: "JAN", icon: "math" },
-    { id: "2", title: "English Quiz", date: "FEB", icon: "language" },
-    { id: "3", title: "Science Quiz", date: "MAR", icon: "math" },
-    { id: "4", title: "History Quiz", date: "APR", icon: "language" },
+    {
+      id: "1",
+      title: "Math Quiz",
+      date: "JAN",
+      icon: "math",
+      score: 85,
+      totalQuestions: 10,
+      timeSpent: 450,
+    },
+    {
+      id: "2",
+      title: "English Quiz",
+      date: "FEB",
+      icon: "language",
+      score: 92,
+      totalQuestions: 15,
+      timeSpent: 720,
+    },
+    {
+      id: "3",
+      title: "Science Quiz",
+      date: "MAR",
+      icon: "math",
+      score: 78,
+      totalQuestions: 12,
+      timeSpent: 540,
+    },
+    {
+      id: "4",
+      title: "History Quiz",
+      date: "APR",
+      icon: "language",
+      score: 88,
+      totalQuestions: 8,
+      timeSpent: 380,
+    },
   ];
 
-/*
+  // Filter quizzes based on search text - update to use quizzes state
+  const filteredQuizzes = quizzes.filter(
+    (quiz) =>
+      quiz.title.toLowerCase().includes(searchText.toLowerCase()) ||
+      quiz.subtitle.toLowerCase().includes(searchText.toLowerCase())
+  );
+  /*
   useEffect(() => {
     const testGetQuizzes = async () => {
       try {
@@ -125,7 +198,6 @@ export default function HomeScreen({ navigation }) {
   
     testGetQuizzes();
   }, []);  */
-
 
   const fetchQuizzes = async () => {
     try {
@@ -141,19 +213,19 @@ export default function HomeScreen({ navigation }) {
         return;
       }
 
-      const response = await api.post("http://172.20.10.2:3000/students/getAvailableQuizzes", {
-        page: 1,
-        limit: 10,
-        for_groupe: studentGroup,
-        for_year: studentYear,
-      });
+      const response = await api.post(
+        `${API_URL}/students/getAvailableQuizzes`,
+        {
+          page: 1,
+          limit: 10,
+          for_groupe: studentGroup,
+          for_year: studentYear,
+        }
+      );
 
       console.log("Quizzes Response:", response.data.data);
       setQuizzes(response.data.data);
       console.log("Quizzes State After Fetch:", quizzes);
-
-
-      
     } catch (err) {
       console.error("Failed to fetch quizzes", err);
       setError("Failed to load quizzes. Please try again.");
@@ -169,21 +241,21 @@ export default function HomeScreen({ navigation }) {
   const startQuiz = async (quizId) => {
     try {
       const attempt = await studentAPI.startAttempt(quizId);
-      
+
       if (!attempt || !attempt.id) {
         throw new Error("Invalid attempt object received");
       }
-      
+
       navigation.navigate("QuizScreen", { attemptId: attempt.id });
     } catch (error) {
       console.error("Error starting quiz:", error);
-          alert("Failed to start quiz. Please try again later.");
-
+      alert("Failed to start quiz. Please try again later.");
     }
   };
 
   const togglePanel = () => {
     const toValue = isExpanded ? 0 : 1;
+
     Animated.spring(panelAnimation, {
       toValue,
       friction: 8,
@@ -193,6 +265,35 @@ export default function HomeScreen({ navigation }) {
     setIsExpanded(!isExpanded);
   };
 
+  // Toggle search input
+  const toggleSearch = () => {
+    setIsSearchActive(!isSearchActive);
+    if (!isSearchActive) {
+      // Focus the input when search is activated
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 100);
+    } else {
+      // Clear search when deactivated
+      setSearchText("");
+    }
+  };
+
+  // Clean up animation when component unmounts
+  useEffect(() => {
+    return () => {
+      panelAnimation.stopAnimation();
+    };
+  }, []);
+
+  // Update the goToFeedback function and add a new goToProfile function
+  const goToFeedback = () => {
+    navigation.navigate("Feedback");
+  };
+
+  const goToProfile = () => {
+    navigation.navigate("Profile");
+  };
 
   const handleQuizPress = async (quiz) => {
     console.log("Attempting to fetch details for quiz:", quiz.id_quiz); // Debug log
@@ -200,17 +301,17 @@ export default function HomeScreen({ navigation }) {
     try {
       const quizDetails = await getQuizDetails(quiz.id_quiz);
       navigation.navigate("QuizInfo", {
-        id_quiz: quiz.id_quiz,  
-        basicQuizData: {       
         id_quiz: quiz.id_quiz,
-        title: quiz.title,
-        description: quiz.description,
-        duration: quiz.duration,
-        nb_attempts: quiz.nb_attempts,
-        subject: quiz.subject,
-        totalQuestions: quiz.totalQuestions,
-        questions: quiz.questions || []
-  }
+        basicQuizData: {
+          id_quiz: quiz.id_quiz,
+          title: quiz.title,
+          description: quiz.description,
+          duration: quiz.duration,
+          nb_attempts: quiz.nb_attempts,
+          subject: quiz.subject,
+          totalQuestions: quiz.totalQuestions,
+          questions: quiz.questions || [],
+        },
       });
     } catch (error) {
       console.error("Error fetching quiz details:", error);
@@ -227,33 +328,10 @@ export default function HomeScreen({ navigation }) {
 
   const getQuizDescription = (quiz) => {
     if (quiz.description) return quiz.description;
-    switch (quiz.subject?.toLowerCase()) {
-      case "1":
-        return "A comprehensive assessment of English grammar skills.";
-      case "2":
-        return "A brief quiz about math.";
-      case "3":
-        return "Test your knowledge of general science concepts.";
-      case "4":
-        return "Explore the fundamental laws of physics.";
-      default:
-        return "A brief assessment to test your knowledge.";
-    }
   };
 
   const getQuizTime = (quiz) => {
     if (quiz.duration) return quiz.duration;
-    switch (quiz.id) {
-      case "1":
-      case "2":
-        return "1 hour";
-      case "3":
-        return "30 minutes";
-      case "4":
-        return "45 minutes";
-      default:
-        return "30 minutes";
-    }
   };
 
   /*
@@ -262,7 +340,15 @@ export default function HomeScreen({ navigation }) {
   const panelHeight = panelAnimation.interpolate({
     inputRange: [0, 1],
     outputRange: [80, height * 0.7],
-  });  
+  });
+
+  const handleHistoryQuizPress = (item) => {
+    navigation.navigate("QuizScore", {
+      score: (item.score * item.totalQuestions) / 100, // Convert percentage to actual score
+      totalQuestions: item.totalQuestions,
+      timeSpent: item.timeSpent,
+    });
+  };
 
   const renderQuizItem = ({ item }) => {
     console.log("Rendering Quiz Item:", item);
@@ -312,60 +398,122 @@ export default function HomeScreen({ navigation }) {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
+        {/* Simple background */}
         <SimpleBackground />
+
         <CustomStatusBar time="9:41" />
+
+        {/* Header */}
         <View style={styles.header}>
           <View>
             <Text style={styles.greeting}>GOOD MORNING</Text>
             <Text style={styles.title}>#Matricule</Text>
           </View>
-          <View style={styles.avatarContainer}>
-            <Image source={{ uri: "https://via.placeholder.com/40" }} style={styles.avatar} />
+          <View style={styles.headerActions}>
+            <TouchableOpacity style={styles.refreshButton} onPress={onRefresh}>
+              <Feather name="refresh-cw" size={20} color="white" />
+            </TouchableOpacity>
           </View>
         </View>
+
+        {/* Main Content - Live Quizzes */}
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#ffffff"]}
+              tintColor="#ffffff"
+              progressBackgroundColor="#7B5CFF"
+            />
+          }
         >
           <View style={styles.sectionTitleContainer}>
             <View style={styles.sectionTitleDecoration} />
             <Text style={styles.sectionTitle}>LIVE QUIZZES</Text>
-          </View>
-          <View style={styles.liveQuizzes}>
-          {quizzes.length === 0 && !loading && !error && (
-            <Text style={{ color: "white", textAlign: "center", marginTop: 20 }}>
-              No quizzes available.
-            </Text>
-          )}
 
-          {error && (
-            <View style={{ alignItems: "center", marginTop: 20 }}>
-              <Text style={{ color: "red", textAlign: "center" }}>{error}</Text>
-              <TouchableOpacity onPress={fetchQuizzes} style={styles.retryButton}>
-                <Text style={styles.retryButtonText}>Retry</Text>
+            {/* Search Input */}
+            {isSearchActive ? (
+              <View style={styles.searchInputContainer}>
+                <TextInput
+                  ref={searchInputRef}
+                  style={styles.searchInput}
+                  placeholder="Search quizzes..."
+                  placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                  value={searchText}
+                  onChangeText={setSearchText}
+                  autoCapitalize="none"
+                />
+                <TouchableOpacity
+                  onPress={toggleSearch}
+                  style={styles.searchCloseButton}
+                >
+                  <Feather name="x" size={18} color="white" />
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity
+                onPress={toggleSearch}
+                style={styles.searchButton}
+              >
+                <Feather name="search" size={18} color="white" />
               </TouchableOpacity>
-            </View>
-          )}
-
-          {/* Render quizzes if available */}
-          {!error && quizzes.length > 0 && (
-          
-            <FlatList
-              data={quizzes}
-              renderItem={renderQuizItem}
-              keyExtractor={(item) => item.id_quiz.toString()}
-              showsVerticalScrollIndicator={false}
-              scrollEnabled={false}
-              contentContainerStyle={{ paddingHorizontal: 24 }}
-              refreshing={loading}
-              onRefresh={fetchQuizzes}
-            />
-          )}
-
+            )}
           </View>
+
+          <View style={styles.liveQuizzes}>
+            {refreshing && (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#ffffff" />
+                <Text style={styles.loadingText}>Refreshing quizzes...</Text>
+              </View>
+            )}
+
+            {quizzes.length === 0 && !loading && !error && (
+              <Text
+                style={{ color: "white", textAlign: "center", marginTop: 20 }}
+              >
+                No quizzes available.
+              </Text>
+            )}
+
+            {error && (
+              <View style={{ alignItems: "center", marginTop: 20 }}>
+                <Text style={{ color: "red", textAlign: "center" }}>
+                  {error}
+                </Text>
+                <TouchableOpacity
+                  onPress={fetchQuizzes}
+                  style={styles.retryButton}
+                >
+                  <Text style={styles.retryButtonText}>Retry</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* Render quizzes if available */}
+            {!error && quizzes.length > 0 && (
+              <FlatList
+                data={quizzes}
+                renderItem={renderQuizItem}
+                keyExtractor={(item) => item.id_quiz.toString()}
+                showsVerticalScrollIndicator={false}
+                scrollEnabled={false}
+                contentContainerStyle={{ paddingHorizontal: 24 }}
+                refreshing={loading}
+                onRefresh={fetchQuizzes}
+              />
+            )}
+          </View>
+
+          {/* Spacer for bottom panel */}
           <View style={{ height: 100 }} />
         </ScrollView>
+
+        {/* History Panel (Expandable) */}
         <Animated.View
           style={[
             styles.historyPanel,
@@ -374,7 +522,11 @@ export default function HomeScreen({ navigation }) {
             },
           ]}
         >
-          <TouchableOpacity style={styles.pullBar} onPress={togglePanel} activeOpacity={0.7}>
+          <TouchableOpacity
+            style={styles.pullBar}
+            onPress={togglePanel}
+            activeOpacity={0.7}
+          >
             <View style={styles.pullBarIndicator} />
             <Animated.View
               style={{
@@ -399,6 +551,7 @@ export default function HomeScreen({ navigation }) {
               </Svg>
             </Animated.View>
           </TouchableOpacity>
+
           <Animated.View
             style={{
               opacity: panelAnimation,
@@ -413,14 +566,30 @@ export default function HomeScreen({ navigation }) {
                 <Text style={styles.viewAllText}>View All</Text>
               </TouchableOpacity>
             </View>
+
             <ScrollView showsVerticalScrollIndicator={false}>
               {historyData.map((item) => (
-                <SimpleHistoryCard key={item.id} title={item.title} date={item.date} icon={item.icon} />
+                <SimpleHistoryCard
+                  key={item.id}
+                  title={item.title}
+                  date={item.date}
+                  icon={item.icon}
+                  score={item.score}
+                  onPress={() => handleHistoryQuizPress(item)}
+                />
               ))}
             </ScrollView>
           </Animated.View>
         </Animated.View>
-        <BottomNavigation onArrowPress={togglePanel} isPanelExpanded={isExpanded} />
+
+        {/* Then update the BottomNavigation component props */}
+        <BottomNavigation
+          onArrowPress={togglePanel}
+          isPanelExpanded={isExpanded}
+          onProfilePress={goToProfile}
+          onFeedbackPress={goToFeedback}
+          onSearchPress={toggleSearch}
+        />
       </LinearGradient>
     </View>
   );
@@ -491,6 +660,53 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: colors.white,
     letterSpacing: 1,
+    flex: 1,
+  },
+  searchButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  searchInputContainer: {
+    flex: 1,
+    height: 36,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    marginLeft: 10,
+  },
+  searchInput: {
+    flex: 1,
+    height: "100%",
+    color: "white",
+    fontSize: 14,
+  },
+  searchCloseButton: {
+    width: 24,
+    height: 24,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  noResultsContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 40,
+  },
+  noResultsText: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "bold",
+    marginTop: 16,
+  },
+  noResultsSubtext: {
+    color: "rgba(255, 255, 255, 0.7)",
+    fontSize: 14,
+    marginTop: 8,
   },
   liveQuizzes: {
     marginBottom: 24,
@@ -503,7 +719,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    paddingBottom: 80,
+    paddingBottom: 80, // Space for bottom navigation
     zIndex: 1,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -3 },
@@ -547,6 +763,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: colors.primary,
   },
+  // Quiz card styles
   quizCard: {
     backgroundColor: "rgba(255, 255, 255, 0.95)",
     borderRadius: 16,
@@ -589,6 +806,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#666",
   },
+  quizCardArrow: {
+    width: 20,
+    alignItems: "center",
+  },
+  quizCardArrowText: {
+    fontSize: 20,
+    color: colors.primary,
+  },
+  // History card styles
   historyCard: {
     backgroundColor: "rgba(255, 255, 255, 0.9)",
     borderRadius: 15,
@@ -641,5 +867,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: "#4ADE80",
+  },
+  loadingContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 20,
+  },
+  loadingText: {
+    color: "#ffffff",
+    marginTop: 10,
+    fontSize: 16,
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  refreshButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 8,
   },
 });
