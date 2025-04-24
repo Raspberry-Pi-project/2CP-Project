@@ -13,7 +13,7 @@ const submitAnswers = async (req, res) => {
         where: {
           id_attempt: id_attempt,
         },
-      })
+      });
 
       const studentAnswer = await prisma.student_answers.create({
         data: {
@@ -51,15 +51,17 @@ const getQuizResults = async (req, res) => {
         id_quiz: id_quiz,
         id_student: id_student,
       },
-      include : {
-        student_answers : true
-      }
+      include: {
+        student_answers: true,
+      },
     });
     if (!existingAttempt) {
       res.status(404).json({ error: "Result not found" });
     } else {
       for (const attempt of existingAttempt) {
-        attempt.quiz = await prisma.quizzes.findUnique({ where: { id_quiz: attempt.id_quiz } });
+        attempt.quiz = await prisma.quizzes.findUnique({
+          where: { id_quiz: attempt.id_quiz },
+        });
       }
       res.json(existingAttempt);
     }
@@ -70,26 +72,58 @@ const getQuizResults = async (req, res) => {
 
 // Get Past Quizzes taken by Student
 const getHistory = async (req, res) => {
-  const { id_student , page , limit } = req.body;
+  const { id_student, page, limit } = req.body;
   try {
-    const pastQuizzes = await prisma.attempts.findMany({
-      skip: (page - 1) * limit, //skip records based on page number
-      take: limit, // limit number of attempts per page
+    // First, get distinct quiz IDs from attempts
+    const distinctQuizIds = await prisma.attempts.findMany({
       where: { id_student: id_student },
+      select: {
+        id_quiz: true,
+      },
       distinct: ["id_quiz"],
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+    
+    // Extract just the quiz IDs
+    const quizIds = distinctQuizIds.map((attempt) => attempt.id_quiz);
+
+    // Then get the full quiz data for these IDs
+    const pastQuizzes = await prisma.quizzes.findMany({
+      where: {
+        id_quiz: {
+          in: quizIds,
+        },
+      },
       include: {
-        quiz: true,
+        attempts: {
+          where: {
+            id_student: id_student,
+          },
+          orderBy: {
+            attempt_at: "desc",
+          },
+        },
       },
     });
-    const totale_attempts = await prisma.attempts.count({
-      where: { id_student: id_student },
-      distinct:["id_quiz"]
-    })
+
+    for (quiz of pastQuizzes) {
+      const totalQuestions = await prisma.questions.count({
+        where: { id_quiz: quiz.id_quiz },
+      });
+      quiz.totalQuestions = totalQuestions;
+    }
+
+    console.log("Past quizzes:", pastQuizzes);
+
+    
+
     res.json({
       data: pastQuizzes,
-      totale_attempts
+      totalPages: distinctQuizIds.length,
     });
   } catch (error) {
+    console.error("Error fetching past quizzes:", error);
     res.status(500).json({ error: "Error fetching past quizzes" });
   }
 };
@@ -97,11 +131,11 @@ const getHistory = async (req, res) => {
 //Calclate the number of participants without duplicates
 const countParticipants = async (req, res) => {
   try {
-    const {id_quiz} = req.body
+    const { id_quiz } = req.body;
     const count = await prisma.attempts.count({
-        where: {
-          id_quiz
-        },
+      where: {
+        id_quiz,
+      },
       distinct: ["id_student"], // Ensure unique students
     });
 
@@ -131,23 +165,15 @@ const getStudents = async (req, res) => {
     if (first_name) filters.first_name = { contains: first_name };
     if (last_name) filters.last_name = { contains: last_name };
     if (email) filters.email = { contains: email };
-    if (id_student) filters.id_teacher = id_student;
+    if (id_student) filters.id_student = id_student;
     if (created_at) filters.created_at = created_at;
     if (annee) filters.annee = annee;
     if (groupe_student) filters.groupe_student = groupe_student;
+    console.log(filters, req.body);
     const students = await prisma.students.findMany({
       skip: (page - 1) * limit, //skip records based on page number
       take: limit, // limit number of students per page
       where: filters,
-      select: {
-        id_student: true,
-        first_name: true,
-        last_name: true,
-        email: true,
-        annee: true,
-        groupe_student: true,
-        created_at: true,
-      },
     });
     const totalStudents = await prisma.students.count({
       where: filters,
