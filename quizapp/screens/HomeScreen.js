@@ -82,7 +82,7 @@ const SimpleQuizCard = ({ quiz, onPress }) => {
   );
 };
 
-const SimpleHistoryCard = ({ title, date, icon }) => {
+const SimpleHistoryCard = ({ title, date, icon, onPress }) => {
   return (
     <TouchableOpacity style={styles.historyCard} onPress={onPress}>
       <View style={styles.historyCardContent}>
@@ -350,7 +350,7 @@ export default function HomeScreen({ navigation }) {
     });
   };
 
-  const renderQuizItem = ({ item }) => {
+  const renderQuizItem = ({ item, onPress }) => {
     console.log("Rendering Quiz Item:", item);
     return (
       <SimpleQuizCard
