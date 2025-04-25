@@ -9,7 +9,7 @@ const { width } = Dimensions.get("window")
 export default function QuizHistoryScreen({ navigation, route }) {
   const { quiz, id_quiz, id_student } = route.params || {}
   const { userData } = useContext(UserContext)
-  
+
   // Create a default quiz object if none is provided
   const quizInfo = quiz || {
     id: id_quiz || "1",
@@ -55,8 +55,8 @@ export default function QuizHistoryScreen({ navigation, route }) {
   const handleCheckResults = () => {
     // Navigate to the QuizScore screen with the necessary parameters
     const { score, totalQuestions, timeSpent } = route.params;
-    
-    navigation.navigate("QuizScore", { 
+
+    navigation.navigate("QuizScore", {
       score: score,
       totalQuestions: totalQuestions || 10,
       timeSpent: timeSpent || 300,

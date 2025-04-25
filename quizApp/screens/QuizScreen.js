@@ -333,7 +333,7 @@ export default function QuizScreen({ navigation, route }) {
     total: 20,
     score: Math.min(quizResults.score, 20), // Ensure score doesn't exceed 20
   }).current;
-  
+
   // Create a persistent reference to all questions
   const questionsRef = useRef(normalizedScore.questions);
   const questions = questionsRef.current;
@@ -341,16 +341,16 @@ export default function QuizScreen({ navigation, route }) {
   // Animation refs
   const headerAnim = useRef(new Animated.Value(0)).current
   const contentAnim = useRef(new Animated.Value(0)).current
-  
+
   // Track mount state to prevent state updates after unmount
   const isMounted = useRef(true);
-  
+
   useEffect(() => {
     return () => {
       isMounted.current = false;
     };
   }, []);
-  
+
   // Disable going back to quiz questions
   useFocusEffect(
     useCallback(() => {
@@ -364,15 +364,15 @@ export default function QuizScreen({ navigation, route }) {
         );
         return true; // Returning true prevents default behavior
       };
-      
+
       // Add the event listener
       BackHandler.addEventListener('hardwareBackPress', onBackPress);
-      
+
       // Disable swipe back gesture (only applies to iOS)
       navigation.setOptions({
         gestureEnabled: false,
       });
-      
+
       // Clean up the event listener on unmount
       return () => {
         BackHandler.removeEventListener('hardwareBackPress', onBackPress);
@@ -402,7 +402,7 @@ export default function QuizScreen({ navigation, route }) {
         useNativeDriver: true,
       }),
     ]);
-    
+
     animationSequence.start();
 
     return () => {
@@ -418,11 +418,11 @@ export default function QuizScreen({ navigation, route }) {
     // Get the original quiz data from the route params
     const originalQuiz = quizResultsRef.current.originalQuiz;
     const quizId = quizResultsRef.current.quizId;
-    
+
     // Validate required data exists
     if (!originalQuiz || !quizId) {
       console.error("Missing quiz data for review");
-      
+
       // FALLBACK: Look up the quiz from QUIZ_DATA if we have quizId
       if (quizId) {
         const fallbackQuiz = SAMPLE_QUIZ_DATA.find(quiz => quiz.id === quizId);
@@ -437,7 +437,7 @@ export default function QuizScreen({ navigation, route }) {
           return;
         }
       }
-      
+
       // If we can't find the quiz, show an error
       Alert.alert(
         "Error",
@@ -446,13 +446,13 @@ export default function QuizScreen({ navigation, route }) {
       );
       return;
     }
-    
+
     // Find the original question using the index
     const originalIndex = question.originalIndex || 0;
     const originalQuestion = originalQuiz.questions[originalIndex];
-    
+
     // Navigate to ReviewQuestion with complete data
-    navigation.navigate("ReviewQuestion", { 
+    navigation.navigate("ReviewQuestion", {
       simplifiedQuestion: question,
       originalQuestion: originalQuestion,
       quizId: quizId,
@@ -463,7 +463,7 @@ export default function QuizScreen({ navigation, route }) {
 
   // Item extractor for FlatList to prevent re-renders
   const keyExtractor = useCallback((item) => item.id.toString(), []);
-  
+
   // Render item function for FlatList
   const renderItem = useCallback(({ item, index }) => (
     <QuestionItem
@@ -504,7 +504,7 @@ export default function QuizScreen({ navigation, route }) {
 
           <View style={styles.headerContent}>
             {/* Remove the existing back button and add only home button */}
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.backButton} // Keep using the same style for consistency
               onPress={goToHome}
             >

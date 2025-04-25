@@ -276,18 +276,18 @@ const formatTime = (seconds) => {
 export default function QuizScreenForHistory({ navigation, route }) {
   // Get quiz results from route params
   const quizResultsRef = useRef(route.params?.quizResults);
-  const { 
-    score = 0, 
-    total = 10, 
-    questions = [], 
-    correctCount = 0, 
-    incorrectCount = 0, 
+  const {
+    score = 0,
+    total = 10,
+    questions = [],
+    correctCount = 0,
+    incorrectCount = 0,
     timeSpent = 0,
     quizId = '',
     originalQuiz = null,
     attemptInfo = {}
   } = quizResultsRef.current || {};
-  
+
   // Ensure normalized score for consistent display
   const normalizedScore = {
     score: score,
@@ -299,10 +299,10 @@ export default function QuizScreenForHistory({ navigation, route }) {
   // Animation refs
   const headerAnim = useRef(new Animated.Value(0)).current
   const contentAnim = useRef(new Animated.Value(0)).current
-  
+
   // Track mount state to prevent state updates after unmount
   const isMounted = useRef(true);
-  
+
   useEffect(() => {
     return () => {
       isMounted.current = false;
@@ -334,7 +334,7 @@ export default function QuizScreenForHistory({ navigation, route }) {
         useNativeDriver: true,
       }),
     ]);
-    
+
     animationSequence.start();
 
     return () => {
@@ -349,13 +349,13 @@ export default function QuizScreenForHistory({ navigation, route }) {
   const handleQuestionPress = useCallback((question) => {
     // Find or create original question data to pass to ReviewQuestionHistory
     let originalQuestion;
-    
+
     // First try to get the question from the original quiz
     if (originalQuiz && originalQuiz.questions) {
       const originalIndex = question.originalIndex || 0;
       originalQuestion = originalQuiz.questions[originalIndex];
     }
-    
+
     // If the original question isn't available, create a static fallback
     if (!originalQuestion) {
       // Create a fallback question with the same structure
@@ -364,16 +364,16 @@ export default function QuizScreenForHistory({ navigation, route }) {
         text: question.text || "Question",
         options: [
           "Option A",
-          "Option B", 
-          "Option C", 
+          "Option B",
+          "Option C",
           "Option D"
         ],
         correctAnswer: question.isCorrect ? 0 : 1, // Mock correct answer
       };
     }
-    
+
     // Navigate to ReviewQuestionHistory screen with either real or fallback data
-    navigation.navigate("ReviewQuestionHistory", { 
+    navigation.navigate("ReviewQuestionHistory", {
       originalQuestion: originalQuestion,
       quizId: quizId || "history-quiz",
       selectedAnswers: question.selections || [question.answer].filter(Boolean) || [question.isCorrect ? 0 : 1],
@@ -389,7 +389,7 @@ export default function QuizScreenForHistory({ navigation, route }) {
 
   // Item extractor for FlatList to prevent re-renders
   const keyExtractor = useCallback((item) => item.id.toString(), []);
-  
+
   // Render item function for FlatList
   const renderItem = useCallback(({ item, index }) => (
     <QuestionItem
@@ -431,14 +431,14 @@ export default function QuizScreenForHistory({ navigation, route }) {
           <View style={styles.headerContent}>
             {/* Back button and home button */}
             <View style={styles.buttonsContainer}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.backButton}
                 onPress={handleGoBack}
               >
                 <Icon name="arrow-left" size={24} color="white" />
               </TouchableOpacity>
 
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.homeButton}
                 onPress={handleHomePress}
               >
@@ -464,7 +464,7 @@ export default function QuizScreenForHistory({ navigation, route }) {
                 <Text style={styles.scoreItemLabel}>Correct</Text>
               </View>
               <View style={styles.scoreItem}>
-                <Text style={[styles.scoreItemValue, {color: "#FF5252"}]}>{normalizedScore.incorrectCount}</Text>
+                <Text style={[styles.scoreItemValue, { color: "#FF5252" }]}>{normalizedScore.incorrectCount}</Text>
                 <Text style={styles.scoreItemLabel}>Incorrect</Text>
               </View>
             </View>
