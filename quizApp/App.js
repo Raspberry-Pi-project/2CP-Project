@@ -20,6 +20,8 @@ import StudentPrivateChartScreen from "./screens/StudentPrivateChartScreen"
 import notificationManager, { NotificationManager } from "./components/NotificationManager"
 import { LogBox } from "react-native"
 import ReviewQuestionScreen from "./screens/ReviewQuestionScreen"
+import ReviewQuestionHistory from "./screens/ReviewQuestionHistory"
+import QuizScreenForHistory from "./screens/QuizScreenForHistory"
 
 // Ignore specific warnings that might be causing issues
 LogBox.ignoreLogs([
@@ -91,6 +93,8 @@ export default function App() {
               <Stack.Screen name="Feedback" component={FeedbackScreen} />
               <Stack.Screen name="StudentPrivateChart" component={StudentPrivateChartScreen} />
               <Stack.Screen name="ReviewQuestion" component={ReviewQuestionScreen} />
+              <Stack.Screen name="ReviewQuestionHistory" component={ReviewQuestionHistory} />
+              <Stack.Screen name="QuizScreenForHistory" component={QuizScreenForHistory} />
               <Stack.Screen 
                 name="ResultsQuiz" 
                 component={QuizHistoryScreen}

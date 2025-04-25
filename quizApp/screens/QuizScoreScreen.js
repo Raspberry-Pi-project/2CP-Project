@@ -443,10 +443,8 @@ export default function QuizScoreScreen({ navigation, route }) {
           };
         });
         
-        // IMPORTANT: The originalQuiz property is critical
-        // QuizScreen.handleQuestionPress uses this to find the question data
-        // and pass it to ReviewQuestionScreen
-        navigation.navigate("Quiz", {
+        // Navigate to the dedicated history review screen instead of the regular Quiz screen
+        navigation.navigate("QuizScreenForHistory", {
           quizResults: {
             // Basic score information
             score: attemptData.score,
@@ -455,20 +453,19 @@ export default function QuizScoreScreen({ navigation, route }) {
             incorrectCount: totalQuestions - Math.round((attemptData.score / 100) * totalQuestions),
             timeSpent: 300, // Mock time spent in seconds
             
-            // These questions are displayed in QuizScreen
-            // When clicked, QuizScreen.handleQuestionPress uses the originalIndex
-            // to find the corresponding question in originalQuiz
+            // Questions to display
             questions: userAnswers,
             
-            // This is ESSENTIAL for QuizScreen.handleQuestionPress
-            // It uses this to get the full question data for ReviewQuestionScreen
+            // Original quiz data for reference
             originalQuiz: historyQuiz,
             
-            // This is also required for finding the quiz in QUIZ_DATA
+            // Quiz ID for reference
             quizId: historyQuiz.id,
             
-            // Allow going back
-            preventBackNavigation: false
+            // Include attempt info
+            attemptInfo: {
+              date: attemptData.date
+            }
           }
         });
       }}
