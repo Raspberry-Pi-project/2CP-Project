@@ -127,16 +127,17 @@ export default function HomeScreen({ navigation }) {
   const searchInputRef = useRef(null);
 
   // Add refresh function
-  const onRefresh = () => {
+  const onRefresh = async () => {
     setRefreshing(true);
 
-    // Simulate API call with a timeout
-    setTimeout(() => {
-      // Simulate getting new data by shuffling the existing quizzes
-      const shuffledQuizzes = [...QUIZ_DATA].sort(() => Math.random() - 0.5);
-      setQuizzes(shuffledQuizzes);
+    try {
+      await fetchQuizzes(); // 
+    } catch (error) {
+      console.error("Refresh error:", error);
+      setError("Failed to refresh quizzes. Please try again.");
+    } finally {
       setRefreshing(false);
-    }, 1500);
+    }
   };
 
   // History data
