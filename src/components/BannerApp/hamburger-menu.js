@@ -13,11 +13,17 @@ import {
   faSignOutAlt
 } from "@fortawesome/free-solid-svg-icons";
 import "./hamburger-menu.css";
+import { useNavigate } from "react-router-dom";
 
 
 const HamburgerMenu = ({ routes }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
 
+  const handleMenuItemClick = (path) => {
+    setIsOpen(false);
+    navigate(path);
+  };
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -102,17 +108,16 @@ const HamburgerMenu = ({ routes }) => {
 
             <nav className="menu-items">
               {menuRoutes.map((route, index) => (
-                <a
+                <p
                   key={index}
-                  href={route.path}
                   className="menu-item"
                   style={{ "--index": index }}
-                  onClick={() => setIsOpen(false)}
+                  onClick={() => handleMenuItemClick(route.path)}
                 >
                   {route.icon && <span className="menu-item-icon">{route.icon}</span>}
                   <span>{route.name}</span>
                   <FontAwesomeIcon icon={faChevronRight} className="menu-item-arrow" />
-                </a>
+                </p>
               ))}
             </nav>
           </div>
