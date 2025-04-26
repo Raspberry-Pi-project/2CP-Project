@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+
 import {
   View,
   Text,
@@ -33,9 +34,7 @@ export default function LoginScreen({ navigation }) {
     }
 
     try {
-      console.log("API URL:", API_URL);
-      console.log("Attempting login to:", `${API_URL}/auth/login`);
-      console.log("Request Payload:", { email, password, role: "student" });
+      
 
       // Step 1: Login and get userId
       const response = await axios.post(`${API_URL}/auth/login`, {
@@ -44,29 +43,32 @@ export default function LoginScreen({ navigation }) {
         role: "student",
       });
 
-      console.log("Response:", response.data);
+      
 
-      const { userId, role, message } = response.data;
+      const { userId, role, message , token } = response.data;
 
       if (!userId) {
         alert("Login failed: No userId received.");
         return;
       }
 
-      console.log("Login successful:", message);
-      console.log("User ID:", userId);
 
       // Save userId and role to AsyncStorage
       await AsyncStorage.setItem("userId", userId.toString());
       await AsyncStorage.setItem("userRole", role);
-
+      await AsyncStorage.setItem("token", token );
       // Step 2: Fetch additional details using userId
       const userDetailsResponse = await axios.post(
-        `${API_URL}/students/${userId}`
+        `${API_URL}/students/profile`,
+        { id_student: userId, page: 1, limit: 1 },
+        { headers: {
+          Authorization: `Bearer ${token}`,
+        }, } // Include credentials in the request
       );
       // jknjkn
+
       const { groupe_student: studentGroup, annee: studentYear } =
-        userDetailsResponse.data;
+        userDetailsResponse.data.data[0];
 
       if (!studentGroup || !studentYear) {
         alert("Failed to fetch student details.");
