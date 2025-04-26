@@ -56,6 +56,7 @@ const register = async (req, res) => {
 // ✅ Login User and Set Token in Cookie
 const login = async (req, res) => {
     const { email, password, role } = req.body;
+   
     
     
     let user;
@@ -87,16 +88,16 @@ const login = async (req, res) => {
 
     switch (role) {
         case "student":
-            res.json({ role, userId: user.id_student, message: "Login successful" });
+            res.json({ role, userId: user.id_student, message: "Login successful" , token });
             break;
         case "teacher":
-            res.json({ role, userId: user.id_teacher, message: "Login successful" });
+            res.json({ role, userId: user.id_teacher, message: "Login successful" , token });
             break;
         case "admin":
-            res.json({ role, userId: user.id_admin, message: "Login successful" });
+            res.json({ role, userId: user.id_admin, message: "Login successful" , token });
             break;
     }
-    console.log(res.json);
+    
 };
 
 // ✅ Logout User by Clearing Cookie
