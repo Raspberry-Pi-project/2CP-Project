@@ -66,13 +66,13 @@ const SimpleQuizCard = ({ quiz, onPress }) => {
         <View style={styles.quizCardIconContainer}>
           <View style={styles.quizCardIcon}>
             <Text style={styles.quizCardIconText}>
-              {quiz.icon === "book" ? "📚" : "📊"}
+              {quiz.image}
             </Text>
           </View>
         </View>
         <View style={styles.quizCardTextContainer}>
           <Text style={styles.quizCardTitle}>{quiz.title}</Text>
-          <Text style={styles.quizCardSubtitle}>{quiz.subtitle}</Text>
+          <Text style={styles.quizCardSubtitle}>{quiz.subject}</Text>
         </View>
         <View style={styles.quizCardArrow}>
           <Text style={styles.quizCardArrowText}>›</Text>
@@ -82,7 +82,7 @@ const SimpleQuizCard = ({ quiz, onPress }) => {
   );
 };
 
-const SimpleHistoryCard = ({ title, date, icon, onPress }) => {
+const SimpleHistoryCard = ({ title, date, icon, score, onPress }) => {
   return (
     <TouchableOpacity style={styles.historyCard} onPress={onPress}>
       <View style={styles.historyCardContent}>
@@ -90,17 +90,10 @@ const SimpleHistoryCard = ({ title, date, icon, onPress }) => {
           <View
             style={[
               styles.historyCardIcon,
-              {
-                backgroundColor:
-                  icon === "math"
-                    ? "rgba(123, 92, 255, 0.1)"
-                    : "rgba(255, 157, 157, 0.1)",
-              },
+              { backgroundColor: icon === "math" ? "rgba(123, 92, 255, 0.1)" : "rgba(255, 157, 157, 0.1)" },
             ]}
           >
-            <Text style={styles.historyCardIconText}>
-              {icon === "math" ? "📊" : "📚"}
-            </Text>
+            <Text style={styles.historyCardIconText}>{icon}</Text>
           </View>
         </View>
         <View style={styles.historyCardTextContainer}>
@@ -108,7 +101,7 @@ const SimpleHistoryCard = ({ title, date, icon, onPress }) => {
           <Text style={styles.historyCardDate}>{date}</Text>
         </View>
         <View style={styles.historyCardScoreContainer}>
-          <Text style={styles.historyCardScore}>85%</Text>
+          <Text style={styles.historyCardScore}>{score}%</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -125,13 +118,17 @@ export default function HomeScreen({ navigation }) {
   const [error, setError] = useState(null);
   const panelAnimation = useRef(new Animated.Value(0)).current;
   const searchInputRef = useRef(null);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [historyData, setHistoryData] = useState([]); // State for history data
 
   // Add refresh function
   const onRefresh = async () => {
     setRefreshing(true);
 
     try {
-      await fetchQuizzes(); // 
+      setPage(page + 1);
+      await fetchQuizzes(page); // 
     } catch (error) {
       console.error("Refresh error:", error);
       setError("Failed to refresh quizzes. Please try again.");
@@ -139,9 +136,33 @@ export default function HomeScreen({ navigation }) {
       setRefreshing(false);
     }
   };
+  useEffect(() => {
+    const fetchHistoryData = async () => {
+      try {
+        const studentID = await AsyncStorage.getItem("userId");
+        const token = await AsyncStorage.getItem("token");
+
+        if (!studentGroup || !studentYear) {
+          alert("Student group or year is missing. Please log in again.");
+          navigation.navigate("Login");
+          return;
+        }
+
+        const response = await api.post(
+          `${API_URL}/students/getHistory`,{id_student: studentID , page : 1 , limit : 7},)
+        console.log("History Response:", response.data.data);
+          setHistoryData(response.data.data);
+
+        // Fetch history data here if needed
+      } catch (error) {
+        console.error("Error fetching history data:", error);
+      }
+    }
+    fetchHistoryData();
+  },[])
 
   // History data
-  const historyData = [
+  const historyDataa = [
     {
       id: "1",
       title: "Math Quiz",
@@ -181,11 +202,7 @@ export default function HomeScreen({ navigation }) {
   ];
 
   // Filter quizzes based on search text - update to use quizzes state
-  const filteredQuizzes = quizzes.filter(
-    (quiz) =>
-      quiz.title.toLowerCase().includes(searchText.toLowerCase()) ||
-      quiz.subtitle.toLowerCase().includes(searchText.toLowerCase())
-  );
+  
   /*
   useEffect(() => {
     const testGetQuizzes = async () => {
@@ -200,7 +217,7 @@ export default function HomeScreen({ navigation }) {
     testGetQuizzes();
   }, []);  */
 
-  const fetchQuizzes = async () => {
+  const fetchQuizzes = async (page) => {
     try {
       const studentGroup = await AsyncStorage.getItem("studentGroup");
       const studentYear = await AsyncStorage.getItem("studentYear");
@@ -217,7 +234,7 @@ export default function HomeScreen({ navigation }) {
       const response = await api.post(
         `${API_URL}/students/getAvailableQuizzes`,
         {
-          page: 1,
+          page,
           limit: 10,
           for_groupe: parseInt(studentGroup),
           for_year: parseInt(studentYear),
@@ -241,7 +258,7 @@ export default function HomeScreen({ navigation }) {
   };
 
   useEffect(() => {
-    fetchQuizzes();
+    fetchQuizzes(page);
   }, []);
 
   const startQuiz = async (quizId) => {
@@ -266,10 +283,11 @@ export default function HomeScreen({ navigation }) {
       toValue,
       friction: 8,
       tension: 40,
-      useNativeDriver: true,
-    }).start();
-    setIsExpanded(!isExpanded);
-  };
+      useNativeDriver: false,
+    }).start()
+
+    setIsExpanded(!isExpanded)
+  }
 
   // Toggle search input
   const toggleSearch = () => {
@@ -309,36 +327,23 @@ export default function HomeScreen({ navigation }) {
       navigation.navigate("QuizInfo", {
         id_quiz: quiz.id_quiz,
         basicQuizData: {
-          id_quiz: quiz.id_quiz,
-          title: quiz.title,
-          description: quiz.description,
-          duration: quiz.duration,
-          nb_attempts: quiz.nb_attempts,
-          subject: quiz.subject,
-          totalQuestions: quiz.totalQuestions,
-          questions: quiz.questions || [],
+          id_quiz: quizDetails.id_quiz,
+          title: quizDetails.title,
+          description: quizDetails.description,
+          duration: quizDetails.duration,
+          nb_attempts: quizDetails.nb_attempts,
+          subject: quizDetails.subject,
+          totalQuestions: quizDetails.totalQuestions,
+          questions: quizDetails.questions || [],
         },
       });
     } catch (error) {
       console.error("Error fetching quiz details:", error);
-      navigation.navigate("QuizInfo", {
-        quiz: {
-          ...quiz,
-          description: getQuizDescription(quiz),
-          time: getQuizTime(quiz),
-          attempts: 1,
-        },
-      });
+      
     }
   };
 
-  const getQuizDescription = (quiz) => {
-    if (quiz.description) return quiz.description;
-  };
 
-  const getQuizTime = (quiz) => {
-    if (quiz.duration) return quiz.duration;
-  };
 
   /*
   const renderQuizItem = ({ item }) => <SimpleQuizCard quiz={item} onPress={handleQuizPress} />;
@@ -349,10 +354,17 @@ export default function HomeScreen({ navigation }) {
   });
 
   const handleHistoryQuizPress = (item) => {
-    navigation.navigate("QuizScore", {
-      score: (item.score * item.totalQuestions) / 100, // Convert percentage to actual score
+    navigation.navigate("QuizHistoryScreen", { 
+      quiz: {
+        id: item.id,
+        title: item.title,
+        description: item.descreption,
+        time: item.duration,
+        attempts: 1,
+        questions: item.totalQuestions || 10
+      },
+      score: item.score,
       totalQuestions: item.totalQuestions,
-      timeSpent: item.timeSpent,
     });
   };
 
@@ -576,10 +588,10 @@ export default function HomeScreen({ navigation }) {
             <ScrollView showsVerticalScrollIndicator={false}>
               {historyData.map((item) => (
                 <SimpleHistoryCard
-                  key={item.id}
+                  key={item.id_quiz}
                   title={item.title}
-                  date={item.date}
-                  icon={item.icon}
+                  date={item.created_at}
+                  icon={item.image}
                   score={item.score}
                   onPress={() => handleHistoryQuizPress(item)}
                 />
