@@ -204,7 +204,7 @@ export default function HomeScreen({ navigation }) {
     try {
       const studentGroup = await AsyncStorage.getItem("studentGroup");
       const studentYear = await AsyncStorage.getItem("studentYear");
-
+      const token = await AsyncStorage.getItem("token");
       console.log("Retrieved Student Group:", studentGroup);
       console.log("Retrieved Student Year:", studentYear);
 
@@ -213,14 +213,19 @@ export default function HomeScreen({ navigation }) {
         navigation.navigate("Login");
         return;
       }
-
+      console.log("student group and year :", studentGroup, studentYear);
       const response = await api.post(
         `${API_URL}/students/getAvailableQuizzes`,
         {
           page: 1,
           limit: 10,
-          for_groupe: studentGroup,
-          for_year: studentYear,
+          for_groupe: parseInt(studentGroup),
+          for_year: parseInt(studentYear),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
