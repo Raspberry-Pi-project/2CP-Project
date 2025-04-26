@@ -1,379 +1,323 @@
-/*"use client"
+"use client"
 
-import { useState } from "react"
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, SafeAreaView, StatusBar } from "react-native"
+import { useState, useRef } from "react"
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  TextInput, 
+  TouchableOpacity, 
+  SafeAreaView, 
+  StatusBar,
+  ScrollView,
+  Platform,
+  Dimensions,
+  Animated
+} from "react-native"
 import { colors } from "../constants/colors"
 import Svg, { Path } from "react-native-svg"
+import Icon from "react-native-vector-icons/MaterialCommunityIcons"
+import React from "react"
+
+const { width } = Dimensions.get('window');
+
+// Centralized theme colors
+const COLORS = {
+  primary: colors.primary || '#A42FC1', // Using the colors from constants, with fallback
+  secondary: '#4fc3f7',
+  background: '#F8F9FA',
+  cardBackground: '#ffffff',
+  text: {
+    dark: '#333333',
+    medium: '#666666',
+    light: '#888888',
+    white: '#ffffff'
+  },
+  error: '#d32f2f',
+  divider: '#f0f0f0',
+  danger: '#FF3B30'
+};
+
+// Centralized typography
+const TYPOGRAPHY = {
+  fontFamily: Platform.select({
+    web: 'Roboto, Arial, sans-serif',
+    ios: 'System',
+    android: 'Roboto'
+  }),
+  sizes: {
+    small: 12,
+    medium: 14,
+    regular: 16,
+    large: 18,
+    xlarge: 24
+  },
+  weights: {
+    normal: Platform.select({ web: '400', native: 'normal' }),
+    medium: Platform.select({ web: '500', native: '500' }),
+    bold: Platform.select({ web: '700', native: 'bold' })
+  }
+};
+
+// Centralized spacing
+const SPACING = {
+  xs: 4,
+  sm: 8,
+  md: 16,
+  lg: 24,
+  xl: 30
+};
+
+// Centralized shadows
+const SHADOWS = Platform.select({
+  web: {
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)'
+  },
+  ios: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4
+  },
+  android: {
+    elevation: 4
+  },
+  default: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4
+  }
+});
 
 export default function ProfileScreen({ navigation }) {
+  // Simple state management - no backend connections
   const [name, setName] = useState("Melissa Peters")
   const [email, setEmail] = useState("mepeters@gmail.com")
-  const [yearOfStudy, setYearOfStudy] = useState("***********")
-  const [groupe, setGroupe] = useState("23/05/1995")
+  const [yearOfStudy, setYearOfStudy] = useState("3")
+  const [groupe, setGroupe] = useState("Group A")
+  const [studentId, setStudentId] = useState("STU12345")
+  
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const avatarAnim = useRef(new Animated.Value(0)).current;
+  const cardAnim1 = useRef(new Animated.Value(0)).current;
+  const cardAnim2 = useRef(new Animated.Value(0)).current;
+  const buttonAnim = useRef(new Animated.Value(0)).current;
+
+  // Make sure header is hidden when component mounts
+  React.useEffect(() => {
+    navigation.setOptions({
+      headerShown: false,
+    });
+    
+    // Start animations
+    Animated.sequence([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      Animated.timing(avatarAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.stagger(200, [
+        Animated.timing(cardAnim1, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.timing(cardAnim2, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.timing(buttonAnim, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+  }, [navigation, fadeAnim, avatarAnim, cardAnim1, cardAnim2, buttonAnim]);
 
   const handleLogout = () => {
     navigation.navigate("Login")
   }
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-
-      {/* Header *}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-            <Path
-              d="M15 18l-6-6 6-6"
-              stroke={colors.primary}
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </Svg>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Edit Profile</Text>
-        <View style={styles.placeholder} />
-      </View>
-
-      {/* Profile Content *}
-      <View style={styles.content}>
-        {/* Avatar *}
-        <View style={styles.avatarContainer}>
-          <View style={styles.avatar}>
-            <Svg width={40} height={40} viewBox="0 0 24 24" fill="none">
-              <Path
-                d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z"
-                fill="#A0A0A0"
-              />
-              <Path d="M12 13C7.03 13 3 17.03 3 22H21C21 17.03 16.97 13 12 13Z" fill="#A0A0A0" />
-            </Svg>
-          </View>
-        </View>
-
-        {/* Form *}
-        <View style={styles.form}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Name</Text>
-            <TextInput
-              style={styles.input}
-              value={name}
-              onChangeText={setName}
-              placeholder="Enter your name"
-              placeholderTextColor="#999"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              value={email}
-              onChangeText={setEmail}
-              placeholder="Enter your email"
-              placeholderTextColor="#999"
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Year of study</Text>
-            <TextInput
-              style={styles.input}
-              value={yearOfStudy}
-              onChangeText={setYearOfStudy}
-              placeholder="Enter year of study"
-              placeholderTextColor="#999"
-              secureTextEntry
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Groupe</Text>
-            <TouchableOpacity style={styles.dropdownButton}>
-              <Text style={styles.dropdownText}>{groupe}</Text>
-              <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-                <Path d="M6 9l6 6 6-6" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </Svg>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Logout Button *}
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutText}>LOG OUT</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
-  )
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 24,
-    paddingTop: 10,
-    paddingBottom: 20,
-  },
-  backButton: {
-    padding: 8,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#333",
-  },
-  placeholder: {
-    width: 40,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 24,
-  },
-  avatarContainer: {
-    alignItems: "center",
-    marginVertical: 30,
-  },
-  avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: "#E1E1E1",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  form: {
-    marginBottom: 30,
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 14,
-    color: "#333",
-    marginBottom: 8,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#E1E1E1",
-    borderRadius: 8,
-    padding: 15,
-    fontSize: 16,
-    color: "#333",
-  },
-  dropdownButton: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#E1E1E1",
-    borderRadius: 8,
-    padding: 15,
-  },
-  dropdownText: {
-    fontSize: 16,
-    color: "#333",
-  },
-  logoutButton: {
-    backgroundColor: "#FF3B30",
-    borderRadius: 8,
-    padding: 16,
-    alignItems: "center",
-    marginTop: 20,
-  },
-  logoutText: {
-    color: "#FFF",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-})  */
-
-  "use client"
-
-import React, { useState, useEffect } from "react"
-import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  SafeAreaView,
-  StatusBar,
-} from "react-native"
-import AsyncStorage from "@react-native-async-storage/async-storage"
-import { colors } from "../constants/colors"
-import Svg, { Path } from "react-native-svg"
-
-export default function ProfileScreen({ navigation }) {
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [yearOfStudy, setYearOfStudy] = useState("")
-  const [groupe, setGroupe] = useState("")
-
-  useEffect(() => {
-    const loadProfileData = async () => {
-      try {
-        const storedName = await AsyncStorage.getItem("name")
-        const storedEmail = await AsyncStorage.getItem("rememberedEmail")
-        const storedYear = await AsyncStorage.getItem("studentYear")
-        const storedGroup = await AsyncStorage.getItem("studentGroup")
-  
-        console.log("Loaded from AsyncStorage:", {
-          storedName,
-          storedEmail,
-          storedYear,
-          storedGroup,
-        })
-  
-        if (storedName) setName(storedName)
-        if (storedEmail) setEmail(storedEmail)
-        if (storedYear) setYearOfStudy(storedYear)
-        if (storedGroup) setGroupe(storedGroup)
-      } catch (error) {
-        console.error("Failed to load profile data:", error)
-      }
-    }
-  
-    loadProfileData()
-  }, [])
-  
-  /*useEffect(() => {
-    const loadProfileData = async () => {
-      try {
-        const storedName = await AsyncStorage.getItem("name")
-        const storedEmail = await AsyncStorage.getItem("rememberedEmail")
-        const storedYear = await AsyncStorage.getItem("studentYear")
-        const storedGroup = await AsyncStorage.getItem("studentGroup")
-
-        if (storedName) setName(storedName)
-        if (storedEmail) setEmail(storedEmail)
-        if (storedYear) setYearOfStudy(storedYear)
-        if (storedGroup) setGroupe(storedGroup)
-      } catch (error) {
-        console.error("Failed to load profile data:", error)
-      }
-    }
-
-    loadProfileData()
-  }, [])  */
-
-
-useEffect(() => {
-  const loadRememberedCredentials = async () => {
-    const savedEmail = await AsyncStorage.getItem("rememberedEmail");
-    const savedPassword = await AsyncStorage.getItem("rememberedPassword");
-
-    if (savedEmail && savedPassword) {
-      setEmail(savedEmail);
-      setPassword(savedPassword);
-      setRememberMe(true);
-    }
+  // Get initials for avatar
+  const getInitials = () => {
+    const nameParts = name.split(' ');
+    const first = nameParts[0] ? nameParts[0].charAt(0).toUpperCase() : '';
+    const last = nameParts.length > 1 ? nameParts[1].charAt(0).toUpperCase() : '';
+    return first + last;
   };
 
-  loadRememberedCredentials();
-}, []);
-
-  const handleLogout = async () => {
-    await AsyncStorage.clear()
-    navigation.navigate("Login")
-  }
-
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-            <Path
-              d="M15 18l-6-6 6-6"
-              stroke={colors.primary}
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </Svg>
+    <SafeAreaView style={[styles.container, {paddingTop: 0}]}>
+      {/* Explicitly hide status bar */}
+      <StatusBar hidden />
+      
+      {/* Back Button */}
+      <Animated.View style={[styles.backButtonContainer, {
+        opacity: fadeAnim,
+        transform: [{ translateY: fadeAnim.interpolate({
+          inputRange: [0, 1],
+          outputRange: [-20, 0]
+        })}]
+      }]}>
+        <TouchableOpacity 
+          style={styles.backButton} 
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.7}
+        >
+          <Icon name="arrow-left" size={24} color={COLORS.primary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Edit Profile</Text>
-        <View style={styles.placeholder} />
-      </View>
+      </Animated.View>
 
       {/* Profile Content */}
-      <View style={styles.content}>
+      <ScrollView 
+        style={styles.scrollView} 
+        contentContainerStyle={styles.scrollContentContainer}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Avatar */}
-        <View style={styles.avatarContainer}>
+        <Animated.View 
+          style={[
+            styles.avatarContainer, 
+            {
+              opacity: avatarAnim,
+              transform: [
+                { scale: avatarAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.8, 1]
+                })},
+                { translateY: avatarAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [20, 0]
+                })}
+              ]
+            }
+          ]}
+        >
           <View style={styles.avatar}>
-            <Svg width={40} height={40} viewBox="0 0 24 24" fill="none">
-              <Path
-                d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z"
-                fill="#A0A0A0"
-              />
-              <Path d="M12 13C7.03 13 3 17.03 3 22H21C21 17.03 16.97 13 12 13Z" fill="#A0A0A0" />
-            </Svg>
+            <Text style={styles.avatarText}>{getInitials()}</Text>
           </View>
-        </View>
+          <Text style={styles.nameText}>{name}</Text>
+        </Animated.View>
 
-        {/* Form */}
-        <View style={styles.form}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Name</Text>
-            <TextInput
-              style={styles.input}
-              value={name}
-              onChangeText={setName}
-              placeholder="Enter your name"
-              placeholderTextColor="#999"
-            />
-          </View>
+        {/* Content Cards */}
+        <View style={styles.cardsContainer}>
+          {/* Personal Information Card */}
+          <Animated.View 
+            style={[
+              styles.card, 
+              {
+                opacity: cardAnim1,
+                transform: [
+                  { translateX: cardAnim1.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-50, 0]
+                  })}
+                ]
+              }
+            ]}
+          >
+            <View style={styles.cardHeader}>
+              <Icon name="account-details" size={24} color={COLORS.primary} />
+              <Text style={styles.cardTitle}>Personal Information</Text>
+            </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              value={email}
-              onChangeText={setEmail}
-              placeholder="Enter your email"
-              placeholderTextColor="#999"
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-          </View>
+            <View style={styles.cardContent}>
+              <View style={styles.infoRow}>
+                <Icon name="account" size={20} color={COLORS.text.medium} style={styles.infoIcon} />
+                <View style={styles.infoTextContainer}>
+                  <Text style={styles.infoLabel}>Name</Text>
+                  <Text style={styles.infoValue}>{name}</Text>
+                </View>
+              </View>
+              
+              <View style={styles.infoRow}>
+                <Icon name="email" size={20} color={COLORS.text.medium} style={styles.infoIcon} />
+                <View style={styles.infoTextContainer}>
+                  <Text style={styles.infoLabel}>Email</Text>
+                  <Text style={styles.infoValue}>{email}</Text>
+                </View>
+              </View>
+            </View>
+          </Animated.View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Year of study</Text>
-            <TextInput
-              style={styles.input}
-              value={yearOfStudy}
-              onChangeText={setYearOfStudy}
-              placeholder="Enter year of study"
-              placeholderTextColor="#999"
-            />
-          </View>
+          {/* Academic Information Card */}
+          <Animated.View 
+            style={[
+              styles.card, 
+              {
+                opacity: cardAnim2,
+                transform: [
+                  { translateX: cardAnim2.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [50, 0]
+                  })}
+                ]
+              }
+            ]}
+          >
+            <View style={styles.cardHeader}>
+              <Icon name="school" size={24} color={COLORS.primary} />
+              <Text style={styles.cardTitle}>Academic Information</Text>
+            </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Groupe</Text>
-            <TouchableOpacity style={styles.dropdownButton}>
-              <Text style={styles.dropdownText}>{groupe}</Text>
-              <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-                <Path d="M6 9l6 6 6-6" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </Svg>
+            <View style={styles.cardContent}>
+              <View style={styles.infoRow}>
+                <Icon name="calendar-clock" size={20} color={COLORS.text.medium} style={styles.infoIcon} />
+                <View style={styles.infoTextContainer}>
+                  <Text style={styles.infoLabel}>Year of Study</Text>
+                  <Text style={styles.infoValue}>{yearOfStudy}</Text>
+                </View>
+              </View>
+              
+              <View style={styles.infoRow}>
+                <Icon name="account-group" size={20} color={COLORS.text.medium} style={styles.infoIcon} />
+                <View style={styles.infoTextContainer}>
+                  <Text style={styles.infoLabel}>Groupe</Text>
+                  <Text style={styles.infoValue}>{groupe}</Text>
+                </View>
+              </View>
+              
+              <View style={styles.infoRow}>
+                <Icon name="identifier" size={20} color={COLORS.text.medium} style={styles.infoIcon} />
+                <View style={styles.infoTextContainer}>
+                  <Text style={styles.infoLabel}>Student ID</Text>
+                  <Text style={styles.infoValue}>{studentId}</Text>
+                </View>
+              </View>
+            </View>
+          </Animated.View>
+
+          {/* Logout Button */}
+          <Animated.View style={{ 
+            opacity: buttonAnim,
+            transform: [
+              { translateY: buttonAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [20, 0]
+              })}
+            ]
+          }}>
+            <TouchableOpacity 
+              style={styles.logoutButton} 
+              onPress={handleLogout}
+              activeOpacity={0.8}
+            >
+              <Icon name="logout" size={20} color={COLORS.text.white} />
+              <Text style={styles.logoutText}>LOG OUT</Text>
             </TouchableOpacity>
-          </View>
+          </Animated.View>
         </View>
-
-        {/* Logout Button */}
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutText}>LOG OUT</Text>
-        </TouchableOpacity>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   )
 }
@@ -381,86 +325,122 @@ useEffect(() => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.background,
   },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 24,
-    paddingTop: 10,
-    paddingBottom: 20,
+  backButtonContainer: {
+    position: 'absolute',
+    top: SPACING.xl,
+    left: SPACING.md,
+    zIndex: 10,
   },
   backButton: {
-    padding: 8,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#333",
-  },
-  placeholder: {
     width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...SHADOWS,
   },
-  content: {
+  scrollView: {
     flex: 1,
-    paddingHorizontal: 24,
+  },
+  scrollContentContainer: {
+    paddingBottom: SPACING.xl * 2,
+    paddingTop: SPACING.xl * 3, // Extra padding at top to account for back button
   },
   avatarContainer: {
-    alignItems: "center",
-    marginVertical: 30,
+    alignItems: 'center',
+    marginTop: SPACING.xl * 2,
+    marginBottom: SPACING.xl,
   },
   avatar: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: "#E1E1E1",
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...SHADOWS,
   },
-  form: {
-    marginBottom: 30,
+  avatarText: {
+    fontSize: 36,
+    fontWeight: TYPOGRAPHY.weights.bold,
+    color: COLORS.text.white,
   },
-  inputGroup: {
-    marginBottom: 20,
+  nameText: {
+    fontSize: TYPOGRAPHY.sizes.xlarge,
+    fontWeight: TYPOGRAPHY.weights.bold,
+    color: COLORS.text.dark,
+    marginTop: SPACING.md,
+    fontFamily: TYPOGRAPHY.fontFamily,
   },
-  label: {
-    fontSize: 14,
-    color: "#333",
-    marginBottom: 8,
+  cardsContainer: {
+    paddingHorizontal: SPACING.md,
+    paddingTop: SPACING.md,
   },
-  input: {
-    borderWidth: 1,
-    borderColor: "#E1E1E1",
-    borderRadius: 8,
-    padding: 15,
-    fontSize: 16,
-    color: "#333",
+  card: {
+    backgroundColor: COLORS.cardBackground,
+    borderRadius: 12,
+    marginBottom: SPACING.md,
+    ...SHADOWS,
   },
-  dropdownButton: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#E1E1E1",
-    borderRadius: 8,
-    padding: 15,
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: SPACING.md,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.divider,
   },
-  dropdownText: {
-    fontSize: 16,
-    color: "#333",
+  cardTitle: {
+    fontSize: TYPOGRAPHY.sizes.large,
+    fontWeight: TYPOGRAPHY.weights.bold,
+    color: COLORS.primary,
+    marginLeft: SPACING.sm,
+    fontFamily: TYPOGRAPHY.fontFamily,
+  },
+  cardContent: {
+    padding: SPACING.md,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: SPACING.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.divider,
+  },
+  infoIcon: {
+    marginRight: SPACING.md,
+  },
+  infoTextContainer: {
+    flex: 1,
+  },
+  infoLabel: {
+    fontSize: TYPOGRAPHY.sizes.medium,
+    color: COLORS.text.medium,
+    marginBottom: 2,
+    fontFamily: TYPOGRAPHY.fontFamily,
+  },
+  infoValue: {
+    fontSize: TYPOGRAPHY.sizes.regular,
+    color: COLORS.text.dark,
+    fontWeight: TYPOGRAPHY.weights.medium,
+    fontFamily: TYPOGRAPHY.fontFamily,
   },
   logoutButton: {
-    backgroundColor: "#FF3B30",
+    backgroundColor: COLORS.danger,
     borderRadius: 8,
-    padding: 16,
-    alignItems: "center",
-    marginTop: 20,
+    padding: SPACING.md,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: SPACING.md,
   },
   logoutText: {
-    color: "#FFF",
-    fontSize: 16,
-    fontWeight: "600",
+    color: COLORS.text.white,
+    fontSize: TYPOGRAPHY.sizes.regular,
+    fontWeight: TYPOGRAPHY.weights.bold,
+    marginLeft: SPACING.xs,
+    fontFamily: TYPOGRAPHY.fontFamily,
   },
-})
-
+});
