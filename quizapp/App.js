@@ -26,6 +26,7 @@ import ReviewQuestionScreen from "./screens/ReviewQuestionScreen";
 import OfflineOnly from "./components/OfflineOnly";
 import ReviewQuestionHistory from "./screens/ReviewQuestionHistory"
 import QuizScreenForHistory from "./screens/QuizScreenForHistory"
+import { createContext } from "react";
 // Ignore specific warnings that might be causing issues
 LogBox.ignoreLogs([
   "Animated: `useNativeDriver` was not specified",
