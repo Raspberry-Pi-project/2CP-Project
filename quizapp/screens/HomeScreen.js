@@ -82,7 +82,7 @@ const SimpleQuizCard = ({ quiz, onPress }) => {
   );
 };
 
-const SimpleHistoryCard = ({ title, date, icon, onPress }) => {
+const SimpleHistoryCard = ({ title, date, icon }) => {
   return (
     <TouchableOpacity style={styles.historyCard} onPress={onPress}>
       <View style={styles.historyCardContent}>
@@ -127,17 +127,16 @@ export default function HomeScreen({ navigation }) {
   const searchInputRef = useRef(null);
 
   // Add refresh function
-  const onRefresh = async () => {
+  const onRefresh = () => {
     setRefreshing(true);
 
-    try {
-      await fetchQuizzes(); // 
-    } catch (error) {
-      console.error("Refresh error:", error);
-      setError("Failed to refresh quizzes. Please try again.");
-    } finally {
+    // Simulate API call with a timeout
+    setTimeout(() => {
+      // Simulate getting new data by shuffling the existing quizzes
+      const shuffledQuizzes = [...QUIZ_DATA].sort(() => Math.random() - 0.5);
+      setQuizzes(shuffledQuizzes);
       setRefreshing(false);
-    }
+    }, 1500);
   };
 
   // History data
@@ -351,7 +350,7 @@ export default function HomeScreen({ navigation }) {
     });
   };
 
-  const renderQuizItem = ({ item, onPress }) => {
+  const renderQuizItem = ({ item }) => {
     console.log("Rendering Quiz Item:", item);
     return (
       <SimpleQuizCard
