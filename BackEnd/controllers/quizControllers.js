@@ -17,7 +17,6 @@ const getQuizzes = async (req, res) => {
       for_groupe,
       correctionType,
     } = req.body;
-
     //default to page 1
     // default to 10 quizzes per page
     const filters = {};
@@ -30,7 +29,6 @@ const getQuizzes = async (req, res) => {
     if (status) filters.status = status;
     if (for_year) filters.for_year = for_year;
     if (for_groupe) filters.for_groupe = for_groupe;
-
     const quizzes = await prisma.quizzes.findMany({
       skip: (page - 1) * limit, //skip records based on page number
       take: limit, // limit number of quizzes per page
