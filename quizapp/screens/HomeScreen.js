@@ -82,7 +82,7 @@ const SimpleQuizCard = ({ quiz, onPress }) => {
   );
 };
 
-const SimpleHistoryCard = ({ title, date, icon }) => {
+const SimpleHistoryCard = ({ title, date, icon, onPress }) => {
   return (
     <TouchableOpacity style={styles.historyCard} onPress={onPress}>
       <View style={styles.historyCardContent}>
@@ -127,16 +127,17 @@ export default function HomeScreen({ navigation }) {
   const searchInputRef = useRef(null);
 
   // Add refresh function
-  const onRefresh = () => {
+  const onRefresh = async () => {
     setRefreshing(true);
 
-    // Simulate API call with a timeout
-    setTimeout(() => {
-      // Simulate getting new data by shuffling the existing quizzes
-      const shuffledQuizzes = [...QUIZ_DATA].sort(() => Math.random() - 0.5);
-      setQuizzes(shuffledQuizzes);
+    try {
+      await fetchQuizzes(); // 
+    } catch (error) {
+      console.error("Refresh error:", error);
+      setError("Failed to refresh quizzes. Please try again.");
+    } finally {
       setRefreshing(false);
-    }, 1500);
+    }
   };
 
   // History data
@@ -203,7 +204,7 @@ export default function HomeScreen({ navigation }) {
     try {
       const studentGroup = await AsyncStorage.getItem("studentGroup");
       const studentYear = await AsyncStorage.getItem("studentYear");
-
+      const token = await AsyncStorage.getItem("token");
       console.log("Retrieved Student Group:", studentGroup);
       console.log("Retrieved Student Year:", studentYear);
 
@@ -212,14 +213,19 @@ export default function HomeScreen({ navigation }) {
         navigation.navigate("Login");
         return;
       }
-
+      console.log("student group and year :", studentGroup, studentYear);
       const response = await api.post(
         `${API_URL}/students/getAvailableQuizzes`,
         {
           page: 1,
           limit: 10,
-          for_groupe: studentGroup,
-          for_year: studentYear,
+          for_groupe: parseInt(studentGroup),
+          for_year: parseInt(studentYear),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
@@ -350,7 +356,7 @@ export default function HomeScreen({ navigation }) {
     });
   };
 
-  const renderQuizItem = ({ item }) => {
+  const renderQuizItem = ({ item, onPress }) => {
     console.log("Rendering Quiz Item:", item);
     return (
       <SimpleQuizCard
