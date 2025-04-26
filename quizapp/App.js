@@ -43,7 +43,7 @@ export default function App() {
   const [showNotification, setShowNotification] = useState(false)
   const [userData, setUserData] = useState(null)
 
-  useEffect(() => {
+ /* useEffect(() => {
     // Show notification after a short delay to ensure app is fully loaded
     const timer = setTimeout(() => {
       // Using the advanced notification manager
@@ -56,7 +56,7 @@ export default function App() {
     }, 2000)
 
     return () => clearTimeout(timer)
-  }, [])
+  }, [])*/
 
   return (
     <UserContext.Provider value={{ userData, setUserData }}>

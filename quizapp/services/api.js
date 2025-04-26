@@ -5,10 +5,12 @@ import { API_URL } from "./config";
 
 const API_BASE_URL = `${API_URL}/students`;
 
+
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
+     // Attach token to the Authorization header
   },
 });
 
@@ -16,7 +18,7 @@ console.log("API Instance:", api);
 
 api.interceptors.request.use(
   async (config) => {
-    const token = await AsyncStorage.getItem("authToken"); // Retrieve the token
+    const token = await AsyncStorage.getItem("token"); // Retrieve the token
     if (token) {
       config.headers["Authorization"] = `Bearer ${token}`; // Attach token to the Authorization header
     }
@@ -93,10 +95,11 @@ export const studentAPI = {
     }
   },
 
-  getQuizResults: async (attemptId) => {
+  getQuizResults: async (attemptId , id_student) => {
     try {
       const response = await api.post("/getQuizResults", {
         id_attempt: attemptId,
+        id_student,
       });
       return response.data;
     } catch (error) {
@@ -105,9 +108,9 @@ export const studentAPI = {
     }
   },
 
-  getHistory: async () => {
+  getHistory: async (id_student) => {
     try {
-      const response = await api.post("/history");
+      const response = await api.post("/history",{id_student});
       return response.data;
     } catch (error) {
       console.error("Error fetching history:", error);
@@ -115,9 +118,9 @@ export const studentAPI = {
     }
   },
 
-  getProfile: async () => {
+  getProfile: async (id_student) => {
     try {
-      const response = await api.post("/profile");
+      const response = await api.post("/profile" , {id_student});
       return response.data;
     } catch (error) {
       console.error("Error fetching profile:", error);
