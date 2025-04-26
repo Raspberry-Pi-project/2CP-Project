@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useRef, useCallback, useMemo } from "react"
+import React, { useEffect, useRef, useCallback } from "react"
 import {
   View,
   Text,
@@ -12,46 +12,14 @@ import {
   FlatList,
   Platform,
   Alert,
-  BackHandler,
 } from "react-native"
 import Icon from "react-native-vector-icons/Feather"
 import { LinearGradient } from "expo-linear-gradient"
 import Svg, { Circle, Path, Defs, LinearGradient as SvgLinearGradient, Stop } from "react-native-svg"
-import { useFocusEffect } from "@react-navigation/native"
 
 const { width, height } = Dimensions.get("window")
 const AnimatedCircle = Animated.createAnimatedComponent(Circle)
 const AnimatedSvg = Animated.createAnimatedComponent(Svg)
-
-// Sample quiz data with 20 questions
-const SAMPLE_QUIZ_DATA = {
-  score: 18,
-  total: 20,
-  correctCount: 18,
-  incorrectCount: 2,
-  questions: [
-    { id: 1, text: "What is the past tense of 'eat'?", isCorrect: true },
-    { id: 2, text: "Which sentence is grammatically correct?", isCorrect: true },
-    { id: 3, text: "Choose the correct preposition: 'She arrived ___ the airport.'", isCorrect: true },
-    { id: 4, text: "What is the value of x in the equation 2x + 5 = 13?", isCorrect: false },
-    { id: 5, text: "Which of these is not a prime number?", isCorrect: false },
-    { id: 6, text: "What is 25% of 80?", isCorrect: true },
-    { id: 7, text: "If a = 3 and b = 5, what is a² + b²?", isCorrect: true },
-    { id: 8, text: "What is the square root of 144?", isCorrect: true },
-    { id: 9, text: "Which planet is known as the Red Planet?", isCorrect: true },
-    { id: 10, text: "What is the chemical symbol for water?", isCorrect: true },
-    { id: 11, text: "What is the largest organ in the human body?", isCorrect: true },
-    { id: 12, text: "How many students in your class ___ from Korea?", isCorrect: true },
-    { id: 13, text: "Select the correct form of the verb.", isCorrect: true },
-    { id: 14, text: "What is the capital of France?", isCorrect: true },
-    { id: 15, text: "Who wrote 'Romeo and Juliet'?", isCorrect: true },
-    { id: 16, text: "What is the formula for water?", isCorrect: true },
-    { id: 17, text: "What is the largest continent?", isCorrect: true },
-    { id: 18, text: "How many sides does a hexagon have?", isCorrect: true },
-    { id: 19, text: "What is the main component of the sun?", isCorrect: false },
-    { id: 20, text: "Which element has the chemical symbol 'Au'?", isCorrect: true },
-  ],
-}
 
 // Floating bubbles background component
 const FloatingBubbles = () => {
@@ -142,7 +110,6 @@ const FloatingBubbles = () => {
 const ScoreCircle = ({ score, total }) => {
   const animatedValue = useRef(new Animated.Value(0)).current
   const pulseAnim = useRef(new Animated.Value(1)).current
-  const rotateAnim = useRef(new Animated.Value(0)).current
 
   useEffect(() => {
     // Animate the score
@@ -168,30 +135,13 @@ const ScoreCircle = ({ score, total }) => {
       ]),
     ).start()
 
-    // Subtle rotation animation
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(rotateAnim, {
-          toValue: 1,
-          duration: 10000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(rotateAnim, {
-          toValue: 0,
-          duration: 10000,
-          useNativeDriver: true,
-        }),
-      ]),
-    ).start()
-
     return () => {
       animatedValue.stopAnimation()
       pulseAnim.stopAnimation()
-      rotateAnim.stopAnimation()
     }
   }, [score, total])
 
-  const circumference = 2 * Math.PI * 40
+  const circumference = 2 * Math.PI * 45
   const strokeDashoffset = animatedValue.interpolate({
     inputRange: [0, 1],
     outputRange: [circumference, 0],
@@ -202,42 +152,36 @@ const ScoreCircle = ({ score, total }) => {
       style={[
         styles.scoreCircleContainer,
         {
-          transform: [
-            { scale: pulseAnim },
-            {
-              rotate: rotateAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: ["-3deg", "3deg"],
-              }),
-            },
-          ],
+          transform: [{ scale: pulseAnim }]
         },
       ]}
     >
-      <AnimatedSvg height="120" width="120" viewBox="0 0 100 100">
+      <AnimatedSvg height="150" width="150" viewBox="0 0 110 110">
         <Defs>
           <SvgLinearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
             <Stop offset="0%" stopColor="#7B5CFF" />
             <Stop offset="100%" stopColor="#A42FC1" />
           </SvgLinearGradient>
         </Defs>
-        <Circle cx="50" cy="50" r="40" stroke="rgba(255,255,255,0.3)" strokeWidth="8" fill="white" />
+        <Circle cx="55" cy="55" r="45" stroke="rgba(255,255,255,0.3)" strokeWidth="8" fill="white" />
         <AnimatedCircle
-          cx="50"
-          cy="50"
-          r="40"
+          cx="55"
+          cy="55"
+          r="45"
           stroke="url(#scoreGradient)"
           strokeWidth="8"
           fill="transparent"
           strokeDasharray={circumference}
           strokeDashoffset={strokeDashoffset}
           strokeLinecap="round"
-          transform="rotate(-90, 50, 50)"
+          transform="rotate(-90, 55, 55)"
         />
       </AnimatedSvg>
       <View style={styles.scoreTextContainer}>
-        <Text style={styles.scoreLabel}>score</Text>
-        <Text style={styles.scoreValue}>{score}/20</Text>
+        <Text style={styles.scoreValue}>
+          {Math.round((score / total) * 100)}%
+        </Text>
+        <Text style={styles.scoreLabel}>{score}/{total}</Text>
       </View>
     </Animated.View>
   )
@@ -322,21 +266,35 @@ const QuestionItem = React.memo(({ question, index, isCorrect, onPress, animatio
   )
 })
 
-export default function QuizScreen({ navigation, route }) {
-  // Get quiz results from route params or use sample data and keep it stable with useRef
-  const quizResultsRef = useRef(route.params?.quizResults || SAMPLE_QUIZ_DATA);
-  const quizResults = quizResultsRef.current;
+// Format time helper function
+const formatTime = (seconds) => {
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = seconds % 60
+  return `${minutes}m ${remainingSeconds}s`
+}
 
-  // Ensure score is out of 20
-  const normalizedScore = useRef({
-    ...quizResults,
-    total: 20,
-    score: Math.min(quizResults.score, 20), // Ensure score doesn't exceed 20
-  }).current;
+export default function QuizScreenForHistory({ navigation, route }) {
+  // Get quiz results from route params
+  const quizResultsRef = useRef(route.params?.quizResults);
+  const {
+    score = 0,
+    total = 10,
+    questions = [],
+    correctCount = 0,
+    incorrectCount = 0,
+    timeSpent = 0,
+    quizId = '',
+    originalQuiz = null,
+    attemptInfo = {}
+  } = quizResultsRef.current || {};
 
-  // Create a persistent reference to all questions
-  const questionsRef = useRef(normalizedScore.questions);
-  const questions = questionsRef.current;
+  // Ensure normalized score for consistent display
+  const normalizedScore = {
+    score: score,
+    total: total,
+    correctCount: correctCount,
+    incorrectCount: incorrectCount
+  };
 
   // Animation refs
   const headerAnim = useRef(new Animated.Value(0)).current
@@ -351,37 +309,11 @@ export default function QuizScreen({ navigation, route }) {
     };
   }, []);
 
-  // Disable going back to quiz questions
-  useFocusEffect(
-    useCallback(() => {
-      // Prevent hardware back button from working
-      const onBackPress = () => {
-        // Show an alert telling the user they can't go back
-        Alert.alert(
-          "Quiz Completed",
-          "You can't go back to the questions. Use the home button to return to the main screen.",
-          [{ text: "OK" }]
-        );
-        return true; // Returning true prevents default behavior
-      };
+  const handleGoBack = useCallback(() => {
+    navigation.goBack();
+  }, [navigation]);
 
-      // Add the event listener
-      BackHandler.addEventListener('hardwareBackPress', onBackPress);
-
-      // Disable swipe back gesture (only applies to iOS)
-      navigation.setOptions({
-        gestureEnabled: false,
-      });
-
-      // Clean up the event listener on unmount
-      return () => {
-        BackHandler.removeEventListener('hardwareBackPress', onBackPress);
-      };
-    }, [navigation])
-  );
-
-  const goToHome = useCallback(() => {
-    // Reset the entire navigation stack and go to Home screen
+  const handleHomePress = useCallback(() => {
     navigation.reset({
       index: 0,
       routes: [{ name: 'Home' }],
@@ -415,51 +347,45 @@ export default function QuizScreen({ navigation, route }) {
   }, []);
 
   const handleQuestionPress = useCallback((question) => {
-    // Get the original quiz data from the route params
-    const originalQuiz = quizResultsRef.current.originalQuiz;
-    const quizId = quizResultsRef.current.quizId;
-    
-    // Validate required data exists
-    if (!originalQuiz || !quizId) {
-      console.error("Missing quiz data for review");
-      
-      // FALLBACK: Look up the quiz from QUIZ_DATA if we have quizId
-      if (quizId) {
-        const fallbackQuiz = SAMPLE_QUIZ_DATA.find(quiz => quiz.id === quizId);
-        if (fallbackQuiz) {
-          navigation.navigate("ReviewQuestion", {
-            simplifiedQuestion: question,
-            originalQuestion: fallbackQuiz.questions[question.originalIndex || 0],
-            quizId: quizId,
-            selectedAnswers: question.selections || [question.answer].filter(Boolean),
-            isCorrect: question.isCorrect
-          });
-          return;
-        }
-      }
-      
-      // If we can't find the quiz, show an error
-      Alert.alert(
-        "Error",
-        "Cannot display question details. Please try again.",
-        [{ text: "OK" }]
-      );
-      return;
+    // Find or create original question data to pass to ReviewQuestionHistory
+    let originalQuestion;
+
+    // First try to get the question from the original quiz
+    if (originalQuiz && originalQuiz.questions) {
+      const originalIndex = question.originalIndex || 0;
+      originalQuestion = originalQuiz.questions[originalIndex];
     }
-    
-    // Find the original question using the index
-    const originalIndex = question.originalIndex || 0;
-    const originalQuestion = originalQuiz.questions[originalIndex];
-    
-    // Navigate to ReviewQuestion with complete data
-    navigation.navigate("ReviewQuestion", { 
-      simplifiedQuestion: question,
+
+    // If the original question isn't available, create a static fallback
+    if (!originalQuestion) {
+      // Create a fallback question with the same structure
+      originalQuestion = {
+        id: question.id || 1,
+        text: question.text || "Question",
+        options: [
+          "Option A",
+          "Option B",
+          "Option C",
+          "Option D"
+        ],
+        correctAnswer: question.isCorrect ? 0 : 1, // Mock correct answer
+      };
+    }
+
+    // Navigate to ReviewQuestionHistory screen with either real or fallback data
+    navigation.navigate("ReviewQuestionHistory", {
       originalQuestion: originalQuestion,
-      quizId: quizId,
-      selectedAnswers: question.selections || [question.answer].filter(Boolean),
-      isCorrect: question.isCorrect
+      quizId: quizId || "history-quiz",
+      selectedAnswers: question.selections || [question.answer].filter(Boolean) || [question.isCorrect ? 0 : 1],
+      title: (originalQuiz?.title || "History Quiz"),
+      attemptInfo: {
+        ...attemptInfo,
+        date: attemptInfo.date || new Date().toLocaleDateString(),
+        isCorrect: question.isCorrect,
+        score: score
+      }
     });
-  }, [navigation]);
+  }, [navigation, originalQuiz, quizId, attemptInfo, score]);
 
   // Item extractor for FlatList to prevent re-renders
   const keyExtractor = useCallback((item) => item.id.toString(), []);
@@ -503,49 +429,43 @@ export default function QuizScreen({ navigation, route }) {
           <FloatingBubbles />
 
           <View style={styles.headerContent}>
-            {/* Remove the existing back button and add only home button */}
-            <TouchableOpacity 
-              style={styles.backButton} // Keep using the same style for consistency
-              onPress={goToHome}
-            >
-              <Icon name="home" size={24} color="white" />
-            </TouchableOpacity>
+            {/* Back button and home button */}
+            <View style={styles.buttonsContainer}>
+              <TouchableOpacity
+                style={styles.backButton}
+                onPress={handleGoBack}
+              >
+                <Icon name="arrow-left" size={24} color="white" />
+              </TouchableOpacity>
 
-            {/* Score indicators */}
-            <View style={styles.scoreIndicators}>
-              <View style={styles.indicatorContainer}>
-                <Text style={styles.indicatorValue}>{normalizedScore.correctCount}</Text>
-                <View style={styles.indicatorBar}>
-                  <View
-                    style={[
-                      styles.indicatorFill,
-                      {
-                        backgroundColor: "#4ADE80",
-                        width: `${(normalizedScore.correctCount / 20) * 100}%`,
-                      },
-                    ]}
-                  />
-                </View>
+              <TouchableOpacity
+                style={styles.homeButton}
+                onPress={handleHomePress}
+              >
+                <Icon name="home" size={24} color="white" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Large prominent score circle at the top */}
+            <View style={styles.scoreCircleWrapper}>
+              <ScoreCircle score={normalizedScore.score} total={total} />
+            </View>
+
+            {/* Title under the score */}
+            <Text style={styles.screenTitle}>Attempt Review</Text>
+            {attemptInfo.date && (
+              <Text style={styles.screenSubtitle}>{attemptInfo.date}</Text>
+            )}
+
+            {/* Simple score text display */}
+            <View style={styles.scoreTextSummary}>
+              <View style={styles.scoreItem}>
+                <Text style={styles.scoreItemValue}>{normalizedScore.correctCount}</Text>
+                <Text style={styles.scoreItemLabel}>Correct</Text>
               </View>
-
-              <ScoreCircle score={normalizedScore.score} total={20} />
-
-              <View style={styles.indicatorContainer}>
-                <Text style={[styles.indicatorValue, { color: "#FF5252" }]}>
-                  {normalizedScore.incorrectCount < 10 ? "0" : ""}
-                  {normalizedScore.incorrectCount}
-                </Text>
-                <View style={styles.indicatorBar}>
-                  <View
-                    style={[
-                      styles.indicatorFill,
-                      {
-                        backgroundColor: "#FF5252",
-                        width: `${(normalizedScore.incorrectCount / 20) * 100}%`,
-                      },
-                    ]}
-                  />
-                </View>
+              <View style={styles.scoreItem}>
+                <Text style={[styles.scoreItemValue, { color: "#FF5252" }]}>{normalizedScore.incorrectCount}</Text>
+                <Text style={styles.scoreItemLabel}>Incorrect</Text>
               </View>
             </View>
           </View>
@@ -575,10 +495,7 @@ export default function QuizScreen({ navigation, route }) {
           renderItem={renderItem}
           contentContainerStyle={styles.questionsContainer}
           showsVerticalScrollIndicator={false}
-          removeClippedSubviews={false} // Prevents components from being unmounted when off-screen
-          maxToRenderPerBatch={20} // Render all items at once
-          windowSize={21} // Keep more items in memory
-          initialNumToRender={20} // Render all items initially
+          initialNumToRender={20}
         />
       </Animated.View>
     </SafeAreaView>
@@ -591,7 +508,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8F9FA",
   },
   headerContainer: {
-    height: height * 0.35, // Take up about 1/3 of the screen
+    height: height * 0.42,
     overflow: "hidden",
   },
   headerGradient: {
@@ -601,6 +518,13 @@ const styles = StyleSheet.create({
   },
   headerContent: {
     flex: 1,
+    justifyContent: 'space-between',
+    paddingBottom: 20,
+  },
+  buttonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 5,
   },
   backButton: {
     width: 40,
@@ -609,7 +533,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.2)",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 10,
   },
   homeButton: {
     width: 40,
@@ -619,21 +542,38 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  scoreCircleWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 10,
+  },
+  screenTitle: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 0,
+  },
+  screenSubtitle: {
+    color: "rgba(255, 255, 255, 0.8)",
+    fontSize: 13,
+    textAlign: "center",
+    marginBottom: 0,
+  },
   scoreIndicators: {
-    flex: 1,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingTop: 20,
+    marginTop: 10,
   },
   indicatorContainer: {
     alignItems: "center",
   },
   indicatorValue: {
     color: "#4ADE80",
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
-    marginBottom: 8,
+    marginBottom: 5,
   },
   indicatorBar: {
     width: 50,
@@ -641,10 +581,15 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.2)",
     borderRadius: 2,
     overflow: "hidden",
+    marginBottom: 5,
   },
   indicatorFill: {
     height: "100%",
     borderRadius: 2,
+  },
+  indicatorLabel: {
+    color: "rgba(255, 255, 255, 0.8)",
+    fontSize: 12,
   },
   scoreCircleContainer: {
     alignItems: "center",
@@ -654,16 +599,15 @@ const styles = StyleSheet.create({
     position: "absolute",
     alignItems: "center",
   },
-  scoreLabel: {
-    color: "#7B5CFF",
-    fontSize: 14,
-    fontWeight: "500",
-    textTransform: "lowercase",
-  },
   scoreValue: {
     color: "#333",
-    fontSize: 18,
+    fontSize: 28,
     fontWeight: "bold",
+  },
+  scoreLabel: {
+    color: "#666",
+    fontSize: 16,
+    marginTop: 4,
   },
   contentContainer: {
     flex: 1,
@@ -694,9 +638,11 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   questionText: {
+    flex: 1,
     fontSize: 16,
     color: "#333",
     fontWeight: "500",
+    marginRight: 10,
   },
   statusIcon: {
     width: 24,
@@ -710,4 +656,24 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: "rgba(255, 255, 255, 0.15)",
   },
-})
+  scoreTextSummary: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    marginTop: 10,
+    paddingHorizontal: 20,
+  },
+  scoreItem: {
+    alignItems: "center",
+  },
+  scoreItemValue: {
+    color: "#4ADE80",
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+  scoreItemLabel: {
+    color: "rgba(255, 255, 255, 0.9)",
+    fontSize: 14,
+    marginTop: 5,
+  },
+}) 
