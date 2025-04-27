@@ -58,11 +58,44 @@ const getQuizResults = async (req, res) => {
     if (!existingAttempt) {
       res.status(404).json({ error: "Result not found" });
     } else {
+      let groupedAnswers = {};
+      for (const studentAnswer of existingAttempt.studentAnswers) {
+        if (!groupedAnswers[studentAnswer.id_question]) {
+          groupedAnswers[studentAnswer.id_question] = [];
+        }
+        groupedAnswers[studentAnswer.id_question].push(studentAnswer);
+      }
       for (const attempt of existingAttempt) {
         attempt.quiz = await prisma.quizzes.findUnique({
           where: { id_quiz: attempt.id_quiz },
+          include: {
+            questions: {
+              select: {
+                id_question: true,
+                question_text: true,
+                question_type: true,
+                question_number: true,
+                duration: true,
+                points: true,
+                question_percentage: true,
+                answers: {
+                  select: {
+                    id_answer: true,
+                    answer_text: true,
+                    correct: true,
+                  },
+                },
+              },
+            },
+          },
         });
+
+        for (const qst of attempt.questions){
+          qst.studentAnswers = groupedAnswers[qst.id_question] || [];
+        } 
       }
+      
+
       res.json(existingAttempt);
     }
   } catch (error) {
@@ -84,7 +117,7 @@ const getHistory = async (req, res) => {
       skip: (page - 1) * limit,
       take: limit,
     });
-    
+
     // Extract just the quiz IDs
     const quizIds = distinctQuizIds.map((attempt) => attempt.id_quiz);
 
@@ -115,8 +148,6 @@ const getHistory = async (req, res) => {
     }
 
     console.log("Past quizzes:", pastQuizzes);
-
-    
 
     res.json({
       data: pastQuizzes,
