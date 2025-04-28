@@ -28,7 +28,7 @@ app.get("/testConnection", (req, res) => {
 
 app.use("/auth", authRoutes);
 app.use("/admins",authenticateUser, authorizeRoles("admin"), adminsRoutes);
-app.use("/teachers",authenticateUser, authorizeRoles("teacher" , "admin"), teachersRoutes);
+app.use("/teachers",/*,authenticateUser, authorizeRoles("teacher" , "admin"),*/ teachersRoutes);
 app.use("/students",authenticateUser, authorizeRoles("student"), studentsRoutes);
 
 
