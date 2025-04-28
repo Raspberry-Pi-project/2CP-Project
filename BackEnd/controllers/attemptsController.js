@@ -21,7 +21,7 @@ const startAttempt = async (req, res) => {
                 id_quiz
               }
             })
-            if (numberAttempts >= quiz.totale_attempts) {
+            if (numberAttempts >= quiz.nb_attempts) {
               return res.status(400).json({ error: "attempt limit reached" });
               
             }
