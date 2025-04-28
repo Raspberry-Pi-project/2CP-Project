@@ -7,33 +7,52 @@ import React, { useContext } from "react"
 const { width } = Dimensions.get("window")
 
 export default function QuizHistoryScreen({ navigation, route }) {
-  const { quiz, id_quiz, id_student } = route.params || {}
+  const { quiz, score, totalQuestions, timeSpent, id_quiz, id_student } = route.params || {};
   const { userData } = useContext(UserContext)
+  const [loading, setLoading] = useState(false)
+
 
   // Create a default quiz object if none is provided
   const quizInfo = quiz || {
-    id: id_quiz || "1",
+    id: id_quiz ? id_quiz.toString() : "1",
     title: `Quiz #${id_quiz || "1"}`,
     description: "View your previous quiz attempt results.",
     time: "30 minutes",
     attempts: 1,
-    questions: []
+    questions: totalQuestions || 0
   }
 
   // Get an icon based on quiz type
+  
   const getQuizIcon = () => {
-    switch (quizInfo.id) {
-      case "1": // English
-        return "book"
-      case "2": // Math
-        return "bar-chart-2"
-      case "3": // Science
-        return "thermometer"
-      case "4": // Physics
-        return "zap"
-      default:
-        return "help-circle"
+    // First check if quiz has a specific image set in the database
+    if (quiz && quiz.image) {
+      // If image field contains a recognizable icon name, use it
+      const iconName = quiz.image.toLowerCase();
+      if (iconName.includes("book")) return "book";
+      if (iconName.includes("math") || iconName.includes("chart")) return "bar-chart-2";
+      if (iconName.includes("science")) return "thermometer";
+      if (iconName.includes("physics")) return "zap";
+      if (iconName.includes("language")) return "edit";
+      if (iconName.includes("history")) return "clock";
+      if (iconName.includes("geography")) return "globe";
+      if (iconName.includes("computer")) return "code";
     }
+    
+    // Fallback based on subject if available
+    if (quiz && quiz.subject) {
+      const subject = quiz.subject.toLowerCase();
+      if (subject.includes("math")) return "bar-chart-2";
+      if (subject.includes("physics")) return "zap";
+      if (subject.includes("science")) return "thermometer";
+      if (subject.includes("english") || subject.includes("language")) return "book";
+      if (subject.includes("history")) return "clock";
+      if (subject.includes("geography")) return "globe";
+      if (subject.includes("computer")) return "code";
+    }
+    
+    // Default icon if no match
+    return "help-circle";
   }
 
   // Get the appropriate image based on quiz type
@@ -119,8 +138,8 @@ export default function QuizHistoryScreen({ navigation, route }) {
 
               <View style={styles.detailItem}>
                 <Text style={styles.detailLabel}>Questions :</Text>
-                <Text style={styles.detailValue}>{quizInfo.questions ? quizInfo.questions.length : 0}</Text>
-              </View>
+                <Text style={styles.detailValue}>{quizInfo.questions || 0}</Text>
+                </View>
             </View>
           </View>
 
