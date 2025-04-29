@@ -72,7 +72,7 @@ export default function QuizletScreen({ navigation, route }) {
   const [customAnswer, setCustomAnswer] = useState("");
   const [score, setScore] = useState(0);
   const [answers, setAnswers] = useState(Array(questions.length).fill(null));
-  const [timeLeft, setTimeLeft] = useState(currentQuestionData.duration);
+  const [timeLeft, setTimeLeft] = useState(currentQuestionData.duration === 0 ? 10000 : currentQuestionData.duration);
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [correctAnswers, setCorrectAnswers] = useState(0);
@@ -241,7 +241,7 @@ export default function QuizletScreen({ navigation, route }) {
     customInputAnim.setValue(0);
 
     // Always reset timer to 15 when changing questions
-    setTimeLeft(currentQuestionData.duration);
+    setTimeLeft(currentQuestionData.duration === 0 ? 10000 : currentQuestionData.duration);
     timerProgress.setValue(1);
     timerOpacity.setValue(1);
     setTimerActive(true);

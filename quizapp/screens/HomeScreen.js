@@ -65,9 +65,8 @@ const SimpleQuizCard = ({ quiz, onPress }) => {
       <View style={styles.quizCardContent}>
         <View style={styles.quizCardIconContainer}>
           <View style={styles.quizCardIcon}>
-            <Text style={styles.quizCardIconText}>
-              {quiz.image}
-            </Text>
+          { <Image source={{ uri : quiz.image}} style={styles.quizCardIcon}/>}
+            
           </View>
         </View>
         <View style={styles.quizCardTextContainer}>
@@ -150,7 +149,6 @@ export default function HomeScreen({ navigation }) {
 
         const response = await api.post(
           `${API_URL}/students/history`,{id_student: parseInt(studentID) , page : 1 , limit : 7},)
-        console.log("History Response:", response.data.data);
           setHistoryData(response.data.data);
 
         // Fetch history data here if needed
