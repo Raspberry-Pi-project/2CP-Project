@@ -80,7 +80,7 @@ const Finalization1 = () => {
       status: "draft",
     });
     console.log("quizData", quizData);
-    const publishedQuiz = await axios.post("http://localhost:3000/teachers/createQuiz", quizData , {withCredentials: true} );
+    const publishedQuiz = await axios.post("http://localhost:3000/teachers/updateQuiz", quizData , {withCredentials: true} );
     console.log("publishedQuiz", publishedQuiz);
     setQuizData({
       ...quizData,

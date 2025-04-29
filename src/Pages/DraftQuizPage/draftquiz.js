@@ -44,6 +44,7 @@ const DraftQuiz = () => {
         const quizzesData = Array.isArray(response.data)
           ? response.data
           : response.data.quizzes || response.data.data || [];
+          console.log("Quizzes data:", response.data);
 
         setQuizzes(quizzesData); // Set quizzes data from the backend
       } catch (error) {

@@ -30,7 +30,7 @@ const Finalization2 = () => {
       status: "published",
     });
     const publishedQuiz = await axios.post(
-      "http://localhost:3000/teachers/createQuiz",
+      "http://localhost:3000/teachers/updateQuiz",
       quizData,
       { withCredentials: true }
     );
