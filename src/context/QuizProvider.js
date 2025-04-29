@@ -4,8 +4,7 @@ export const QuizContext = createContext();
 
 export const QuizProvider = ({ children }) => {
   const { user } = useAuth();
-  const teacherId = user.id;
-
+  const teacherId = user.id;  
   const [quizData, setQuizData] = useState(() => {
     const savedQuiz = sessionStorage.getItem("quizData");
     return savedQuiz ? JSON.parse(savedQuiz) : {id_teacher: teacherId,
@@ -21,6 +20,7 @@ export const QuizProvider = ({ children }) => {
       status: "draft", // Default to draft
       questions: [], // Array to hold questions};
   }});
+
   // Initialize quiz data with the structure matching Prisma schema
   useEffect(() => {
     if (quizData && Object.keys(quizData).length > 0) {

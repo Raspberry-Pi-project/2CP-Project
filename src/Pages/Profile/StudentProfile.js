@@ -23,6 +23,7 @@ const StudentProfile = () => {
       const userr = await axios.post(
         "http://localhost:3000/teachers/getTeachers",
         { id_teacher: user.id, page: 1, limit: 1000000 },
+        { headers: { Authorization: `Bearer ${user.token}` } },
         { withCredentials: true }
       );
       if (userr.status !== 200) {
@@ -44,6 +45,7 @@ const StudentProfile = () => {
         const response = await axios.post(
           "http://localhost:3000/teachers/getStudents",
           { id_student: parseInt(id), page: 1, limit: 1 },
+          { headers: { Authorization: `Bearer ${user.token}` } },
           { withCredentials: true }
         );
         if (response.status === 200) {
@@ -65,6 +67,7 @@ const StudentProfile = () => {
         const response = await axios.post(
           "http://localhost:3000/teachers/getStudentHistory",
           { id_student: parseInt(id), page: 1, limit: 6 },
+          { headers: { Authorization: `Bearer ${user.token}` } },
           { withCredentials: true }
         );
         if (response.status === 200) {

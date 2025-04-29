@@ -23,6 +23,7 @@ const AdminTeacher = () => {
       const userr = await axios.post(
         "http://localhost:3000/admins/getAdmin",
         { id_admin: user.id },
+        { headers: { Authorization: `Bearer ${user.token}` } },
         { withCredentials: true }
       )
         setAdmin(userr.data.data);
@@ -42,6 +43,7 @@ const AdminTeacher = () => {
         const response = await axios.post(
           "http://localhost:3000/teachers/getTeachers",
           { page, limit },
+          { headers: { Authorization: `Bearer ${user.token}` } },
           { withCredentials: true }
         );
         setTeachers(response.data.data);

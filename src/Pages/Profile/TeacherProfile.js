@@ -33,6 +33,7 @@ const TeacherProfile = () => {
           result = await axios.post(
             "http://localhost:3000/teachers/getQuizzes",
             { id_teacher: user.id, page, limit, status: "published" },
+            { headers: { Authorization: `Bearer ${user.token}` } },
             { withCredentials: true }
           );
         }
@@ -41,12 +42,14 @@ const TeacherProfile = () => {
           userr = await axios.post(
             "http://localhost:3000/teachers/getTeachers",
             { id_teacher: user.id, page: 1, limit: 1000000 },
+            { headers: { Authorization: `Bearer ${user.token}` } },
             { withCredentials: true }
           );
         } else if (user.role === "admin") {
           userr = await axios.post(
             "http://localhost:3000/admins/getAdmin",
             { id_admin: user.id },
+            { headers: { Authorization: `Bearer ${user.token}` } },
             { withCredentials: true }
           );
         }
@@ -89,6 +92,7 @@ const TeacherProfile = () => {
       const response = await axios.post(
         "http://localhost:3000/teachers/getQuizDetails",
         { id_quiz: quizId },
+        { headers: { Authorization: `Bearer ${user.token}` } },
         { withCredentials: true }
       );
       //console.log("Quiz details response:", response.data);
