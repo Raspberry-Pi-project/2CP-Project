@@ -14,83 +14,20 @@ import Icon from "react-native-vector-icons/Feather";
 import { ActivityIndicator, Alert } from "react-native";
 import axios from "axios";
 import { API_URL } from "../services/config";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 const { width } = Dimensions.get("window");
 import { useNavigation, useRoute } from "@react-navigation/native";
 
 export default function QuizInfoScreen({ navigation, route }) {
-  const { id_quiz, basicQuizData } = route.params || {}; // Get quizId from route params
-  const [quiz, setQuiz] = useState(() => {
-    if (basicQuizData) {
-      return {
-        ...basicQuizData,
-        time: basicQuizData.duration,
-        attempts: basicQuizData.nb_attempts,
-        questions: basicQuizData.questions || [],
-        totalQuestions:
-          basicQuizData.totalQuestions ||
-          (basicQuizData.questions ? basicQuizData.questions.length : 0),
-      };
-    }
-    return null;
-  });
+  const { id_quiz, basicQuizData } = route.params ; // Get quizId from route params
+  const [quiz, setQuiz] = useState(basicQuizData); // State to manage quiz data
 
   const [loading, setLoading] = useState(!basicQuizData); // State to manage loading
   const [error, setError] = useState(null); // State to manage errors
-  const [quizData, setQuizData] = useState(null);
-
-  const fetchQuizDetails = async () => {
-    if (!id_quiz) {
-      setError("Missing quiz ID");
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const response = await axios.post(
-        `${API_URL}/students/getQuizDetails`,
-        { id_quiz },
-        { timeout: 10000 } // 10 seconds
-      );
-
-      console.log("API Response Data:", response.data);
-      console.log("Questions array:", response.data.questions);
-      console.log(
-        "Questions length:",
-        response.data.questions ? response.data.questions.length : 0
-      );
-      console.log("totalQuestions from API:", response.data.totalQuestions);
-
-      if (response.data) {
-        setQuiz({
-          //...basicQuizData, // Keep basic data as fallback
-          ...response.data, // Override with detailed data
-          time: response.data.duration,
-          attempts: response.data.nb_attempts,
-          questions: response.data.questions || [],
-          totalQuestions: response.data.totalQuestions || questionCount,
-          //totalQuestions: response.data.totalQuestions  //
-          // id_quiz // Ensure ID is preserved
-        });
-      } else {
-        setError("No quiz data received");
-      }
-
-      //setQuiz(response.data) // Update the state with the fetched quiz details
-    } catch (err) {
-      console.error("API Error:", err.response?.data || err.message);
-      setError(
-        err.response?.data?.error || err.message || "Failed to load quiz"
-      );
-    } finally {
-      setLoading(false); //
-    }
-  };
-
-  useEffect(() => {
-    if (!basicQuizData && id_quiz) {
-      fetchQuizDetails();
-    }
-  }, [id_quiz, basicQuizData]);
+  useEffect(()=>{
+    
+  },[basicQuizData])
 
   /*useEffect(() => {
     if (id_quiz) {
@@ -151,17 +88,7 @@ export default function QuizInfoScreen({ navigation, route }) {
   const shouldShowImage = ["3", "4"].includes(quiz.id);
   const quizImage = getQuizImage();
 
-  const handleStartQuiz = () => {
-    // Navigate to the appropriate quiz screen based on quiz ID
-    /*if (quiz.id === "4") {
-      navigation.navigate("Quizlet2", { quiz })
-    } else {
-      navigation.navigate("Quizlet", { quiz })
-    } */
-
-    /*const quizId = String(quiz.id_quiz || quiz.id); // fallback
-      navigation.navigate("Quizlet", { quizId, quiz }); */
-
+  const handleStartQuiz = async () => {
     if (!quiz) return;
 
     if (quiz.totalQuestions === 0) {
@@ -171,12 +98,39 @@ export default function QuizInfoScreen({ navigation, route }) {
       );
       return;
     }
+    try {
+      const token = await AsyncStorage.getItem("token");
+      const userId = await AsyncStorage.getItem("userId");
+      if (!token || !userId) {
+        Alert.alert("Authentication Error", "Please log in to continue.");
+        return;
+      }
 
-    navigation.navigate("Quizlet", {
-      quizId: quiz.id_quiz,
-      quizTitle: quiz.title,
-      quizData: quiz,
-    });
+      const attemptStarted = await axios.post(
+        `${API_URL}/students/startAttempt`,
+        { id_quiz: quiz.id_quiz, id_student: parseInt(userId) },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (attemptStarted.status === 400) {
+        Alert.alert("Error", "Attempts limit reached for this quiz");
+        navigation.navigate("Home");
+        return;
+      } else if (attemptStarted.status === 201) {
+        navigation.navigate("Quizlet", {
+          id_attempt: attemptStarted.data.newAttempt.id_attempt,
+          quizId: quiz.id_quiz,
+          quizTitle: quiz.title,
+          quizData: quiz,
+        });
+      } else {
+        throw new Error("Unexpected response status");
+      }
+    } catch (error) {
+       
+      console.error("Error starting quiz attempt:", error);
+      Alert.alert("Error", "Attempts limit reached for this quiz");
+    }
   };
 
   if (loading) {
@@ -242,7 +196,7 @@ export default function QuizInfoScreen({ navigation, route }) {
         {shouldShowImage && quizImage && (
           <View style={styles.imageContainer}>
             <Image
-              source={quizImage}
+              source={quiz.image}
               style={styles.quizImage}
               resizeMode="contain"
             />
@@ -268,7 +222,11 @@ export default function QuizInfoScreen({ navigation, route }) {
             {/* Quiz Details */}
             <View style={styles.detailsContainer}>
               <View style={styles.detailItem}>
-                <Text style={styles.detailLabel}>Time :</Text>
+                <Text style={styles.detailLabel}>Subject :</Text>
+                <Text style={styles.detailValue}>{quiz.subject}</Text>
+              </View>
+              <View style={styles.detailItem}>
+                <Text style={styles.detailLabel}>Duration :</Text>
                 <Text style={styles.detailValue}>{quiz.duration}</Text>
               </View>
 

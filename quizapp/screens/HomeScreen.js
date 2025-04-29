@@ -65,9 +65,8 @@ const SimpleQuizCard = ({ quiz, onPress }) => {
       <View style={styles.quizCardContent}>
         <View style={styles.quizCardIconContainer}>
           <View style={styles.quizCardIcon}>
-            <Text style={styles.quizCardIconText}>
-              {quiz.image}
-            </Text>
+          { <Image source={{ uri : quiz.image}} style={styles.quizCardIcon}/>}
+            
           </View>
         </View>
         <View style={styles.quizCardTextContainer}>
@@ -147,13 +146,14 @@ export default function HomeScreen({ navigation }) {
         
         console.log("Student ID being sent:", studentID);
 
-        if (!studentGroup || !studentYear) {
-          alert("Student group or year is missing. Please log in again.");
+        if (!studentID || !token) {
+          alert("Please log in again.");
           navigation.navigate("Login");
           return;
         }
 
         const response = await api.post(
+
           `${API_URL}/students/history`,{id_student: parseInt(studentID), page : 1, limit : 10},
           {
           headers: {
@@ -178,6 +178,7 @@ export default function HomeScreen({ navigation }) {
             totalQuestions: quiz.totalQuestions || 0
           })));
         }
+
 
       } catch (error) {
         console.error("Error fetching history data:", error);
@@ -280,15 +281,13 @@ export default function HomeScreen({ navigation }) {
       const studentGroup = await AsyncStorage.getItem("studentGroup");
       const studentYear = await AsyncStorage.getItem("studentYear");
       const token = await AsyncStorage.getItem("token");
-      console.log("Retrieved Student Group:", studentGroup);
-      console.log("Retrieved Student Year:", studentYear);
+      
 
       if (!studentGroup || !studentYear) {
         alert("Student group or year is missing. Please log in again.");
         navigation.navigate("Login");
         return;
       }
-      console.log("student group and year :", studentGroup, studentYear);
       const response = await api.post(
         `${API_URL}/students/getAvailableQuizzes`,
         {
@@ -304,9 +303,7 @@ export default function HomeScreen({ navigation }) {
         }
       );
 
-      console.log("Quizzes Response:", response.data.data);
       setQuizzes(response.data.data);
-      console.log("Quizzes State After Fetch:", quizzes);
     } catch (err) {
       console.error("Failed to fetch quizzes", err);
       setError("Failed to load quizzes. Please try again.");
@@ -378,21 +375,28 @@ export default function HomeScreen({ navigation }) {
   };
 
   const handleQuizPress = async (quiz) => {
-    console.log("Attempting to fetch details for quiz:", quiz.id_quiz); // Debug log
 
     try {
-      const quizDetails = await getQuizDetails(quiz.id_quiz);
+      const quizDetails = await axios.post(`${API_URL}/students/getQuizDetails`, {
+        id_quiz : quiz.id_quiz , page : 1 , limit : 1 
+      },{
+        headers: {
+          Authorization: `Bearer ${await AsyncStorage.getItem("token")}`}
+      })
+
       navigation.navigate("QuizInfo", {
         id_quiz: quiz.id_quiz,
         basicQuizData: {
-          id_quiz: quizDetails.id_quiz,
-          title: quizDetails.title,
-          description: quizDetails.description,
-          duration: quizDetails.duration,
-          nb_attempts: quizDetails.nb_attempts,
-          subject: quizDetails.subject,
-          totalQuestions: quizDetails.totalQuestions,
-          questions: quizDetails.questions || [],
+          id_quiz: quizDetails.data.id_quiz,
+          title: quizDetails.data.title,
+          description: quizDetails.data.description,
+          duration: quizDetails.data.duration,
+          nb_attempts: quizDetails.data.nb_attempts,
+          subject: quizDetails.data.subject,
+          totalQuestions: quiz.totalQuestions,
+          image : quizDetails.data.image,
+          score : quizDetails.data.score,
+          questions: quizDetails.data.questions || [],
         },
       });
     } catch (error) {
@@ -430,6 +434,7 @@ export default function HomeScreen({ navigation }) {
   };
 
   const renderQuizItem = ({ item, onPress }) => {
+
     console.log("Rendering Quiz Item:", item);
 
     let icon = "📚"; // Default icon
@@ -455,6 +460,7 @@ export default function HomeScreen({ navigation }) {
         icon = "💻";
       }
     }
+
     return (
       <SimpleQuizCard
         quiz={{
