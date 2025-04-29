@@ -420,7 +420,7 @@ const Generating = () => {
           {error && <div className="error-message">{error}</div>}
 
           {/* Question Actions */}
-          <div className="question-actions">
+          <div className="question-actionss">
             <button className="save-question-btn" onClick={saveQuestion}>
               Save Question
             </button>

@@ -5,19 +5,75 @@ import { useNavigate } from "react-router-dom";
 import { faEllipsisVertical } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useAuth } from "../../context/AuthProvider";
-import { useQuiz } from "../../context/QuizProvider"; // Import the QuizProvider context
+import { useQuiz } from "../../context/QuizProvider";
 import LOGO from "../../photos/Frame 39 (2).png";
+
+// Add these styles directly in your component
+const horizontalGridStyle = {
+  display: "flex",
+  overflowX: "auto",
+  scrollBehavior: "smooth",
+  padding: "10px 0",
+  marginBottom: "20px",
+  msOverflowStyle: "none", /* IE and Edge */
+  scrollbarWidth: "none", /* Firefox */
+};
+
+const quizCardStyle = {
+  flex: "0 0 calc(25% - 20px)",
+  minWidth: "calc(25% - 20px)",
+  marginRight: "20px",
+};
+
+const paginationStyle = {
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  margin: "20px 0",
+  gap: "10px",
+};
+
+const pageNumberStyle = {
+  width: "36px",
+  height: "36px",
+  borderRadius: "50%",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  cursor: "pointer",
+  backgroundColor: "#f0f0f0",
+  border: "none",
+  fontWeight: "500",
+};
+
+const activePageStyle = {
+  ...pageNumberStyle,
+  backgroundColor: "#7b68ee",
+  color: "white",
+};
+
+const pageArrowStyle = {
+  width: "36px",
+  height: "36px",
+  borderRadius: "50%",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  cursor: "pointer",
+  backgroundColor: "#f0f0f0",
+  border: "none",
+};
 
 const HistoryPage = () => {
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState("All");
-  const [quizzes, setQuizzes] = useState([]); // State to store quizzes from the database
-  const [loading, setLoading] = useState(true); // Loading state for fetching quizzes
-  const [error, setError] = useState(null); // Error state if something goes wrong
-  const { user } = useAuth(); // Get user information from context (if needed)
-  const [page, setPage] = useState(1); // State for pagination
-  const [limit, setLimit] = useState(10); // State for number of quizzes per page
-  const { setQuizData } = useQuiz(); // Get setQuiz function from QuizProvider context
+  const [quizzes, setQuizzes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { user } = useAuth();
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const { setQuizData } = useQuiz();
 
   // Filter options
   const filters = [
@@ -33,50 +89,46 @@ const HistoryPage = () => {
   useEffect(() => {
     const fetchQuizzes = async () => {
       try {
-        // You might need to replace the URL with your own backend URL
         const response = await axios.post(
           "http://localhost:3000/teachers/getQuizzes",
           { page, limit, id_teacher: user.id, status: "published" },
           { withCredentials: true }
-        ); // Adjust the API endpoint accordingly
+        );
         console.log("API response:", response.data);
 
-        // Ensure response.data is an array before setting it to state
         const quizzesData = Array.isArray(response.data)
           ? response.data
           : response.data.quizzes || response.data.data || [];
 
-        setQuizzes(quizzesData); // Set quizzes data from the backend
+        setQuizzes(quizzesData);
       } catch (error) {
         setError("Failed to fetch quizzes.");
         console.error("Error fetching quizzes:", error);
-        setQuizzes([]); // Set empty array on error
+        setQuizzes([]);
       } finally {
-        setLoading(false); // Set loading to false when fetch is complete
+        setLoading(false);
       }
     };
-    setLoading(true); // Set loading to true before fetching
+    setLoading(true);
     fetchQuizzes();
-  }, [page, limit, user.id]); // Added user.id to dependency array
+  }, [page, limit, user.id]);
 
   useEffect(() => {
-    console.log("Quizzes updated:", quizzes); // Log quizzes data whenever it changes
+    console.log("Quizzes updated:", quizzes);
   }, [quizzes]);
 
   // Handle consulting a quiz
   const handleConsult = async (quizId) => {
     try {
-      // Fetch quiz details from the backend API
       const response = await axios.post(
         "http://localhost:3000/teachers/getQuizDetails",
         { id_quiz: quizId },
         { withCredentials: true }
       );
-      //console.log("Quiz details response:", response.data);
       if (response.status !== 200) {
         throw new Error("Failed to fetch quiz details");
       } else {
-        setQuizData(response.data); // Set the selected quiz data in context
+        setQuizData(response.data);
         navigate(`/quizdetails`);
       }
     } catch (error) {
@@ -95,6 +147,9 @@ const HistoryPage = () => {
       ? quizzes
       : quizzes.filter((quiz) => quiz.category === activeFilter)
     : [];
+
+  // Calculate total pages
+  const totalPages = Math.ceil(filteredQuizzes.length / 4) || 1;
 
   return (
     <div className="history-container">
@@ -121,20 +176,22 @@ const HistoryPage = () => {
 
         {/* Error state */}
         {error && <p>{error}</p>}
+        
         {/* No quizzes found state */}
         {quizzes.length === 0 && !loading && !error && (
           <div className="full-page-container">
             <div className="logo-container">
-              <img src={LOGO} alt="Logo" className="full-page-logo" />
+              <img src={LOGO || "/placeholder.svg"} alt="Logo" className="full-page-logo" />
             </div>
           </div>
         )}
-        {/* Quiz Grid */}
+        
+        {/* Quiz Grid - using inline styles */}
         {!loading && !error && quizzes.length > 0 && (
-          <div className="quiz-grid">
+          <div className="quiz-grid" style={horizontalGridStyle}>
             {Array.isArray(quizzes) && quizzes.length > 0 ? (
               quizzes.map((quiz, index) => (
-                <div key={quiz.id_quiz} className="quiz-card">
+                <div key={quiz.id_quiz} className="quiz-card" style={quizCardStyle}>
                   <div className="quiz-image">
                     <img
                       src={quiz.image || "/placeholder.svg"}
@@ -158,15 +215,12 @@ const HistoryPage = () => {
                         : quiz.for_groupe}{" "}
                     </p>
                     <div className="quiz-actions">
-                      {/* Button to consult the quiz details */}
                       <button
                         className="consult-btn"
                         onClick={() => handleConsult(quiz.id_quiz)}
                       >
                         CONSULT
                       </button>
-
-                      {/* Button for quiz options */}
                       <button
                         className="options-btn"
                         onClick={() => handleQuizOptions(quiz.id_quiz)}
@@ -180,6 +234,19 @@ const HistoryPage = () => {
             ) : (
               <p>No quizzes found</p>
             )}
+          </div>
+        )}
+        
+        {/* Pagination - using inline styles */}
+        {!loading && !error && quizzes.length > 0 && (
+          <div style={paginationStyle}>
+            <button style={pageArrowStyle}>&#10094;</button>
+            <button style={activePageStyle}>1</button>
+            {totalPages > 1 && <button style={pageNumberStyle}>2</button>}
+            {totalPages > 2 && <button style={pageNumberStyle}>3</button>}
+            {totalPages > 4 && <span>...</span>}
+            {totalPages > 3 && <button style={pageNumberStyle}>{totalPages}</button>}
+            <button style={pageArrowStyle}>&#10095;</button>
           </div>
         )}
       </div>
