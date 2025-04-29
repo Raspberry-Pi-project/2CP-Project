@@ -1,4 +1,80 @@
-/* Keeping existing header styles */
+header {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  height: auto;
+  min-height: 80vh;
+}
+
+.about-us-section {
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-top: 0;
+  min-height: auto;
+}
+
+.how-it-works-section {
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-top: 0;
+}
+
+.testimonials-section {
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-top: 0;
+}
+
+.why-choose-section {
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-top: 0;
+}
+
+/* Adjust specific section elements to maintain visual hierarchy */
+.section-title-container {
+  margin-top: 40px;
+  margin-bottom: 30px;
+}
+
+.testimonial-header {
+  margin-top: 40px;
+}
+
+.why-choose-content {
+  padding-top: 40px;
+  padding-bottom: 40px;
+}
+
+/* Fix curved line decoration to not create extra space */
+.curved-line-decoration {
+  height: 30px;
+  bottom: 0;
+  margin-bottom: 0;
+  position: relative;
+}
+
+/* Adjust marquee to not create extra space */
+.marquee-container {
+  margin-top: 20px;
+  margin-bottom: 0;
+}
+
+/* Remove any extra padding from containers */
+.container {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* Ensure sections flow directly into each other */
+section {
+  margin: 0;
+}
+
+/* Fix for the curved line in how it works section */
+.curved-line {
+  top: -50px;
+}
+
 header {
     margin-top: 0%;
     background-image: url("../photos/Background.png"); /* Adjust path if needed */
