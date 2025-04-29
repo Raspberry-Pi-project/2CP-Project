@@ -16,7 +16,7 @@ services:
     ports:
       - 3000:3000
     restart: unless-stopped  
-    image: meroooo/trivio-server2:latest  # This is where you define the tag
+    image: meroooo/trivio-server3:latest  # This is where you define the tag
 
 # The commented out section below is an example of how to define a PostgreSQL
 # database that your application can use. `depends_on` tells Docker Compose to
