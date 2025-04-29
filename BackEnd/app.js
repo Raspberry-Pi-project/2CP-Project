@@ -8,6 +8,8 @@ const authRoutes = require("./routes/authRoutes");
 const teachersRoutes = require("./routes/teachersRoutes");
 const studentsRoutes = require("./routes/studentsRoutes");
 const adminsRoutes = require("./routes/adminsRoutes");
+// Load environment variables from .env file
+require('dotenv').config();
 
 
 // ✅ Middleware
@@ -41,7 +43,7 @@ app.get("/", (req,res) => {
 });
 
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
