@@ -22,7 +22,7 @@ const calculatePercentage = async (req, res) => {
     allQuestions.forEach(async (question) => {
       let correctAnswers = 0;
       let QuestionCorrectAnswers = 0;
-      const groupedAnswers = question.student_answers.reduce((acc, obj) => {
+      const groupedAnswers = question.student_answers.length === 0 ? [] : question.student_answers.reduce((acc, obj) => {
         const foundGroup = acc.find(
           (group) => group[0].id_attempt === obj.id_attempt
         );
@@ -34,7 +34,8 @@ const calculatePercentage = async (req, res) => {
         return acc;
       }, []);
       const numberOfAnswers = groupedAnswers.length
-      console.log("tes ", groupedAnswers);
+      
+      if (numberOfAnswers !== 0){
       groupedAnswers.forEach((answer) => {
         answer.forEach((answer) => {
           if (answer.correct) {
@@ -45,8 +46,9 @@ const calculatePercentage = async (req, res) => {
           correctAnswers++;
           QuestionCorrectAnswers = 0;
         }
-      });
-      question.question_percentage = (correctAnswers / numberOfAnswers) * 100;
+      });}
+      question.question_percentage = numberOfAnswers === 0 ? 0 : (correctAnswers / numberOfAnswers) * 100;
+      
       const updatedQuestion = await prisma.questions.update({
         where: {
           id_question: question.id_question,
