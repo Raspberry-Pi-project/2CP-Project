@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import "./Finalization2.css";
 import { useNavigate } from "react-router-dom";
 import { useQuiz } from "../../context/QuizProvider";
+import { useAuth } from "../../context/AuthProvider";
 import axios from "axios";
 
 const Finalization2 = () => {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(5);
   const [yearOfStudy, setYearOfStudy] = useState();
@@ -32,6 +34,7 @@ const Finalization2 = () => {
     const publishedQuiz = await axios.post(
       "http://localhost:3000/teachers/updateQuiz",
       quizData,
+      { headers: { Authorization: `Bearer ${user.token}` } },
       { withCredentials: true }
     );
     console.log("publishedQuiz", publishedQuiz);
