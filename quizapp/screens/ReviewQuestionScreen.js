@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import React, { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -12,15 +12,15 @@ import {
   Platform,
   ScrollView,
   Alert,
-} from "react-native"
-import Icon from "react-native-vector-icons/Feather"
-import { LinearGradient } from "expo-linear-gradient"
-import Svg, { Circle, Path } from "react-native-svg"
-import { QUIZ_DATA } from "../data/quizData"
-import QuizBackground from "../components/QuizBackground"
+} from "react-native";
+import Icon from "react-native-vector-icons/Feather";
+import { LinearGradient } from "expo-linear-gradient";
+import Svg, { Circle, Path } from "react-native-svg";
+import { QUIZ_DATA } from "../data/quizData";
+import QuizBackground from "../components/QuizBackground";
 
-const { width, height } = Dimensions.get("window")
-const AnimatedCircle = Animated.createAnimatedComponent(Circle)
+const { width, height } = Dimensions.get("window");
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 // Floating bubbles animation component
 const FloatingBubbles = () => {
@@ -43,7 +43,7 @@ const FloatingBubbles = () => {
       position: { top: 150, left: 0 },
       opacity: 0.1,
     },
-  ]
+  ];
 
   useEffect(() => {
     bubbles.forEach((bubble, index) => {
@@ -60,15 +60,15 @@ const FloatingBubbles = () => {
             useNativeDriver: true,
           }),
         ])
-      ).start()
-    })
+      ).start();
+    });
 
     return () => {
       bubbles.forEach((bubble) => {
-        bubble.ref.stopAnimation()
-      })
-    }
-  }, [])
+        bubble.ref.stopAnimation();
+      });
+    };
+  }, []);
 
   return (
     <View style={StyleSheet.absoluteFill}>
@@ -101,40 +101,30 @@ const FloatingBubbles = () => {
         />
       ))}
     </View>
-  )
-}
+  );
+};
 
 const ReviewQuestionScreen = ({ navigation, route }) => {
   // Get the basic info from route params
-  const { simplifiedQuestion, quizId } = route.params;
-  
+  const { question, quiz } = route.params;
+  const answers = question?.answers || [];
+  const selectedAnswers = question?.selectedAnswers || null;
+
   // Find the exact quiz directly from QUIZ_DATA
-  const quiz = QUIZ_DATA.find(q => q.id === quizId);
-  
+
   // If no quiz found by ID, show error and go back
   useEffect(() => {
     if (!quiz) {
-      Alert.alert(
-        "Error",
-        "Quiz data not found. Please try again.",
-        [{ text: "Go Back", onPress: () => navigation.goBack() }]
-      );
+      Alert.alert("Error", "Quiz data not found. Please try again.", [
+        { text: "Go Back", onPress: () => navigation.goBack() },
+      ]);
     }
   }, [quiz]);
-  
-  // Get the original question index
-  const questionIndex = simplifiedQuestion?.originalIndex || 0;
-  
-  // Get the EXACT question from the quiz data
-  const originalQuestion = quiz?.questions[questionIndex];
-  
-  // Get the user's selected answer
-  const selectedAnswer = route.params?.selectedAnswer;
-  
+
   // Setup animations
   const questionAnim = useRef(new Animated.Value(0)).current;
   const optionsAnim = useRef(
-    Array(originalQuestion?.options?.length || 4)
+    Array(question?.answers?.length || 4)
       .fill()
       .map(() => new Animated.Value(0))
   ).current;
@@ -149,7 +139,7 @@ const ReviewQuestionScreen = ({ navigation, route }) => {
       duration: 300,
       useNativeDriver: true,
     }).start();
-    
+
     Animated.stagger(
       100,
       optionsAnim.map((anim) =>
@@ -161,16 +151,16 @@ const ReviewQuestionScreen = ({ navigation, route }) => {
       )
     ).start();
   }, []);
-  
+
   // If question not found, show error
-  if (!originalQuestion) {
+  if (!question) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>
             Question data could not be found.
           </Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.errorButton}
             onPress={() => navigation.goBack()}
           >
@@ -187,11 +177,17 @@ const ReviewQuestionScreen = ({ navigation, route }) => {
         <View style={styles.content}>
           {/* Purple Header */}
           <View style={styles.purpleHeader}>
-            <LinearGradient colors={["#A42FC1", "#8B27A3"]} style={styles.headerGradient}>
+            <LinearGradient
+              colors={["#A42FC1", "#8B27A3"]}
+              style={styles.headerGradient}
+            >
               <QuizBackground />
 
               <View style={styles.headerControls}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                <TouchableOpacity
+                  onPress={() => navigation.goBack()}
+                  style={styles.backButton}
+                >
                   <Icon name="arrow-left" size={24} color="white" />
                 </TouchableOpacity>
 
@@ -219,7 +215,7 @@ const ReviewQuestionScreen = ({ navigation, route }) => {
                   },
                 ]}
               >
-                <Text style={styles.questionText}>{originalQuestion.text}</Text>
+                <Text style={styles.questionText}>{question.text}</Text>
               </Animated.View>
             </LinearGradient>
           </View>
@@ -227,12 +223,18 @@ const ReviewQuestionScreen = ({ navigation, route }) => {
           {/* Options - Using original question options directly from QUIZ_DATA */}
           <View style={styles.optionsWrapper}>
             <View style={styles.optionsContainer}>
-              {originalQuestion.options.map((option, index) => {
+              {question.answers.map((option, index) => {
                 // Determine option state
-                const isCorrectOption = index === originalQuestion.correctAnswer;
-                const isSelectedOption = selectedAnswer === index;
+                const isCorrectOption = option.correct;
+                const isSelectedOption = selectedAnswers?.some(
+                  (answer) => answer.student_answer_text === option.answer_text
+                );
                 const isWrongSelection = isSelectedOption && !isCorrectOption;
-                
+
+                console.log(
+                  isCorrectOption , isSelectedOption , isWrongSelection
+                );
+
                 return (
                   <Animated.View
                     key={index}
@@ -240,7 +242,9 @@ const ReviewQuestionScreen = ({ navigation, route }) => {
                       opacity: optionsAnim[index % optionsAnim.length],
                       transform: [
                         {
-                          translateY: optionsAnim[index % optionsAnim.length].interpolate({
+                          translateY: optionsAnim[
+                            index % optionsAnim.length
+                          ].interpolate({
                             inputRange: [0, 1],
                             outputRange: [20, 0],
                           }),
@@ -255,21 +259,26 @@ const ReviewQuestionScreen = ({ navigation, route }) => {
                         isWrongSelection && styles.incorrectOption,
                       ]}
                     >
-                      <Text style={[
-                        styles.optionText,
-                        isCorrectOption && styles.correctOptionText
-                      ]}>
-                        {option}
+                      <Text
+                        style={[
+                          styles.optionText,
+                          isCorrectOption && styles.correctOptionText,
+                        ]}
+                      >
+                        {option.answer_text}
                       </Text>
 
                       {isCorrectOption && (
                         <View style={styles.checkmark}>
                           <Svg width={20} height={20} viewBox="0 0 24 24">
-                            <Path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="white" />
+                            <Path
+                              d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"
+                              fill="white"
+                            />
                           </Svg>
                         </View>
                       )}
-                      
+
                       {isWrongSelection && (
                         <View style={styles.crossmark}>
                           <Svg width={20} height={20} viewBox="0 0 24 24">
@@ -284,11 +293,11 @@ const ReviewQuestionScreen = ({ navigation, route }) => {
                   </Animated.View>
                 );
               })}
-              
+
               {/* Back to Results Button */}
               <View style={styles.navigationButtons}>
-                <TouchableOpacity 
-                  style={[styles.navButton, styles.nextButton]} 
+                <TouchableOpacity
+                  style={[styles.navButton, styles.nextButton]}
                   onPress={() => navigation.goBack()}
                 >
                   <Text style={styles.navButtonText}>Back to Results</Text>
@@ -450,28 +459,28 @@ const styles = StyleSheet.create({
   },
   errorContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   errorText: {
     fontSize: 18,
-    color: '#333',
-    textAlign: 'center',
+    color: "#333",
+    textAlign: "center",
     marginBottom: 20,
   },
   errorButton: {
-    backgroundColor: '#A42FC1',
+    backgroundColor: "#A42FC1",
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 25,
   },
   errorButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
-})
+});
 
 // Export the component properly
-export default ReviewQuestionScreen 
+export default ReviewQuestionScreen;

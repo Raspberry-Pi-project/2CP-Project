@@ -17,10 +17,13 @@ import {
   Platform,
   AppState,
 } from "react-native";
+import axios from "axios";
 import Icon from "react-native-vector-icons/Feather";
 import QuizBackground from "../components/QuizBackground";
 import Svg, { Circle, Path } from "react-native-svg";
 import { LinearGradient } from "expo-linear-gradient";
+import { API_URL } from "../services/config";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width, height } = Dimensions.get("window");
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -31,7 +34,7 @@ export default function QuizletScreen({ navigation, route }) {
 
   // Check if quiz data exists in route params
   useEffect(() => {
-    if (!route.params || !route.params.quiz) {
+    if (!route.params || !route.params.quizData) {
       Alert.alert(
         "Error",
         "No quiz data found. Please select a quiz from the home screen.",
@@ -41,27 +44,35 @@ export default function QuizletScreen({ navigation, route }) {
   }, []);
 
   // Get quiz data from route params or use a default quiz
-  const quiz = route.params?.quiz || {
-    title: "Sample Quiz",
-    questions: [
-      {
-        id: 1,
-        text: "Sample question",
-        options: ["Option 1", "Option 2", "Option 3", "Option 4"],
-        correctAnswer: 0,
-      },
-    ],
-  };
+  const quiz = route.params?.quizData || {};
+  const id_attempt = route.params?.id_attempt || null;
+
+  if (!quiz) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorText}>No quiz data found.</Text>
+      </View>
+    );
+  }
+
+  if (!id_attempt) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorText}>No attempt ID found.</Text>
+      </View>
+    );
+  }
 
   // Ensure questions array exists
   const questions = quiz.questions || [];
-
   const [currentQuestion, setCurrentQuestion] = useState(0);
+  
+  const currentQuestionData = questions[currentQuestion] ;
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [customAnswer, setCustomAnswer] = useState("");
   const [score, setScore] = useState(0);
   const [answers, setAnswers] = useState(Array(questions.length).fill(null));
-  const [timeLeft, setTimeLeft] = useState(15);
+  const [timeLeft, setTimeLeft] = useState(currentQuestionData.duration === 0 ? 10000 : currentQuestionData.duration);
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [correctAnswers, setCorrectAnswers] = useState(0);
@@ -200,7 +211,7 @@ export default function QuizletScreen({ navigation, route }) {
     ]).start();
 
     // Animate options with staggered effect
-    const currentOptions = questions[currentQuestion]?.options || [];
+    const currentOptions = questions[currentQuestion]?.answers || [];
     const numOptions = currentOptions.length + 1; // +1 for "Other" option
 
     Animated.stagger(
@@ -230,7 +241,7 @@ export default function QuizletScreen({ navigation, route }) {
     customInputAnim.setValue(0);
 
     // Always reset timer to 15 when changing questions
-    setTimeLeft(15);
+    setTimeLeft(currentQuestionData.duration === 0 ? 10000 : currentQuestionData.duration);
     timerProgress.setValue(1);
     timerOpacity.setValue(1);
     setTimerActive(true);
@@ -245,7 +256,9 @@ export default function QuizletScreen({ navigation, route }) {
         setTimeLeft((prev) => {
           if (prev <= 0) {
             handleNext();
-            return 15; // Reset to 15 when timer hits 0
+            return currentQuestionData.duration === 0
+              ? 10000
+              : currentQuestionData.duration; // Reset to 15 when timer hits 0
           }
           const newTime = prev - 1;
 
@@ -310,7 +323,7 @@ export default function QuizletScreen({ navigation, route }) {
 
   const handleAnswer = (index) => {
     // If "Other" option is selected
-    if (index === (questions[currentQuestion]?.options?.length || 0)) {
+    if (index === (questions[currentQuestion]?.answers?.length || 0)) {
       setShowCustomInput(true);
       setTimerActive(false); // Pause timer when custom input is shown
       Animated.timing(customInputAnim, {
@@ -336,37 +349,64 @@ export default function QuizletScreen({ navigation, route }) {
       }),
     ]).start();
 
-    // Multiple selection logic
-    const newSelectedAnswers = [...selectedAnswers];
-    const currentSelections = [...(newSelectedAnswers[currentQuestion] || [])];
+    // Get the current question's selected answers or initialize an empty array
+    const currentQuestionAnswers = selectedAnswers[currentQuestion] || [];
 
-    // Toggle selection - if already selected, remove it; if not, add it
-    const selectionIndex = currentSelections.indexOf(index);
-    if (selectionIndex >= 0) {
-      currentSelections.splice(selectionIndex, 1);
+    // Check if this answer is already selected
+    const existingAnswerIndex = currentQuestionAnswers.findIndex(
+      (answer) =>
+        answer.student_answer_text ===
+        questions[currentQuestion].answers[index].answer_text
+    );
+
+    // Create a new array for the current question's answers
+    let newQuestionAnswers;
+
+    if (existingAnswerIndex >= 0) {
+      // If the answer is already selected, remove it (toggle off)
+      newQuestionAnswers = [...currentQuestionAnswers];
+      newQuestionAnswers.splice(existingAnswerIndex, 1);
     } else {
-      currentSelections.push(index);
+      // If the answer is not selected, add it (toggle on)
+      const newAnswer = {
+        id_attempt,
+        id_question: questions[currentQuestion].id_question,
+        student_answer_text:
+          questions[currentQuestion].answers[index].answer_text,
+      };
+      newQuestionAnswers = [...currentQuestionAnswers, newAnswer];
     }
 
-    newSelectedAnswers[currentQuestion] = currentSelections;
+    // Update the selectedAnswers array
+    const newSelectedAnswers = [...selectedAnswers];
+    newSelectedAnswers[currentQuestion] = newQuestionAnswers;
     setSelectedAnswers(newSelectedAnswers);
 
     // For backward compatibility, set the most recent selection
     setSelectedAnswer(index);
 
-    // Update the answers array for scoring
-    const newAnswers = [...answers];
-    newAnswers[currentQuestion] = currentSelections;
-    setAnswers(newAnswers);
+    // Update the answers array to match selectedAnswers
+    setAnswers(newSelectedAnswers);
   };
 
   const handleCustomAnswer = () => {
     if (customAnswer.trim()) {
       const index = -1; // Special index for custom answer
       setSelectedAnswer(index);
-      const newAnswers = [...answers];
-      newAnswers[currentQuestion] = { custom: customAnswer };
-      setAnswers(newAnswers);
+
+      // Create a custom answer object
+      const customAnswerObj = {
+        id_attempt,
+        id_question: questions[currentQuestion].id_question,
+        student_answer_text: customAnswer.trim(),
+      };
+
+      // Update both selectedAnswers and answers arrays
+      const newSelectedAnswers = [...selectedAnswers];
+      newSelectedAnswers[currentQuestion] = [customAnswerObj];
+      setSelectedAnswers(newSelectedAnswers);
+      setAnswers(newSelectedAnswers);
+
       Keyboard.dismiss();
 
       // Move to next question after submitting custom answer
@@ -398,7 +438,7 @@ export default function QuizletScreen({ navigation, route }) {
     }
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentQuestion < questions.length - 1) {
       // Reset animations for next question
       questionAnim.setValue(0);
@@ -416,54 +456,106 @@ export default function QuizletScreen({ navigation, route }) {
       // Quiz is complete - calculate score based on selected answers
       const finalScore = questions.reduce((totalScore, question, idx) => {
         const userAnswers = selectedAnswers[idx] || [];
-        const correctAnswer = question.correctAnswer;
+        const correctAnswer = question.answers.filter(
+          (answer) => answer.correct === 1
+        );
+        // If the question has a custom answer, check if it matches
+        const correctAnswers = question.correctAnswer;
 
-        // If there's only one correct answer
+        /* // If there's only one correct answer
         if (typeof correctAnswer === "number") {
           return userAnswers.includes(correctAnswer)
             ? totalScore + 1
             : totalScore;
-        }
+        }*/
         // If there are multiple correct answers (assuming correctAnswer is an array)
-        else if (Array.isArray(correctAnswer)) {
+        /* else */ if (Array.isArray(correctAnswer)) {
           // Check if user selected all correct answers and only correct answers
           const allCorrectSelected = correctAnswer.every((ans) =>
-            userAnswers.includes(ans)
+            selectedAnswers[idx].some((userAns) => {
+              if (userAns.student_answer_text === ans.answer_text) {
+                userAns.correct = 1;
+                return true;
+              } else {
+                userAns.correct = 0;
+                return false;
+              }
+            })
           );
-          const onlyCorrectSelected = userAnswers.every((ans) =>
-            correctAnswer.includes(ans)
+          const onlyCorrectSelected = userAnswers.every((userAns) =>
+            correctAnswer.some(
+              (ans) => ans.answer_text === userAns.student_answer_text
+            )
           );
-          return allCorrectSelected && onlyCorrectSelected
-            ? totalScore + 1
-            : totalScore;
+          if (allCorrectSelected && onlyCorrectSelected) {
+            question.isCorrect = true;
+            return totalScore + 1;
+          } else {
+            question.isCorrect = false;
+            return totalScore;
+          }
         }
 
         return totalScore;
       }, 0);
 
+      const attemptResult = {
+        id_attempt: id_attempt,
+        answers: selectedAnswers.flat(),
+        score: finalScore,
+      };
+      try {
+        const token = await AsyncStorage.getItem("token");
+        const updatedAttempt = await axios.post(
+          `${API_URL}/students/submitAnswers`,
+          {
+            id_attempt: attemptResult.id_attempt,
+            score: attemptResult.score,
+            answers: attemptResult.answers,
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        if (updatedAttempt.status === 200) {
+          console.log("Attempt updated successfully");
+          const quizResults = {
+            id_quiz : quiz.id_quiz,
+            totalQuizScore: quiz.score,
+            score: finalScore,
+            total: quiz.totalQuestions,
+            correctCount: finalScore,
+            incorrectCount: questions.length - finalScore,
+            questions: questions.map((q, index) => ({
+              ...q,
+              id_question : q.id_question,
+              id: q.question_number || index + 1,
+              text: q.question_text,
+              isCorrect: q.isCorrect,
+              selectedAnswers: selectedAnswers[index] || [],
+              
+              
+            })),
+          }
+          
+          navigation.navigate("Quiz", {
+            quizResults
+          });
+        } else {
+          throw new Error("Failed to update attempt");
+        }
+      } catch (error) {
+        console.error("Error updating attempt:", error);
+        Alert.alert("Error", "Failed to update attempt. Please try again.");
+        navigation.navigate("Home")
+      }
+
       // Navigate to results screen with updated data
-      navigation.navigate("Quiz", {
-        quizResults: {
-          score: finalScore,
-          total: questions.length,
-          correctCount: finalScore,
-          incorrectCount: questions.length - finalScore,
-          questions: questions.map((q, index) => ({
-            id: q.id || index + 1,
-            text: `Question ${index + 1}`,
-            isCorrect:
-              selectedAnswers[index]?.includes(q.correctAnswer) || false,
-          })),
-        },
-      });
+     
     }
   };
 
   // Ensure we have a current question to display
-  const currentQuestionData = questions[currentQuestion] || {
-    text: "Loading question...",
-    options: ["Option 1", "Option 2", "Option 3", "Option 4"],
-  };
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -537,7 +629,7 @@ export default function QuizletScreen({ navigation, route }) {
               {/* Question Counter */}
               <View style={styles.questionCounterContainer}>
                 <Text style={styles.questionCounter}>
-                  Question {currentQuestion + 1}/{questions.length}
+                  Question {currentQuestion + 1}/{quiz.totalQuestions}
                 </Text>
               </View>
 
@@ -559,7 +651,7 @@ export default function QuizletScreen({ navigation, route }) {
                 ]}
               >
                 <Text style={styles.questionText}>
-                  {currentQuestionData.text}
+                  {currentQuestionData.question_text}
                 </Text>
               </Animated.View>
             </LinearGradient>
@@ -604,7 +696,7 @@ export default function QuizletScreen({ navigation, route }) {
                   </TouchableOpacity>
                 </Animated.View>
               ) : (
-                (currentQuestionData.options || []).map((option, index) => (
+                (currentQuestionData.answers || []).map((option, index) => (
                   <Animated.View
                     key={index}
                     style={{
@@ -621,9 +713,12 @@ export default function QuizletScreen({ navigation, route }) {
                   >
                     <TouchableOpacity
                       style={[
-                        styles.option,
-                        selectedAnswers[currentQuestion]?.includes(index) &&
-                          styles.selectedOption,
+                        
+                        selectedAnswers[currentQuestion]?.some(
+                          (answer) =>
+                            answer.student_answer_text === option.answer_text
+                        ) ? styles.selectedOption : styles.option,
+                        
                       ]}
                       onPress={() => handleAnswer(index)}
                       disabled={showCustomInput}
@@ -631,15 +726,19 @@ export default function QuizletScreen({ navigation, route }) {
                     >
                       <Text
                         style={[
-                          styles.optionText,
-                          selectedAnswers[currentQuestion]?.includes(index) &&
-                            styles.selectedOptionText,
+                          selectedAnswers[currentQuestion]?.some(
+                            (answer) =>
+                              answer.student_answer_text === option.answer_text
+                          ) ? styles.selectedOptionText : styles.optiontext,
                         ]}
                       >
-                        {option}
+                        {option.answer_text}
                       </Text>
 
-                      {selectedAnswers[currentQuestion]?.includes(index) && (
+                      {selectedAnswers[currentQuestion]?.some(
+                        (answer) =>
+                          answer.student_answer_text === option.answer_text
+                      ) && (
                         <View style={styles.selectionIndicator}>
                           <Svg width={20} height={20} viewBox="0 0 24 24">
                             <Path
@@ -774,6 +873,14 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   selectedOption: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderWidth: 1,
+    borderRadius: 25,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    marginBottom: 12,
     borderColor: "#A42FC1",
     backgroundColor: "rgba(164, 47, 193, 0.05)",
     transform: [{ scale: 1.02 }],
