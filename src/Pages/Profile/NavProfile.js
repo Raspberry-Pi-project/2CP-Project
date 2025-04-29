@@ -9,15 +9,13 @@ import axios from "axios";
 export const NavProfile = () => {
   const navigate = useNavigate();
   const { user, setUser } = useAuth();
-  const { setQuizData} = useQuiz();
+  const { setQuizData } = useQuiz();
   const handleLogout = async () => {
     try {
       await axios.post(
-        "http://localhost/auth/logout",
-        {},
-        { withCredentials: true }
+        "http://localhost:3000/auth/logout"
       );
-      setQuizData({})
+      setQuizData({});
       setUser({});
       navigate("/");
     } catch (error) {

@@ -11,6 +11,7 @@ import {
   Legend,
 } from "chart.js";
 import { useQuiz } from "../../context/QuizProvider";
+import { useAuth } from "../../context/AuthProvider";
 import { useEffect, useState } from "react";
 import axios from "axios";
 // Register ChartJS components
@@ -24,6 +25,7 @@ ChartJS.register(
 );
 
 const Results = () => {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { quizData, setQuizData } = useQuiz(); // Get quiz data from context
@@ -34,6 +36,7 @@ const Results = () => {
         const response = await axios.put(
           "http://localhost:3000/teachers/calculatePercentage",
           { id_quiz: quizData.id_quiz },
+          { headers: { Authorization: `Bearer ${user.token}` } },
           { withCredentials: true }
         );
         console.log("API response:", response);

@@ -92,6 +92,7 @@ const HistoryPage = () => {
         const response = await axios.post(
           "http://localhost:3000/teachers/getQuizzes",
           { page, limit, id_teacher: user.id, status: "published" },
+          { headers: { Authorization: `Bearer ${user.token}` } },
           { withCredentials: true }
         );
         console.log("API response:", response.data);
@@ -123,6 +124,7 @@ const HistoryPage = () => {
       const response = await axios.post(
         "http://localhost:3000/teachers/getQuizDetails",
         { id_quiz: quizId },
+        { headers: { Authorization: `Bearer ${user.token}` } },
         { withCredentials: true }
       );
       if (response.status !== 200) {

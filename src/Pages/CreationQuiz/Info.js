@@ -3,6 +3,7 @@ import "./Info.css";
 import { useNavigate } from "react-router-dom";
 import { useQuiz } from "../../context/QuizProvider";
 import { useAuth } from "../../context/AuthProvider";
+import axios from "axios";
 const Infos = () => {
   const navigate = useNavigate();
   const { quizData, setQuizData } = useQuiz();
@@ -11,9 +12,12 @@ const Infos = () => {
   const [subject, setSubject] = useState(quizData.subject || "");
   const [title, setTitle] = useState(quizData.title || "");
   const [description, setDescription] = useState(quizData.description || "");
+  const [file, setFile] = useState(null);
 
   const [image, setImage] = useState(quizData.image || null);
-  const [navigation, setNavigation] = useState(quizData.navigation || "dynamic");
+  const [navigation, setNavigation] = useState(
+    quizData.navigation || "dynamic"
+  );
 
   const [currentStep, setCurrentStep] = useState(1);
   const [error, setError] = useState(null);
@@ -34,8 +38,8 @@ const Infos = () => {
       for_groupe: 0, // To be filled by user
       status: "draft", // Default to draft
       questions: [], // Array to hold questions
-      navigation: "dynamic", // Default navigation
-    })
+      navigation: "linear", // Default navigation
+    });
   }, []);
 
   // Update quizData when form fields change
@@ -47,39 +51,65 @@ const Infos = () => {
       title,
       description,
       navigation,
-      
     });
-  }, [subject, title, description, user]);
+  }, [subject, title, description, user, image]);
 
   const handleImageUpload = (e) => {
     if (e.target.files && e.target.files[0]) {
       const imageUrl = URL.createObjectURL(e.target.files[0]); // ✅ Define imageUrl here
+      setFile(e.target.files[0]); // Set the file state
       setImage(imageUrl);
       setQuizData({ ...quizData, image: imageUrl });
-      return
-    } 
-      setImage(null);
-      setQuizData({ ...quizData, image: null });
-    
+      return;
+    }
+    setImage(null);
+    setQuizData({ ...quizData, image: null });
   };
-  
+
   const handleNext = async () => {
     // Validate required fields
     if (!title || !subject) {
       setError("Title and subject are required");
       return;
     }
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("id_teacher", user.id);
+    formData.append("title", title);
+    formData.append("description", description);
+    formData.append("subject", subject);
+    formData.append("navigation", navigation);
+    try {
+      const craetedQuiz = await axios.post(
+        "http://localhost:3000/teachers/createQuiz",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${user.token}`, // Include the token in the headers
+          },
+        },
+        { withCredentials: true }
+      );
+      console.log("craetedQuiz", craetedQuiz);
+      setQuizData({
+        ...quizData,
+        id_quiz: craetedQuiz.data.newQuiz.id_quiz,
+        id_teacher: user.id,
+        subject,
+        title,
+        description,
+        navigation,
+      });
+      console.log("quizData", quizData);
+      navigate("/duration");
+      console.log("Quiz created successfully:", craetedQuiz.data);
+    } catch (error) {
+      console.error("Error creating quiz:", error);
+      setError("Failed to create quiz. Please try again.");
+    }
 
     // Save entered data before navigating
-    setQuizData({
-      ...quizData,
-      id_teacher: user.id,
-      subject,
-      title,
-      description,navigation
-    });
-    console.log("quizData", quizData);
-    navigate("/duration");
   };
 
   return (
@@ -150,18 +180,17 @@ const Infos = () => {
                 value={navigation}
                 onChange={(e) => setNavigation(e.target.value)}
                 className="form-input"
-                
               />
             </div>
             <div className="form-group">
               <label>Image :</label>
               <div className="image-upload-container">
-                {image ? (
+                {file ? (
                   <div className="image-preview">
                     <img src={image || "/placeholder.svg"} alt="Quiz" />
                     <button
                       className="remove-image-btn"
-                      onClick={() => setImage(null)}
+                      onClick={() => setFile(null)}
                     >
                       ×
                     </button>
@@ -171,7 +200,7 @@ const Infos = () => {
                     <input
                       type="file"
                       accept="image/*"
-                      /*onChange={handleImageUpload}*/
+                      onChange={handleImageUpload}
                       style={{ display: "none" }}
                     />
                     <div className="upload-placeholder">Add one +</div>

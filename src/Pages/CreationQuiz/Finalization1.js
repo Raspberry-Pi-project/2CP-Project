@@ -5,16 +5,16 @@ import { useNavigate } from "react-router-dom";
 import { faTrash, faPlus, faEdit } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useQuiz } from "../../context/QuizProvider";
+import { useAuth } from "../../context/AuthProvider";
 import axios from "axios";
 
-
-
 const Finalization1 = () => {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { quizData, setQuizData } = useQuiz();
   const [currentStep, setCurrentStep] = useState(4);
   const [error, setError] = useState(null);
-  
+
   // Get questions from quizData
   const questions = quizData.questions || [];
   useEffect(() => {
@@ -80,23 +80,28 @@ const Finalization1 = () => {
       status: "draft",
     });
     console.log("quizData", quizData);
-    const publishedQuiz = await axios.post("http://localhost:3000/teachers/createQuiz", quizData , {withCredentials: true} );
+    const publishedQuiz = await axios.post(
+      "http://localhost:3000/teachers/updateQuiz",
+      quizData,
+      { headers: { Authorization: `Bearer ${user.token}` } },
+      { withCredentials: true }
+    );
     console.log("publishedQuiz", publishedQuiz);
     setQuizData({
       ...quizData,
       title: "",
       description: "",
       subject: "",
-      nb_attempts:0 ,
-      duration:0 , // Default 30 minutes
+      nb_attempts: 0,
+      duration: 0, // Default 30 minutes
       correctionType: "auto", // Default to auto-graded
       score: 0, // Default score
       for_year: 0, // To be filled by user
       for_groupe: 0, // To be filled by user
       status: "draft", // Default to draft
       questions: [], // Array to hold questions
-      created_at : "",
-    })
+      created_at: "",
+    });
     // Navigate to draft quiz page
     navigate("/draftquiz");
   };
@@ -165,7 +170,6 @@ const Finalization1 = () => {
                   ? "Auto-graded"
                   : "Manually graded"}
               </p>
-              
             </div>
           </div>
 
@@ -240,4 +244,6 @@ const Finalization1 = () => {
   );
 };
 
+
 export default Finalization1;
+

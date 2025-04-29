@@ -32,7 +32,7 @@ const SignIn = () => {
 
       //if (response.data.token) {
       if (response.status === 200) {
-        await setUser({ id: response.data.userId, role: response.data.role });
+        await setUser({ id: response.data.userId, role: response.data.role , token : response.data.token });
         alert("Login successful");
         setTimeout(() => {
           navigate("/draftquiz");
