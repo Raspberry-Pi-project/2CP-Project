@@ -1,5 +1,5 @@
 import React from "react";
-import { NavProfile } from "./NavProfile";
+import { NavProfileT } from "./NavProfileT";
 import { useNavigate } from "react-router-dom";
 import styles from "./StudentProfile.module.css";
 
@@ -32,7 +32,7 @@ const StudentProfile = () => {
   return (
     <div className={styles.studentProfileContainer}>
       {/* Top Navbar */}
-      <NavProfile />
+      <NavProfileT />
 
       {/* Sidebar and Main Content */}
       <div className={styles.studentProfileBody}>

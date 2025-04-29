@@ -1,6 +1,7 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./quizdetails.css";
+import "./quiz-details-animation.css";
+import "./quiz-particle-styles.css";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   faPlus,faPlay,
@@ -16,6 +17,27 @@ const QuizDetails = () => {
   const { quizId } = useParams();
   const [activeTab, setActiveTab] = useState("info");
   const { quizData, setQuizData } = useQuiz(); // Get quiz data from context
+
+  useEffect(() => {
+    //animations
+    const initQuizAnimations = () => {
+      
+      const metaItems = document.querySelectorAll('.quiz-meta-item');
+      metaItems.forEach((item, index) => {
+        
+        item.style.setProperty('--i', index + 1);
+      });
+
+
+      const quizHeader = document.querySelector('.quiz-header');
+      if (quizHeader) {
+        quizHeader.classList.add('animate-entrance');
+      }
+    };
+    
+
+    setTimeout(initQuizAnimations, 100);
+  }, []);
 
 
   // Sample quiz data
@@ -83,7 +105,7 @@ const QuizDetails = () => {
     navigate(`/results`);
   };
 
-  // Render content based on active tab
+
   const renderTabContent = () => {
     switch (activeTab) {
       case "info":
@@ -166,13 +188,47 @@ const QuizDetails = () => {
     }
   };
 
+  
+  const createParticles = (e) => {
+    const quizHeader = e.currentTarget;
+    if (!quizHeader) return;
+    
+    for (let i = 0; i < 10; i++) {
+      const particle = document.createElement('div');
+      particle.className = 'quiz-particle';
+      
+      const size = Math.random() * 8 + 2;
+      const x = e.clientX - quizHeader.getBoundingClientRect().left;
+      const y = e.clientY - quizHeader.getBoundingClientRect().top;
+      const duration = Math.random() * 2 + 1;
+      
+      particle.style.width = `${size}px`;
+      particle.style.height = `${size}px`;
+      particle.style.left = `${x}px`;
+      particle.style.top = `${y}px`;
+      particle.style.animationDuration = `${duration}s`;
+      particle.style.setProperty('--x', `${(Math.random() - 0.5) * 40}px`);
+      
+      const colors = ['#7b68ee', '#4cd3a5', '#6a5acd', '#3bc192'];
+      particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+      
+      quizHeader.appendChild(particle);
+      
+      setTimeout(() => {
+        if (particle.parentNode === quizHeader) {
+          quizHeader.removeChild(particle);
+        }
+      }, duration * 1000);
+    }
+  };
+
 
   return (
     <div className="quiz-details-container">
       {/* Main Content */}
       <div className="quiz-details-content">
         {/* Quiz Header */}
-        <div className="quiz-header">
+        <div className="quiz-header" onMouseMove={createParticles}>
           <div className="quiz-header-left">
             <div className="quiz-image">
               <img
@@ -274,5 +330,4 @@ const QuizDetails = () => {
 };
 
 
-export default QuizDetails
-
+export default QuizDetails;

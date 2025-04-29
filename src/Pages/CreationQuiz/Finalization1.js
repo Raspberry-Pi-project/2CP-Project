@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import "./Finalization1.css";
+import "./quiz-summary-styles.css"; // Add this import
 import { useNavigate } from "react-router-dom";
 import { faTrash, faPlus, faEdit } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -243,4 +244,6 @@ const Finalization1 = () => {
   );
 };
 
+
 export default Finalization1;
+
