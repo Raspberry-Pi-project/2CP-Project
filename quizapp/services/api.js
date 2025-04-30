@@ -1,16 +1,13 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getToken } from "../services/authStorge";
 import { API_URL } from "./config";
 
 const API_BASE_URL = `${API_URL}/students`;
-
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
-     // Attach token to the Authorization header
   },
 });
 
@@ -18,11 +15,11 @@ console.log("API Instance:", api);
 
 api.interceptors.request.use(
   async (config) => {
-    const token = await AsyncStorage.getItem("token"); // Retrieve the token
+    const token = await AsyncStorage.getItem("token");
     if (token) {
-      config.headers["Authorization"] = `Bearer ${token}`; // Attach token to the Authorization header
+      config.headers["Authorization"] = `Bearer ${token}`;
     }
-    console.log("Request:", config.url); // Debug log
+    console.log("Request:", config.url);
     return config;
   },
   (error) => {
@@ -32,7 +29,7 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response) => {
-    console.log("Response:", response.data); // Debug log
+    console.log("Response:", response.data);
     return response;
   },
   (error) => {
@@ -62,9 +59,9 @@ export const studentAPI = {
     }
   },
 
-  startAttempt: async (id_quiz) => {
+  startAttempt: async (id_student, id_quiz) => {
     try {
-      const response = await api.post("/startAttempt", { id_quiz });
+      const response = await api.post("/startAttempt", { id_student, id_quiz });
       return response.data;
     } catch (error) {
       console.error("Error starting attempt:", error);
@@ -95,7 +92,7 @@ export const studentAPI = {
     }
   },
 
-  getQuizResults: async (attemptId , id_student) => {
+  getQuizResults: async (attemptId, id_student) => {
     try {
       const response = await api.post("/getQuizResults", {
         id_attempt: attemptId,
@@ -110,7 +107,7 @@ export const studentAPI = {
 
   getHistory: async (id_student) => {
     try {
-      const response = await api.post("/history",{id_student});
+      const response = await api.post("/history", { id_student });
       return response.data;
     } catch (error) {
       console.error("Error fetching history:", error);
@@ -120,7 +117,7 @@ export const studentAPI = {
 
   getProfile: async (id_student) => {
     try {
-      const response = await api.post("/profile" , {id_student});
+      const response = await api.post("/profile", { id_student });
       return response.data;
     } catch (error) {
       console.error("Error fetching profile:", error);

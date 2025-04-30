@@ -33,7 +33,7 @@ export default function QuizInfoScreen({ navigation, route }) {
     if (id_quiz) {
       fetchQuizDetails();
     } else {
-      setError("Quiz ID is missing.");
+      setError("ID is missing.");
       setLoading(false);
     }
   }, [id_quiz]);  */

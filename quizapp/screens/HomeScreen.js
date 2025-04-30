@@ -65,8 +65,9 @@ const SimpleQuizCard = ({ quiz, onPress }) => {
       <View style={styles.quizCardContent}>
         <View style={styles.quizCardIconContainer}>
           <View style={styles.quizCardIcon}>
-          { <Image source={{ uri : quiz.image}} style={styles.quizCardIcon}/>}
-            
+          {/* <Image source={{ uri : quiz.image}} style={styles.quizCardIcon}/> */}
+          <Text style={styles.quizCardIconText}>{quiz.image}</Text>
+ 
           </View>
         </View>
         <View style={styles.quizCardTextContainer}>
@@ -384,6 +385,9 @@ export default function HomeScreen({ navigation }) {
           Authorization: `Bearer ${await AsyncStorage.getItem("token")}`}
       })
 
+      console.log("Quiz Details Response:", quizDetails.data); // Debugging line to see the full response
+
+
       navigation.navigate("QuizInfo", {
         id_quiz: quiz.id_quiz,
         basicQuizData: {
@@ -415,23 +419,38 @@ export default function HomeScreen({ navigation }) {
     outputRange: [80, height * 0.7],
   });
 
-  const handleHistoryQuizPress = (item) => {
+  const handleHistoryQuizPress = async (quiz) => {
+
+    try {
+      const quizDetails = await axios.post(`${API_URL}/students/getQuizDetails`, {
+        id_quiz : quiz.id_quiz , page : 1 , limit : 1 
+      },{
+        headers: {
+          Authorization: `Bearer ${await AsyncStorage.getItem("token")}`}
+      })
+
+      console.log("Quiz Details Response:", quizDetails.data); // Debugging line to see the full response
+
     navigation.navigate("QuizHistoryScreen", { 
       quiz: {
-        id: item.id,
-        title: item.title,
-        description: item.descreption || "View your previous quiz attempt results.",
-        time: item.duration,
-        attempts: item.nb_attempts ||1,
-        questions: item.totalQuestions || 10
+        id: quizDetails.data.id,
+        title: quizDetails.data.title,
+        description: quizDetails.data.descreption || "View your previous quiz attempt results.",
+        time: quizDetails.data.duration,
+        nb_attempts: quizDetails.data.nb_attempts ||1,
+        questions: quizDetails.data.totalQuestions || 10
       },
-      score: item.score,
-      totalQuestions: item.totalQuestions,
-      timeSpent: item.timeSpent || item.duration * 60, // Convert minutes to seconds if timeSpent not available
-      id_quiz: item.id_quiz,
-      id_student: item.id_student 
+      score: quizDetails.data.score,
+      totalQuestions: quizDetails.data.totalQuestions,
+      timeSpent: quizDetails.data.timeSpent || quizDetails.data.duration * 60, // Convert minutes to seconds if timeSpent not available
+      id_quiz: quizDetails.data.id_quiz,
+      id_student: quizDetails.data.id_student 
     });
-  };
+  } catch (error) {
+    console.error("Error fetching quiz details:", error);
+    
+  }
+};
 
   const renderQuizItem = ({ item, onPress }) => {
 

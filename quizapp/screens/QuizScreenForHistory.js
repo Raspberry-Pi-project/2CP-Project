@@ -21,6 +21,12 @@ const { width, height } = Dimensions.get("window")
 const AnimatedCircle = Animated.createAnimatedComponent(Circle)
 const AnimatedSvg = Animated.createAnimatedComponent(Svg)
 
+const fetchQuizResults = async (quizId, attemptId) => {
+  const response = await axios.post(`${quizId}/attempts/${attemptId}`)
+  return response.data
+}
+
+
 // Floating bubbles background component
 const FloatingBubbles = () => {
   // Create multiple animated values for different bubbles
@@ -278,7 +284,7 @@ export default function QuizScreenForHistory({ navigation, route }) {
   const quizResultsRef = useRef(route.params?.quizResults);
   const {
     score = 0,
-    total = 10,
+   // total = 10,
     questions = [],
     correctCount = 0,
     incorrectCount = 0,
@@ -287,13 +293,14 @@ export default function QuizScreenForHistory({ navigation, route }) {
     originalQuiz = null,
     attemptInfo = {}
   } = quizResultsRef.current || {};
+  
 
   // Ensure normalized score for consistent display
   const normalizedScore = {
-    score: score,
-    total: total,
-    correctCount: correctCount,
-    incorrectCount: incorrectCount
+    score: score || 0,
+    total: total || 0,
+    correctCount: correctCount || 0,
+    incorrectCount: incorrectCount || 0
   };
 
   // Animation refs
@@ -306,6 +313,8 @@ export default function QuizScreenForHistory({ navigation, route }) {
   useEffect(() => {
     return () => {
       isMounted.current = false;
+      headerAnim.stopAnimation();
+      contentAnim.stopAnimation();
     };
   }, []);
 

@@ -424,7 +424,7 @@ export default function QuizScoreScreen({ navigation, route }) {
         const realQuestions = historyQuiz.questions.slice(0, totalQuestions);
         
         // Generate mock user answers - correct for half the questions
-        const userAnswers = realQuestions.map((question, idx) => {
+        /*const userAnswers = realQuestions.map((question, idx) => {
           const correctAnswer = question.correctAnswer;
           // For even-indexed questions, select the correct answer
           // For odd-indexed questions, select an incorrect answer
@@ -467,7 +467,44 @@ export default function QuizScoreScreen({ navigation, route }) {
               date: attemptData.date
             }
           }
+        }); */
+
+
+        const userAnswers = realQuestions.map((question, idx) => {
+          const correctAnswer = question.correctAnswer;
+          const selectedOption = idx % 2 === 0 
+            ? correctAnswer 
+            : (correctAnswer + 1) % question.options.length;
+        
+          return {
+            id: question.id,
+            text: `Question ${idx + 1}`,
+            isCorrect: idx % 2 === 0,
+            selections: [selectedOption],
+            answer: selectedOption,
+            originalIndex: idx
+          };
         });
+        
+        const correctCount = userAnswers.filter(q => q.isCorrect).length;
+        const incorrectCount = userAnswers.length - correctCount;
+        
+        navigation.navigate("QuizScreenForHistory", {
+          quizResults: {
+            score: attemptData.score,
+            total: totalQuestions,
+            correctCount,
+            incorrectCount,
+            timeSpent: 300,
+            questions: userAnswers,
+            originalQuiz: historyQuiz,
+            quizId: historyQuiz.id,
+            attemptInfo: {
+              date: attemptData.date
+            }
+          }
+        });
+        
       }}
       animationDelay={500} // Start after main animations
     />
