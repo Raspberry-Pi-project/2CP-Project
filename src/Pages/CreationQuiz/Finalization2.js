@@ -1,72 +1,138 @@
-import { useEffect, useState } from "react";
-import "./Finalization2.css";
-import { useNavigate } from "react-router-dom";
-import { useQuiz } from "../../context/QuizProvider";
-import { useAuth } from "../../context/AuthProvider";
-import axios from "axios";
+import { useEffect, useState } from "react"
+import "./Finalization2.css"
+import { useNavigate } from "react-router-dom"
+import { useQuiz } from "../../context/QuizProvider"
+import { useAuth } from "../../context/AuthProvider"
+import axios from "axios"
+import PresentationConfirmationDialog from "./presentation-confirmation-dialog"
+import PresentationMode from "./presentation-mode"
 
 const Finalization2 = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState(5);
-  const [yearOfStudy, setYearOfStudy] = useState();
-  const [group, setGroup] = useState();
-  const {quizData, setQuizData} = useQuiz();
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  const [currentStep, setCurrentStep] = useState(5)
+  const [yearOfStudy, setYearOfStudy] = useState()
+  const [group, setGroup] = useState()
+  const { quizData, setQuizData } = useQuiz()
+  const [showPresentationConfirmation, setShowPresentationConfirmation] = useState(false)
+  const [showPresentation, setShowPresentation] = useState(false)
+  const [timerType, setTimerType] = useState("wholeQuiz")
+
   const handleReturn = () => {
-    navigate("/Finalization1");
-  };
+    navigate("/Finalization1")
+  }
+
   useEffect(() => {
     setQuizData({
       ...quizData,
-      for_year: parseInt(yearOfStudy),
-      for_groupe: parseInt(group),
+      for_year: Number.parseInt(yearOfStudy),
+      for_groupe: Number.parseInt(group),
       status: "published",
-    });
-  }, [yearOfStudy, group]);
+    })
+  }, [yearOfStudy, group])
 
   async function handlePublish() {
+    // Update quiz data with year and group
     setQuizData({
       ...quizData,
-      for_year: parseInt(yearOfStudy),
-      for_groupe: parseInt(group),
+      for_year: Number.parseInt(yearOfStudy),
+      for_groupe: Number.parseInt(group),
       status: "published",
-    });
-    const publishedQuiz = await axios.post(
-      "http://localhost:3000/teachers/updateQuiz",
-      quizData,
-      { headers: { Authorization: `Bearer ${user.token}` } },
-      { withCredentials: true }
-    );
-    console.log("publishedQuiz", publishedQuiz);
-    setQuizData({
-      ...quizData,
-      title: "",
-      description: "",
-      subject: "",
-      nb_attempts: 1,
-      duration: 30, // Default 30 minutes
-      correctionType: "auto", // Default to auto-graded
-      score: 100, // Default score
-      for_year: 0, // To be filled by user
-      for_groupe: 0, // To be filled by user
-      status: "draft", // Default to draft
-      questions: [], // Array to hold questions
-    });
-    // Navigate to draft quiz page
-    navigate("/draftquiz");
-    // Publish quiz
-    //console.log("Quiz published");
-    // Navigate to dashboard or confirmation page orr as needed i do not know wch hbin dyro ki npubliyiwh
-    //navigate("/dashboard");
+    })
+
+    // Show presentation confirmation dialog
+    setShowPresentationConfirmation(true)
   }
+
+  const handleContinuePublish = async () => {
+    // Close the confirmation dialog
+    setShowPresentationConfirmation(false)
+
+    // Publish the quiz
+    try {
+      const publishedQuiz = await axios.post(
+        "http://localhost:3000/teachers/updateQuiz",
+        quizData,
+        { headers: { Authorization: `Bearer ${user.token}` } },
+        { withCredentials: true },
+      )
+      console.log("publishedQuiz", publishedQuiz)
+
+
+      setQuizData({
+        ...quizData,
+        title: "",
+        description: "",
+        subject: "",
+        nb_attempts: 1,
+        duration: 30,
+        correctionType: "auto",
+        score: 100,
+        for_year: 0,
+        for_groupe: 0,
+        status: "draft",
+        questions: [],
+      })
+
+
+      navigate("/draftquiz")
+    } catch (error) {
+      console.error("Error publishing quiz:", error)
+    }
+  }
+
+  const handleStartPresentation = (selectedTimerType) => {
+
+    setShowPresentationConfirmation(false)
+
+    setTimerType(selectedTimerType)
+
+    setShowPresentation(true)
+  }
+
+  const handlePresentationClose = async () => {
+    setShowPresentation(false)
+
+    try {
+      const publishedQuiz = await axios.post(
+        "http://localhost:3000/teachers/updateQuiz",
+        quizData,
+        { headers: { Authorization: `Bearer ${user.token}` } },
+        { withCredentials: true },
+      )
+      console.log("publishedQuiz", publishedQuiz)
+
+
+      setQuizData({
+        ...quizData,
+        title: "",
+        description: "",
+        subject: "",
+        nb_attempts: 1,
+        duration: 30,
+        correctionType: "auto",
+        score: 100,
+        for_year: 0,
+        for_groupe: 0,
+        status: "draft",
+        questions: [],
+      })
+
+      // Navigate to draft quiz page
+      navigate("/draftquiz")
+    } catch (error) {
+      console.error("Error publishing quiz:", error)
+    }
+  }
+
   const handleCancel = () => {
     // Cancel and go back
-    navigate("/finalization1");
-  };
+    navigate("/finalization1")
+  }
 
   return (
     <div className="quiz-generator-container">
-      {/* Main Content */}
+
       <div className="main-content">
         {/* Sidebar */}
         <div className="sidebar">
@@ -80,9 +146,7 @@ const Finalization2 = () => {
             {[1, 2, 3, 4, 5].map((step) => (
               <div
                 key={step}
-                className={`step ${currentStep === step ? "active" : ""} ${
-                  currentStep > step ? "completed" : ""
-                }`}
+                className={`step ${currentStep === step ? "active" : ""} ${currentStep > step ? "completed" : ""}`}
               >
                 {step}
               </div>
@@ -94,13 +158,8 @@ const Finalization2 = () => {
             <div className="form-group">
               <label>YEAR OF STUDY : (optional) </label>
               <input
-
-                
                 placeholder="enter the year of study"
-
                 type="number"
-                
-
                 value={yearOfStudy}
                 onChange={(e) => setYearOfStudy(e.target.value)}
                 className="form-input"
@@ -109,7 +168,7 @@ const Finalization2 = () => {
 
             <div className="form-group">
               <label>GROUPE : (optional)</label>
-              <input              
+              <input
                 placeholder="enter the group"
                 type="number"
                 value={group}
@@ -130,8 +189,21 @@ const Finalization2 = () => {
           </div>
         </div>
       </div>
-    </div>
-  );
-};
 
-export default Finalization2;
+      {/* Presentation Confirmation Dialog */}
+      {showPresentationConfirmation && (
+        <PresentationConfirmationDialog
+          quiz={quizData}
+          onClose={() => setShowPresentationConfirmation(false)}
+          onPresent={handleStartPresentation}
+          onContinuePublish={handleContinuePublish}
+        />
+      )}
+
+      {/* Presentation Mode */}
+      {showPresentation && <PresentationMode quiz={quizData} timerType={timerType} onClose={handlePresentationClose} />}
+    </div>
+  )
+}
+
+export default Finalization2
