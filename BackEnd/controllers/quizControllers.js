@@ -17,6 +17,7 @@ const getQuizzes = async (req, res) => {
       for_groupe,
       correctionType,
     } = req.body;
+    console.log("req.body", req.body);
     //default to page 1
     // default to 10 quizzes per page
     const filters = {};
@@ -38,11 +39,17 @@ const getQuizzes = async (req, res) => {
       where: filters,
     });
     for (quiz of quizzes) {
+      const buffer = quiz.image ? Buffer.from(quiz.image, "binary") : null; // Convert the image to a Buffer
+      quiz.image =
+        quiz.image === null
+          ? null
+          : `data:image/jpeg;base64,${buffer ? buffer.toString("base64") : ""}`;
       const totalQuestions = await prisma.questions.count({
         where: { id_quiz: quiz.id_quiz },
       });
       quiz.totalQuestions = totalQuestions;
     }
+    //console.log("quizzes", quizzes);
 
     res.json({
       page,
@@ -57,6 +64,7 @@ const getQuizzes = async (req, res) => {
 
 const createQuiz = async (req, res) => {
   try {
+    const file = req.file;
     const {
       title,
       description,
@@ -69,11 +77,12 @@ const createQuiz = async (req, res) => {
       for_year,
       for_groupe,
       status,
-      questions,
-      image,
+      questions: rawQuestions,
       navigation,
     } = req.body;
-    console.log(req.body);
+    const questions = rawQuestions ? JSON.parse(rawQuestions) : [];
+    const image = file ? file.buffer : null;
+
     let for_year2 = for_year;
     let for_groupe2 = for_groupe;
     if (typeof for_year2 === "string") {
@@ -84,19 +93,19 @@ const createQuiz = async (req, res) => {
     }
     const newQuiz = await prisma.quizzes.create({
       data: {
-        image,
+        image: image ? image : null,
         title,
         description,
-        id_teacher,
+        id_teacher: parseInt(id_teacher),
         subject,
-        nb_attempts,
-        duration,
-        correctionType,
-        score,
-        for_year: for_year2,
-        for_groupe: for_groupe2,
-        navigation,
-        status, // Save the status
+        nb_attempts: nb_attempts ? parseInt(nb_attempts) : 0,
+        duration: duration ? parseInt(duration) : 30,
+        correctionType: correctionType ? correctionType : "auto",
+        score: score ? score : 0,
+        for_year: for_year ? for_year2 : 0,
+        for_groupe: for_groupe ? for_groupe2 : 0,
+        navigation: navigation ? navigation : "linear",
+        status: status ? status : "draft", // Save the status
         questions: {
           create: questions.map((question) => ({
             duration: question.duration,
@@ -132,7 +141,6 @@ const createQuiz = async (req, res) => {
 const updateQuiz = async (req, res) => {
   try {
     const {
-      image,
       id_quiz,
       title,
       description,
@@ -148,14 +156,21 @@ const updateQuiz = async (req, res) => {
       questions,
       navigation,
     } = req.body;
-
+    console.log(req.body);
+    let for_year2 = for_year;
+    let for_groupe2 = for_groupe;
+    if (typeof for_year2 === "string") {
+      for_year2 = 0;
+    }
+    if (typeof for_groupe2 === "string") {
+      for_groupe2 = 0;
+    }
     // Update the quiz
     const updatedQuiz = await prisma.quizzes.update({
       where: {
         id_quiz: id_quiz,
       },
       data: {
-        image,
         title,
         description,
         id_teacher,
@@ -164,8 +179,8 @@ const updateQuiz = async (req, res) => {
         duration,
         correctionType,
         score,
-        for_year,
-        for_groupe,
+        for_year: for_year2,
+        for_groupe: for_groupe2,
         status,
         navigation,
       },
@@ -173,76 +188,69 @@ const updateQuiz = async (req, res) => {
 
     if (questions.length > 0) {
       // Delete questions marked as deleted
+      console.log("questions", questions);
       await prisma.questions.deleteMany({
         where: {
-          id_question: {
-            in: questions
-              .filter((question) => question.deleted === true)
-              .map((question) => question.id_question),
-          },
+          id_quiz: updatedQuiz.id_quiz
         },
       });
 
       // Process each question
       for (const question of questions) {
-        if (question.deleted === false) {
+        
           let updatedQuestion;
 
           // Update or create the question
-          if (question.updated === true) {
-            updatedQuestion = await prisma.questions.upsert({
-              where: {
-                id_question: question.id_question,
-              },
-              update: {
-                duration: question.duration,
-                question_text: question.question_text,
-                question_number: question.question_number,
-                question_type: question.question_type,
-                points: question.points,
-              },
-              create: {
-                id_quiz: updatedQuiz.id_quiz,
-                duration: question.duration,
-                question_text: question.question_text,
-                question_number: question.question_number,
-                question_type: question.question_type,
-                points: question.points,
-              },
-            });
 
-            // Delete answers marked as deleted
-            await prisma.answers.deleteMany({
-              where: {
-                id_answer: {
-                  in: question.answers
-                    .filter((answer) => answer.deleted === true)
-                    .map((answer) => answer.id_answer),
+          updatedQuestion = await prisma.questions.create({
+            
+            data: {
+              id_quiz: updatedQuiz.id_quiz,
+              duration: question.duration,
+              question_text: question.question_text,
+              question_number: question.question_number,
+              question_type: question.question_type,
+              points: question.points,
+              answers: {
+                create: question.answers.map((answer) => ({
+                  answer_text: answer.answer_text,
+                  correct: answer.correct,
+                })),
+              },
+            },
+          });
+
+          // Delete answers marked as deleted
+         /* await prisma.answers.deleteMany({
+            where: {
+              id_answer: {
+                in: question.answers
+                  .filter((answer) => answer.deleted === true)
+                  .map((answer) => answer.id_answer),
+              },
+            },
+          });*/
+
+          // Process each answer
+          /*for (const answer of question.answers) {
+            
+              await prisma.answers.upsert({
+                where: {
+                  id_answer: answer.id_answer,
                 },
-              },
-            });
-
-            // Process each answer
-            for (const answer of question.answers) {
-              if (answer.deleted === false && answer.updated === true) {
-                await prisma.answers.upsert({
-                  where: {
-                    id_answer: answer.id_answer,
-                  },
-                  update: {
-                    answer_text: answer.answer_text,
-                    correct: answer.correct,
-                  },
-                  create: {
-                    id_question: updatedQuestion.id_question,
-                    answer_text: answer.answer_text,
-                    correct: answer.correct,
-                  },
-                });
-              }
-            }
-          }
-        }
+                update: {
+                  answer_text: answer.answer_text,
+                  correct: answer.correct,
+                },
+                create: {
+                  id_question: updatedQuestion.id_question,
+                  answer_text: answer.answer_text,
+                  correct: answer.correct,
+                },
+              });
+            
+          }*/
+        
       }
     }
 
@@ -313,6 +321,14 @@ const getQuizDetails = async (req, res) => {
       },
     });
     console.log("quiz", quiz);
+    
+      const buffer = quiz.image ? Buffer.from(quiz.image, "binary") : null; // Convert the image to a Buffer
+      quiz.image =
+        quiz.image === null
+          ? null
+          : `data:image/jpeg;base64,${buffer ? buffer.toString("base64") : ""}`;
+    
+    
     if (!quiz) return res.status(404).json({ error: "Quiz not found" });
     res.json(quiz);
   } catch (error) {
