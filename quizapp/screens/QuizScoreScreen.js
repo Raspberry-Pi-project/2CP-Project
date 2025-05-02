@@ -12,17 +12,18 @@ import {
   Dimensions,
   FlatList,
   StatusBar,
-  Alert
+  Alert,
+  ActivityIndicator
 } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import Svg, { Circle, Path } from "react-native-svg"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { colors } from "../constants/colors"
 import { Feather as Icon } from "@expo/vector-icons"
-// Remove problematic import and use only fallback
-// import { QUIZ_DATA } from "../data/quizData"
+import axios from "axios"  // Make sure to have axios installed
+import { API_URL } from "../services/config"  // Create this file with your API URL
 
-// Define fallback quiz data to use directly
+// Define fallback quiz data to use as backup if API fails
 const HISTORY_QUIZ = {
   id: "5",
   title: "History Quiz",
@@ -30,6 +31,54 @@ const HISTORY_QUIZ = {
   icon: "book",
   description: "Test your knowledge of historical events, figures, and periods.",
   questions: [
+    {
+      id: 1,
+      text: "In which year did World War II end?",
+      options: ["1943", "1945", "1947", "1950"],
+      correctAnswer: 1,
+    },
+    {
+      id: 2,
+      text: "Who was the first President of the United States?",
+      options: ["Thomas Jefferson", "John Adams", "George Washington", "Benjamin Franklin"],
+      correctAnswer: 2,
+    },
+    {
+      id: 3,
+      text: "The ancient city of Rome was founded in which year?",
+      options: ["753 BC", "500 BC", "323 BC", "1 AD"],
+      correctAnswer: 0,
+    },
+    {
+      id: 4,
+      text: "Which empire was ruled by Genghis Khan?",
+      options: ["Ottoman Empire", "Roman Empire", "Mongol Empire", "Byzantine Empire"],
+      correctAnswer: 2,
+    },
+    {
+      id: 5,
+      text: "The French Revolution began in which year?",
+      options: ["1789", "1776", "1804", "1812"],
+      correctAnswer: 0,
+    },
+    {
+      id: 6,
+      text: "Who wrote 'The Communist Manifesto'?",
+      options: ["Vladimir Lenin", "Joseph Stalin", "Karl Marx and Friedrich Engels", "Leon Trotsky"],
+      correctAnswer: 2,
+    },
+    {
+      id: 7,
+      text: "Which ancient wonder was located in Alexandria, Egypt?",
+      options: ["Hanging Gardens", "Colossus of Rhodes", "The Great Pyramid", "The Lighthouse (Pharos)"],
+      correctAnswer: 3,
+    },
+    {
+      id: 8,
+      text: "Which country was NOT involved in the Triple Alliance during World War I?",
+      options: ["Germany", "Italy", "Austria-Hungary", "France"],
+      correctAnswer: 3,
+    },
     {
       id: 1,
       text: "In which year did World War II end?",
@@ -95,7 +144,7 @@ const HISTORY_QUIZ = {
 
 const { width, height } = Dimensions.get("window")
 
-// Floating bubbles component (matches QuizScreen)
+// Floating bubbles component (unchanged)
 const FloatingBubbles = () => {
   const bubbles = [
     {
@@ -133,6 +182,7 @@ const FloatingBubbles = () => {
       opacity: 0.1,
       duration: 22000,
     },
+
   ]
 
   useEffect(() => {
@@ -200,10 +250,10 @@ const FloatingBubbles = () => {
   )
 }
 
-// Score circle component matching QuizScreen
-const ScoreCircle = ({ score, total }) => {
+// Score circle component (unchanged)
+const ScoreCircle = ({ score , totalQuestions  }) => {
   const animatedValue = useRef(new Animated.Value(0)).current
-  const scorePercentage = (score / total) * 100
+  const scorePercentage = (score / totalQuestions) * 100
 
   useEffect(() => {
     Animated.timing(animatedValue, {
@@ -247,7 +297,7 @@ const ScoreCircle = ({ score, total }) => {
       </Svg>
       <View style={styles.scoreTextContainer}>
         <Text style={styles.scorePercentage}>{Math.round(scorePercentage)}%</Text>
-        <Text style={styles.scoreText}>{score}/{total}</Text>
+        <Text style={styles.scoreText}>{score}/{totalQuestions}</Text>
       </View>
     </View>
   )
@@ -256,8 +306,8 @@ const ScoreCircle = ({ score, total }) => {
 // Animated Circle component for SVG
 const AnimatedCircle = Animated.createAnimatedComponent(Circle)
 
-// Attempt item component with neutral styling and enhanced shadow
-const QuestionItem = ({ question, index, isCorrect, onPress, animationDelay = 0 }) => {
+// Attempt item component (updated to use actual attempt data)
+const QuestionItem = ({ attempt, index, onPress, animationDelay = 0 }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current
   const slideAnim = useRef(new Animated.Value(50)).current
 
@@ -285,6 +335,12 @@ const QuestionItem = ({ question, index, isCorrect, onPress, animationDelay = 0 
     }
   }, []);
 
+  // TO BE CHANGED 
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
+  };
+
   return (
     <Animated.View 
       style={[
@@ -297,19 +353,19 @@ const QuestionItem = ({ question, index, isCorrect, onPress, animationDelay = 0 
     >
       <TouchableOpacity 
         style={styles.attemptItemContent}
-        onPress={() => onPress(question)}
+        onPress={() => onPress(attempt)}
         activeOpacity={0.7}
       >
         <View style={styles.attemptItemLeft}>
-          <Text style={styles.attemptText}>{question.text}</Text>
-          <Text style={styles.attemptDate}>{question.date}</Text>
+          <Text style={styles.attemptText}>Attempt {index + 1}</Text>
+          <Text style={styles.attemptDate}>{formatDate(attempt.attempt_at)}</Text>
         </View>
         <View style={styles.scoreDisplay}>
           <Text style={[
             styles.scoreValue, 
-            { color: question.score >= 50 ? '#4ADE80' : '#FF5252' }
+            { color: attempt.score >= 50 ? '#4ADE80' : '#FF5252' }
           ]}>
-            {question.score}%
+            {Math.round(attempt.score)}%
           </Text>
         </View>
       </TouchableOpacity>
@@ -318,17 +374,21 @@ const QuestionItem = ({ question, index, isCorrect, onPress, animationDelay = 0 
 }
 
 export default function QuizScoreScreen({ navigation, route }) {
-  // Remove insets reference as we're not using SafeAreaView
-  
   // Animation refs
   const headerAnim = useRef(new Animated.Value(0)).current
   const contentAnim = useRef(new Animated.Value(0)).current
 
+  // State for attempts data
+  const [attempts, setAttempts] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  
   // Add filter state
   const [filterStatus, setFilterStatus] = useState('all') // 'all', 'passed', 'failed'
 
   // Extract params or use defaults
   const { 
+    id_quiz, // this should be passed from the previous screen
     score = 0, 
     totalQuestions = 10, 
     timeSpent = 0 
@@ -338,23 +398,47 @@ export default function QuizScoreScreen({ navigation, route }) {
   const correctAnswers = score || 0
   const incorrectAnswers = totalQuestions - correctAnswers
 
-  // Sample question results (should ideally come from route.params)
-  const allAttempts = Array.from({ length: totalQuestions }, (_, i) => ({
-    id: i + 1,
-    text: `Attempt ${i + 1}`,
-    date: `${new Date().toLocaleDateString()}`,
-    isCorrect: i < correctAnswers,
-    originalIndex: i,
-    score: Math.floor(Math.random() * 100) // Random score for demonstration
-  }))
+  // Fetch quiz attempts from backend
+  useEffect(() => {
+
+    const fetchAttempts = async () => {
+      setLoading(true);
+      try {
+        // Use either the quiz ID from route params or a fallback
+        const id = id_quiz || route.params?.id_quiz;
+        
+        if (!id) {
+          throw new Error("No quiz ID provided");
+        }
+        
+        const response = await axios.get(`${API_URL}/students/getQuizAttempts/${id}`);
+        
+        if (response.data && response.data.attempts) {
+          setAttempts(response.data.attempts);
+        } else {
+          setAttempts([]);
+        }
+        setError(null);
+      } catch (err) {
+        console.error("Failed to fetch attempts:", err);
+        setError("Failed to load quiz attempts. Please try again.");
+        // If API fails, we could use mock data as fallback
+        setAttempts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAttempts();
+  }, [id_quiz, route.params?.id_quiz]);
 
   // Filter attempts based on status
   const getFilteredAttempts = useCallback(() => {
-    if (filterStatus === 'all') return allAttempts;
-    if (filterStatus === 'passed') return allAttempts.filter(item => item.score >= 50);
-    if (filterStatus === 'failed') return allAttempts.filter(item => item.score < 50);
-    return allAttempts;
-  }, [filterStatus, allAttempts]);
+    if (filterStatus === 'all') return attempts;
+    if (filterStatus === 'passed') return attempts.filter(item => item.score >= 50);
+    if (filterStatus === 'failed') return attempts.filter(item => item.score < 50);
+    return attempts;
+  }, [filterStatus, attempts]);
 
   const filteredAttempts = getFilteredAttempts();
 
@@ -408,107 +492,407 @@ export default function QuizScoreScreen({ navigation, route }) {
   }, []);
 
   // Item extractor for FlatList to prevent re-renders
-  const keyExtractor = useCallback((item) => item.id.toString(), []);
-  
+  const keyExtractor = useCallback((item, index) =>
+    item.id_attempt ? item.id_attempt.toString() : `attempt-${index}`, []);
+
+
+  /*const handleAttemptPress = useCallback(async (attemptData) => {
+    try {
+      // Start by showing a loading indicator
+      setLoading(true);
+      
+      let attemptDetails = null;
+      let quizDetails = null;
+      
+      // Step 1: Try to get attempt details
+      try {
+        const response = await axios.post(`${API_URL}/students/getAttemptById`, {
+          id_attempt: attemptData.id_attempt
+        });
+        
+        if (response.data && response.data.data) {
+          attemptDetails = response.data.data;
+        }
+      } catch (err) {
+        console.log("Error fetching attempt details:", err);
+        // Create fallback attempt details
+        attemptDetails = {
+          id_attempt: attemptData.id_attempt || "fallback-attempt",
+          id_quiz: attemptData.id_quiz || id_quiz || "5",
+          score: attemptData.score || 0,
+          date: attemptData.attempt_at || new Date().toISOString()
+        };
+      }
+
+      try {
+        const quizResponse = await axios.post(`${API_URL}/students/getQuizDetails`, {
+          id_quiz: attemptDetails.id_quiz
+        });
+        
+        if (quizResponse.data && quizResponse.data.quiz) {
+          quizDetails = quizResponse.data.quiz;
+        }
+      } catch (err) {
+        console.log("Error fetching quiz details:", err);
+        // Use fallback quiz data
+        quizDetails = HISTORY_QUIZ;
+      }
+
+      if (!attemptDetails && !quizDetails) {
+        Alert.alert(
+          "Connection Error",
+          "Could not connect to the server. Would you like to view a local copy of the quiz?",
+          [
+            {
+              text: "Cancel",
+              style: "cancel",
+            },
+            {
+              text: "View Offline",
+              onPress: () => navigateToQuizHistory(HISTORY_QUIZ, attemptData)
+            }
+          ]
+        );
+        return;
+      }
+
+      navigateToQuizHistory(quizDetails, attemptDetails);
+      
+    } catch (error) {
+      console.error("Error navigating to attempt details:", error);
+      Alert.alert(
+        "Error", 
+        "Failed to load attempt details. Would you like to try offline mode?",
+        [
+          {
+            text: "Cancel",
+            style: "cancel"
+          },
+
+          {
+            text: "Use Offline Mode",
+            onPress: () => navigateToQuizHistory(HISTORY_QUIZ, attemptData)
+          }
+        ]
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [id_quiz, navigation]); */
+
+   // Helper function to navigate to quiz history with proper parameters
+   const navigateToQuizHistory = useCallback((quizDetails, attemptDetails) => {
+    // Ensure we have questions
+    const questions = (quizDetails?.questions || []).map((q, index) => ({
+      ...q,
+      originalIndex: index,
+      isCorrect: Math.random() > 0.5 // Fallback random correctness if not available
+    }));
+
+    const totalQuestions = questions.length || 10;
+    const scorePercentage = attemptDetails?.score || 0;
+    const correctCount = Math.floor((scorePercentage / 100) * totalQuestions);
+    const incorrectCount = totalQuestions - correctCount;
+
+
+
+     const quizResults = {
+      /*score: attemptDetails?.score || 0,
+      correctCount: Math.round((attemptDetails?.score || 0) / 10), // Approximate
+      //incorrectCount: 10 - Math.round((attemptDetails?.score || 0) / 10), // Approximate
+      incorrectCount: (questions.length || 10) - Math.floor(((attemptDetails?.score || 0) / 100) * (questions.length || 10)),
+      total: questions.length || 10,
+      questions: questions,
+      timeSpent: attemptDetails?.time_spent || 0,
+      quizId: quizDetails?.id || "5",
+      originalQuiz: quizDetails || HISTORY_QUIZ,
+      attemptInfo: {
+        date: new Date(attemptDetails?.attempt_at || Date.now()).toLocaleDateString(),
+        score: attemptDetails?.score || 0
+      } */
+        score: scorePercentage,
+        correctCount: correctCount,
+        incorrectCount: incorrectCount,
+        total: questions.length, // Changed 'total' to 'totalQuestions'
+        questions: questions,
+        timeSpent: attemptDetails?.time_spent || 0,
+        quizId: quizDetails?.id || "5",
+        originalQuiz: quizDetails || HISTORY_QUIZ,
+        attemptInfo: {
+          date: new Date(attemptDetails?.attempt_at || Date.now()).toLocaleDateString(),
+          score: scorePercentage
+        }
+      
+    };
+
+    navigation.navigate("QuizScreenForHistory", {
+      quizResults: quizResults,
+      attemptId: attemptDetails?.id_attempt || "fallback",
+      id_quiz: quizDetails?.id || "5",
+      quizTitle: quizDetails?.title || "History Quiz",
+      quizDescription: quizDetails?.description || "Test your knowledge of history"
+    });
+  }, [navigation]);
+    
+/*
+  const handleAttemptPress = useCallback(async (attemptData) => {
+    try {
+      // Start by showing a loading indicator
+      setLoading(true);
+      
+      let attemptDetails = null;
+      //let quizDetails = null;
+
+      const quizResponse = await axios.post(`${API_URL}/students/getQuizDetails`, {
+        id_quiz: attemptData.id_quiz || id_quiz
+      });
+      
+      const quizDetails = quizResponse.data?.quiz || HISTORY_QUIZ;
+      
+      // Step 1: Try to get attempt details
+      try {
+        console.log("Getting attempt details for ID:", attemptData.id_attempt);
+        const response = await axios.post(`${API_URL}/students/getAttemptById`, {
+          id_attempt: attemptData.id_attempt
+        });
+
+        console.log("Attempt details response:", response.data);
+
+        
+        if (response.data && response.data.data) {
+          attemptDetails = response.data.data;
+        } else {
+          throw new Error("No data returned from attempt details API");
+        }
+      } catch (err) {
+        console.log("Error fetching attempt details:", err);
+        // Create fallback attempt details
+        attemptDetails = {
+          id_attempt: attemptData.id_attempt || "fallback-attempt",
+          id_quiz: attemptData.id_quiz || id_quiz || "5",
+          score: attemptData.score || 0,
+          attempt_at: attemptData.attempt_at || new Date().toISOString()
+        };
+      }
+
+       // Step 2: Try to get quiz details
+    try {
+      console.log("Getting quiz details for ID:", attemptDetails.id_quiz);
+      const quizResponse = await axios.post(`${API_URL}/students/getQuizDetails`, {
+        id_quiz: attemptDetails.id_quiz
+      });
+      
+      console.log("Quiz details response:", quizResponse.data);
+
+      if (quizResponse.data && quizResponse.data.quiz) {
+        quizDetails = quizResponse.data.quiz;
+      } else {
+        console.log("No quiz data in response");
+        throw new Error("No data returned from quiz details API");
+      }
+    } catch (err) {
+      console.log("Error fetching quiz details:", err);
+      // Use fallback quiz data
+      quizDetails = HISTORY_QUIZ;
+      console.log("Using fallback quiz data");
+    }
+
+      // Step 3: Navigate with whatever data we have
+      console.log("Navigating to quiz history with data:", { 
+        quizDetails: quizDetails ? "available" : "null", 
+        attemptDetails: attemptDetails ? "available" : "null" 
+      });
+      navigateToQuizHistory(quizDetails, attemptDetails);
+    
+    } catch (error) {
+      console.error("Error handling attempt press:", error);
+      Alert.alert(
+        "Error", 
+        "Failed to load attempt details. Would you like to try offline mode?",
+        [
+          {
+            text: "Cancel",
+            style: "cancel"
+          },
+          {
+            text: "Use Offline Mode",
+            onPress: () => navigateToQuizHistory(HISTORY_QUIZ, attemptData)
+          }
+        ]
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [id_quiz, navigateToQuizHistory]);  */
+
+
+const handleAttemptPress = useCallback(async (attemptData) => {
+  try {
+    setLoading(true);
+    
+    // Get the quiz details first (you might already have this)
+    const quizResponse = await axios.post(`${API_URL}/students/getQuizDetails`, {
+      id_quiz: attemptData.id_quiz || id_quiz
+    });
+    
+    const quizDetails = quizResponse.data?.quiz || HISTORY_QUIZ;
+
+    // Then get the specific attempt details
+    const attemptResponse = await axios.post(`${API_URL}/students/getAttemptById`, {
+      id_attempt: attemptData.id_attempt
+    });
+
+    const attemptDetails = attemptResponse.data?.data || {
+      id_attempt: attemptData.id_attempt,
+      id_quiz: attemptData.id_quiz,
+      score: attemptData.score,
+      attempt_at: attemptData.attempt_at,
+      time_spent: attemptData.time_spent || 0
+      // Add any other necessary attempt details
+    };
+
+    // Prepare the quiz results object that QuizScreenForHistory expects
+    /*const quizResults = {
+      score: attemptDetails.score,
+      total: quizDetails.questions?.length || 10,
+      questions: quizDetails.questions?.map((q, index) => ({
+        ...q,
+        originalIndex: index,
+        isCorrect: false // This should be determined from attempt data
+      })) || [],
+      correctCount: Math.round((attemptDetails.score / 100) * (quizDetails.questions?.length || 10)),
+      incorrectCount: (quizDetails.questions?.length || 10) - Math.round((attemptDetails.score / 100) * (quizDetails.questions?.length || 10)),
+      timeSpent: attemptDetails.time_spent || 0,
+      quizId: quizDetails.id,
+      originalQuiz: quizDetails,
+      attemptInfo: {
+        date: new Date(attemptDetails.attempt_at).toLocaleDateString(),
+        score: attemptDetails.score
+      }
+    }; */
+
+
+    // 3. Prepare navigation params
+    const navigationParams = {
+      quizResults: {
+        score: attemptDetails.score,
+        total: quizDetails.questions?.length || 10,
+        questions: quizDetails.questions?.map((q, index) => ({
+          ...q,
+          originalIndex: index,
+          isCorrect: false // This should come from attempt data if available
+        })) || [],
+        correctCount: Math.round((attemptDetails.score / 100) * (quizDetails.questions?.length || 10)),
+        incorrectCount: (quizDetails.questions?.length || 10) - Math.round((attemptDetails.score / 100) * (quizDetails.questions?.length || 10)),
+        timeSpent: attemptDetails.time_spent || 0,
+        quizId: quizDetails.id,
+        originalQuiz: quizDetails,
+        attemptInfo: {
+          date: new Date(attemptDetails.attempt_at).toLocaleDateString(),
+          score: attemptDetails.score
+        }
+      }
+    };
+
+    console.log("Navigating to QuizScreenForHistory with:", navigationParams);
+
+
+
+    // Navigate to QuizScreenForHistory with all the required data
+    
+        navigation.navigate("QuizScreenForHistory", navigationParams);
+
+
+  } catch (error) {
+    console.error("Error loading attempt details:", error);
+    Alert.alert(
+      "Error",
+      "Could not load attempt details. Would you like to view offline data?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "View Offline", 
+          onPress: () => navigation.navigate("QuizScreenForHistory", {
+            quizResults: {
+              ...HISTORY_QUIZ,
+              score: attemptData.score || 0,
+              total: HISTORY_QUIZ.questions.length,
+              questions: HISTORY_QUIZ.questions.map((q, i) => ({
+                ...q,
+                originalIndex: i,
+                isCorrect: Math.random() > 0.5 // Random for fallback
+              })),
+              correctCount: Math.round((attemptData.score / 100) * HISTORY_QUIZ.questions.length),
+              incorrectCount: HISTORY_QUIZ.questions.length - Math.round((attemptData.score / 100) * HISTORY_QUIZ.questions.length),
+              timeSpent: 0,
+              quizId: "history-quiz",
+              originalQuiz: HISTORY_QUIZ,
+              attemptInfo: {
+                date: new Date(attemptData.attempt_at).toLocaleDateString(),
+                score: attemptData.score
+              }
+            }
+          })
+        }
+      ]
+    );
+  } finally {
+    setLoading(false);
+  }
+}, [id_quiz, navigation]);
+
+
+
   // Render item function for FlatList
   const renderItem = useCallback(({ item, index }) => (
     <QuestionItem
-      question={item}
+      attempt={item}
       index={index}
-      isCorrect={item.isCorrect}
-      onPress={(attemptData) => {
-        // Use the direct HISTORY_QUIZ constant - no need for try/catch anymore
-        const historyQuiz = HISTORY_QUIZ;
-        
-        // Take questions from the quiz
-        const realQuestions = historyQuiz.questions.slice(0, totalQuestions);
-        
-        // Generate mock user answers - correct for half the questions
-        /*const userAnswers = realQuestions.map((question, idx) => {
-          const correctAnswer = question.correctAnswer;
-          // For even-indexed questions, select the correct answer
-          // For odd-indexed questions, select an incorrect answer
-          const selectedOption = idx % 2 === 0 
-            ? correctAnswer 
-            : (correctAnswer + 1) % question.options.length;
+      onPress={ handleAttemptPress }
+        animationDelay={500} // Start after main animations
+    />
+   ), [handleAttemptPress]);
+      
+        /*try {
+          // First get the attempt details to ensure we have the correct data
+          const response = await axios.post(`${API_URL}/students/getAttemptById`, {
+            id_attempt: attemptData.id_attempt
+          });
           
-          return {
-            id: question.id,
-            // Use "Question X" format instead of actual question text
-            text: `Question ${idx + 1}`,
-            isCorrect: idx % 2 === 0, // Even questions are correct
-            selections: [selectedOption], // What the user selected
-            answer: selectedOption, // For backward compatibility
-            originalIndex: idx // IMPORTANT: Index in the quiz questions array
-          };
-        });
-        
-        // Navigate to the dedicated history review screen instead of the regular Quiz screen
-        navigation.navigate("QuizScreenForHistory", {
-          quizResults: {
-            // Basic score information
-            score: attemptData.score,
-            total: totalQuestions,
-            correctCount: Math.round((attemptData.score / 100) * totalQuestions),
-            incorrectCount: totalQuestions - Math.round((attemptData.score / 100) * totalQuestions),
-            timeSpent: 300, // Mock time spent in seconds
+          if (response.data && response.data.data) {
+            const attemptDetails = response.data.data;
             
-            // Questions to display
-            questions: userAnswers,
+            // Now get the quiz details for this attempt
+            const quizResponse = await axios.post(`${API_URL}/students/getQuizDetails`, {
+              id_quiz: attemptDetails.id_quiz
+            });
             
-            // Original quiz data for reference
-            originalQuiz: historyQuiz,
-            
-            // Quiz ID for reference
-            quizId: historyQuiz.id,
-            
-            // Include attempt info
-            attemptInfo: {
-              date: attemptData.date
+            if (quizResponse.data && quizResponse.data.quiz) {
+              const quizDetails = quizResponse.data.quiz;
+              
+              // Navigate to the quiz results screen with all the data
+              navigation.navigate("QuizScreenForHistory", {
+                attemptId: attemptDetails.id_attempt,
+                id_quiz: attemptDetails.id_quiz,
+                score: attemptDetails.score,
+                // Add any other necessary data
+                quizTitle: quizDetails.title,
+                quizDescription: quizDetails.description
+              });
+            } else {
+              Alert.alert("Error", "Could not fetch quiz details.");
             }
+          } else {
+            Alert.alert("Error", "Could not fetch attempt details.");
           }
-        }); */
-
-
-        const userAnswers = realQuestions.map((question, idx) => {
-          const correctAnswer = question.correctAnswer;
-          const selectedOption = idx % 2 === 0 
-            ? correctAnswer 
-            : (correctAnswer + 1) % question.options.length;
-        
-          return {
-            id: question.id,
-            text: `Question ${idx + 1}`,
-            isCorrect: idx % 2 === 0,
-            selections: [selectedOption],
-            answer: selectedOption,
-            originalIndex: idx
-          };
-        });
-        
-        const correctCount = userAnswers.filter(q => q.isCorrect).length;
-        const incorrectCount = userAnswers.length - correctCount;
-        
-        navigation.navigate("QuizScreenForHistory", {
-          quizResults: {
-            score: attemptData.score,
-            total: totalQuestions,
-            correctCount,
-            incorrectCount,
-            timeSpent: 300,
-            questions: userAnswers,
-            originalQuiz: historyQuiz,
-            quizId: historyQuiz.id,
-            attemptInfo: {
-              date: attemptData.date
-            }
-          }
-        });
-        
+        } catch (error) {
+          console.error("Error navigating to attempt details:", error);
+          Alert.alert("Error", "Failed to load attempt details. Please try again.");
+        }  
       }}
       animationDelay={500} // Start after main animations
     />
-  ), [navigation, totalQuestions]);
+  ), [navigation]);  */
 
   // Render filter options
   const renderFilterOptions = () => {
@@ -549,6 +933,42 @@ export default function QuizScoreScreen({ navigation, route }) {
       </View>
     );
   };
+
+  // Render loading state
+  const renderLoading = () => (
+    <View style={styles.loadingContainer}>
+      <ActivityIndicator size="large" color="#7B5CFF" />
+      <Text style={styles.loadingText}>Loading attempts...</Text>
+    </View>
+  );
+
+  // Render error state
+  const renderError = () => (
+    <View style={styles.errorContainer}>
+      <Icon name="alert-triangle" size={50} color="#FF5252" />
+      <Text style={styles.errorText}>{error}</Text>
+      <TouchableOpacity 
+        style={styles.retryButton}
+        onPress={() => {
+          // Trigger a refetch by updating the state
+          setLoading(true);
+          // This will re-run the useEffect
+          setAttempts([]);
+        }}
+      >
+        <Text style={styles.retryButtonText}>Retry</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  // Render empty state
+  const renderEmpty = () => (
+    <View style={styles.emptyContainer}>
+      <Icon name="inbox" size={50} color="#7B5CFF" />
+      <Text style={styles.emptyText}>No attempts found</Text>
+      <Text style={styles.emptySubtext}>Take a quiz to see your results here</Text>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
@@ -594,8 +1014,11 @@ export default function QuizScoreScreen({ navigation, route }) {
               <Icon name="arrow-left" size={24} color="white" />
             </TouchableOpacity>
 
-            {/* Score circle */}
-            <ScoreCircle score={correctAnswers} total={totalQuestions} />
+            {/* Score circle - using the most recent attempt score if available */}
+            <ScoreCircle 
+              score={attempts.length > 0 ? Math.round(attempts[0].score / totalQuestions) : correctAnswers} 
+              totalQuestions={totalQuestions} 
+            />
 
             {/* Time spent if available */}
             {timeSpent > 0 && (
@@ -633,13 +1056,22 @@ export default function QuizScoreScreen({ navigation, route }) {
         {/* Add filter component */}
         {renderFilterOptions()}
 
-        <FlatList
-          data={filteredAttempts}
-          renderItem={renderItem}
-          keyExtractor={keyExtractor}
-          contentContainerStyle={styles.questionsList}
-          showsVerticalScrollIndicator={false}
-        />
+        {/* Conditional rendering based on loading/error/empty states */}
+        {loading ? (
+          renderLoading()
+        ) : error ? (
+          renderError()
+        ) : filteredAttempts.length === 0 ? (
+          renderEmpty()
+        ) : (
+          <FlatList
+            data={filteredAttempts}
+            renderItem={renderItem}
+            keyExtractor={keyExtractor}
+            contentContainerStyle={styles.questionsList}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
       </Animated.View>
     </View>
   )
@@ -843,4 +1275,57 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
   },
+  // New styles for loading, error and empty states
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#666',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+  },
+  retryButton: {
+    marginTop: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: '#7B5CFF',
+    borderRadius: 20,
+  },
+  retryButtonText: {
+    color: 'white',
+    fontWeight: '600',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyText: {
+    marginTop: 10,
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  emptySubtext: {
+    marginTop: 5,
+    fontSize: 14,
+    color: '#888',
+    textAlign: 'center',
+  }
 })

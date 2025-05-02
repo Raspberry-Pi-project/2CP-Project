@@ -284,7 +284,8 @@ export default function QuizScreenForHistory({ navigation, route }) {
   const quizResultsRef = useRef(route.params?.quizResults);
   const {
     score = 0,
-   // total = 10,
+    total = 10,
+    //totalQuestions = 0,
     questions = [],
     correctCount = 0,
     incorrectCount = 0,
@@ -298,7 +299,7 @@ export default function QuizScreenForHistory({ navigation, route }) {
   // Ensure normalized score for consistent display
   const normalizedScore = {
     score: score || 0,
-    total: total || 0,
+    totalQuestions: total || 10,
     correctCount: correctCount || 0,
     incorrectCount: incorrectCount || 0
   };

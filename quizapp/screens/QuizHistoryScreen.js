@@ -12,7 +12,7 @@ export default function QuizHistoryScreen({ navigation, route }) {
   const {  score, timeSpent, id_quiz, id_student, basicQuizData,nb_attempts } = route.params || {};
   const { userData } = useContext(UserContext)
   const [loading, setLoading] = useState(!basicQuizData)
-  const [quizData, setQuizData] = useState(null)
+  const [quizData, setQuizData] = useState(null) 
   const [quiz, setQuiz] = useState(basicQuizData); // State to manage quiz data
   
 useEffect(()=>{
