@@ -110,6 +110,6 @@ const getQuizAttempts = async (req, res) => {
   module.exports = {
     startAttempt, 
     getAttemptById,
-    getQuizAttempts
+    getQuizAttempts,
   };
     
