@@ -31,7 +31,7 @@ export default function QuizletScreen2({ navigation, route }) {
 
   // Check if quiz data exists in route params
   useEffect(() => {
-    if (!route.params || !route.params.quiz) {
+    if (!route.params || !route.params.quizData) {
       Alert.alert("Error", "No quiz data found. Please select a quiz from the home screen.", [
         { text: "Go Back", onPress: () => navigation.goBack() },
       ])
@@ -39,11 +39,8 @@ export default function QuizletScreen2({ navigation, route }) {
   }, [])
 
   // Get physics quiz data from route params or use default
-  const physicsQuiz = route.params?.quiz ||
-    QUIZ_DATA.find((quiz) => quiz.id === "4") || {
-      title: "Physics Quiz",
-      questions: [],
-    }
+  const quiz = route.params?.quiz 
+  const questions = quiz.questions 
 
   const [currentView, setCurrentView] = useState("list") // 'list' or 'question'
   const [currentQuestion, setCurrentQuestion] = useState(0)
@@ -51,7 +48,7 @@ export default function QuizletScreen2({ navigation, route }) {
   const [selectedAnswers, setSelectedAnswers] = useState({})
   const [score, setScore] = useState(0)
   const [answers, setAnswers] = useState({})
-  const [timeLeft, setTimeLeft] = useState(300) // 5 minutes in seconds
+  const [timeLeft, setTimeLeft] = useState(questions[currentQuestion].duration) // 5 minutes in seconds
   const [correctCount, setCorrectCount] = useState(0)
   const [incorrectCount, setIncorrectCount] = useState(0)
 
@@ -76,7 +73,7 @@ export default function QuizletScreen2({ navigation, route }) {
     setSelectedAnswers({})
     setScore(0)
     setAnswers({})
-    setTimeLeft(300) // Reset to 5 minutes
+    setTimeLeft(questions[currentQuestion].duration) // Reset to 5 minutes
     setCorrectCount(0)
     setIncorrectCount(0)
     
@@ -158,13 +155,13 @@ export default function QuizletScreen2({ navigation, route }) {
         // Update timer animation
         Animated.timing(timerAnim, {
           toValue: prev / 300, // Normalize from 0 to 1
-          duration: 1000,
+          duration: 60,
           useNativeDriver: false,
         }).start()
 
         return prev - 1
       })
-    }, 1000)
+    }, 60)
 
     return () => clearInterval(timerInterval)
   }, [])
@@ -224,7 +221,7 @@ export default function QuizletScreen2({ navigation, route }) {
 
   const handleSelectQuestion = (index) => {
     setCurrentQuestion(index)
-    setSelectedAnswer(answers[index]?.answer !== undefined ? answers[index].answer : null)
+    setSelectedAnswer(answers[index]?.answer_text !== undefined ? answers[index].answer_text : null)
     setCurrentView("question")
   }
 
