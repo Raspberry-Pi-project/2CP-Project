@@ -67,10 +67,49 @@ const startAttempt = async (req, res) => {
       res.status(500).json({ error: "Error fetching attempt" });
     }
   };
+
+ 
+const getQuizAttempts = async (req, res) => {
+  
+  const { id_quiz } = req.params;
+  console.log(`Fetching attempts for quizId: ${id_quiz}`);  // Debug log
+
+  if ( !id_quiz || isNaN(id_quiz)) {
+    return res.status(400).json({ error: 'Invalid quiz ID' });
+  }
+
+  try {
+    const attempts = await prisma.attempts.findMany({
+      where: { id_quiz: parseInt(id_quiz) },
+      orderBy: { attempt_at: 'asc' },
+      include: {
+        student_answers: true,  // Include student_answers related to each attempt
+        students: true,          // Include student information
+        quizzes: true,           // Include quiz details     
+       },
+    });
+
+    console.log('Fetched attempts:', attempts); 
+
+    if ( !attempts ||attempts.length === 0) {
+      return res.status(404).json({ message: 'No attempts found for this quiz' });
+    }
+
+    res.json({ attempts });
+  } catch (error) {
+    console.error('Error fetching quiz attempts:', error);
+    res.status(500).json({ error: 'Failed to get quiz attempts' });
+  }
+
+  //console.log(attempts);  // See if the attempts are returned correctly
+
+};
+
   
 
   module.exports = {
-    startAttempt,
-    getAttemptById
+    startAttempt, 
+    getAttemptById,
+    getQuizAttempts
   };
     

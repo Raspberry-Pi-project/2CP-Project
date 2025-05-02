@@ -271,6 +271,10 @@ const deleteQuiz = async (req, res) => {
   try {
     const { id_quiz } = req.body;
 
+    await prisma.attempts.deleteMany({
+      where: { id_quiz: id_quiz },
+    });
+
     const deletedQuiz = await prisma.quizzes.delete({
       where: {
         id_quiz: id_quiz,
@@ -319,7 +323,7 @@ const getQuizDetails = async (req, res) => {
 module.exports = {
   getQuizzes,
   createQuiz,
-  deleteQuiz,
+  deleteQuiz, 
   updateQuiz,
   getQuizDetails,
 };

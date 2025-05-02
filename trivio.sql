@@ -243,6 +243,7 @@ CREATE TABLE `students` (
 INSERT INTO `students` (`id_student`, `first_name`, `last_name`, `annee`, `groupe_student`, `email`, `password`, `created_at`) VALUES
 (2, 'Abdelouahab', 'Meridja', 2, 9, 'na_meridja@esi.dz', '$2b$10$K8x4NYV8Yf6aSwFcbJobQusLKhDal.S43S.vtRAyTAa0MOrM.nhU.', '2025-03-11 07:57:03'),
 (3, 'Wassim', 'Belguenbour', 2, 9, 'test2@gmail.com', '$2b$10$UIKZClF88HykBlX.6x1eJOwpeMsJrX2BhCBRK8B7EIf5ffmWCcubm', '2025-03-11 08:26:31');
+(3, 'Lyna', 'Mostefaoui', 2, 9, 'lyna11@esi.dz', '$2b$10$3gJ.ZEvETdj0NnnO1taBLOW1g3FYjtf71DJbg0QjRmtj66/miDFLe', '2025-04-18 12:16:44');
 
 -- --------------------------------------------------------
 
