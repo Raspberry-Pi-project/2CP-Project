@@ -1,0 +1,116 @@
+.presentation-button {
+    background-color: #7b68ee;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .presentation-button:hover {
+    background-color: #6a5acd;
+  }
+  
+  .presentation-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .presentation-dialog {
+    background-color: white;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+  }
+  
+  .presentation-dialog-header {
+    padding: 20px;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .presentation-dialog-header h3 {
+    margin: 0 0 5px 0;
+    font-size: 20px;
+  }
+  
+  .presentation-dialog-header p {
+    margin: 0;
+    color: #666;
+    font-size: 14px;
+  }
+  
+  .presentation-dialog-content {
+    padding: 20px;
+  }
+  
+  .presentation-dialog-content h4 {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    color: #333;
+  }
+  
+  .presentation-radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .presentation-radio-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .presentation-radio-option input[type="radio"] {
+    margin: 0;
+  }
+  
+  .presentation-radio-option label {
+    font-size: 14px;
+  }
+  
+  .presentation-dialog-footer {
+    padding: 15px 20px;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+  
+  .presentation-dialog-button {
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+  }
+  
+  .presentation-dialog-button.cancel {
+    background-color: #f5f5f5;
+    color: #333;
+    border: 1px solid #e0e0e0;
+  }
+  
+  .presentation-dialog-button.start {
+    background-color: #4cd3a5;
+    color: white;
+  }
+  
+  .presentation-dialog-button.start:hover {
+    background-color: #3bb894;
+  }
+  

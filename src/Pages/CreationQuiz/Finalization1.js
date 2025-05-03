@@ -1,115 +1,115 @@
-import { useState, useEffect } from "react";
-import "./Finalization1.css";
-import "./quiz-summary-styles.css"; // Add this import
-import { useNavigate } from "react-router-dom";
-import { faTrash, faPlus, faEdit } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useQuiz } from "../../context/QuizProvider";
-import { useAuth } from "../../context/AuthProvider";
-import axios from "axios";
+import { useState, useEffect } from "react"
+import "./Finalization1.css"
+import "./quiz-summary-styles.css"
+import { useNavigate } from "react-router-dom"
+import { faTrash, faPlus, faEdit } from "@fortawesome/free-solid-svg-icons"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { useQuiz } from "../../context/QuizProvider"
+import { useAuth } from "../../context/AuthProvider"
+import axios from "axios"
 
 const Finalization1 = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const { quizData, setQuizData } = useQuiz();
-  const [currentStep, setCurrentStep] = useState(4);
-  const [error, setError] = useState(null);
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  const { quizData, setQuizData } = useQuiz()
+  const [currentStep, setCurrentStep] = useState(4)
+  const [error, setError] = useState(null)
 
   // Get questions from quizData
-  const questions = quizData.questions || [];
+  const questions = quizData.questions || []
   useEffect(() => {
     setQuizData({
       ...quizData,
       status: "draft",
-    });
-  }, []);
+    })
+  }, [])
 
   const handleEdit = (index) => {
     // Navigate back to generating page with the question to edit
-    navigate("/generating", { state: { editIndex: index } });
-  };
+    navigate("/generating", { state: { editIndex: index } })
+  }
 
   const handleDelete = (index) => {
     // Remove the question at the specified index
-    const updatedQuestions = questions.filter((_, i) => i !== index);
+    const updatedQuestions = questions.filter((_, i) => i !== index)
 
     // Update question numbers
     const renumberedQuestions = updatedQuestions.map((q, i) => ({
       ...q,
       question_number: i + 1,
-    }));
+    }))
 
     // Update quizData
     setQuizData({
       ...quizData,
       questions: renumberedQuestions,
-    });
-  };
+    })
+  }
 
   const handleAddQuestion = () => {
     // Navigate to generating page to add a new question
-    navigate("/generating");
-  };
+    navigate("/generating")
+  }
 
   const handlePublish = () => {
     // Validate quiz data
     if (!quizData.title || !quizData.subject) {
-      setError("Title and subject are required");
-      return;
+      setError("Title and subject are required")
+      return
     }
 
     if (questions.length === 0) {
-      setError("At least one question is required");
-      return;
+      setError("At least one question is required")
+      return
     }
 
     // Set status to published
     setQuizData({
       ...quizData,
       status: "published",
-    });
+    })
 
     // Navigate to finalization2
-    navigate("/finalization2");
-  };
+    navigate("/finalization2")
+  }
 
   const handleSaveInDraft = async () => {
     // Set status to draft
     setQuizData({
       ...quizData,
       status: "draft",
-    });
-    console.log("quizData", quizData);
+    })
+    console.log("quizData", quizData)
     const publishedQuiz = await axios.post(
       "http://localhost:3000/teachers/updateQuiz",
       quizData,
       { headers: { Authorization: `Bearer ${user.token}` } },
-      { withCredentials: true }
-    );
-    console.log("publishedQuiz", publishedQuiz);
+      { withCredentials: true },
+    )
+    console.log("publishedQuiz", publishedQuiz)
     setQuizData({
       ...quizData,
       title: "",
       description: "",
       subject: "",
-      nb_attempts: 0,
-      duration: 0, // Default 30 minutes
+      nb_attempts: 1,
+      duration: 30, // Default 30 minutes
       correctionType: "auto", // Default to auto-graded
-      score: 0, // Default score
+      score: 100, // Default score
       for_year: 0, // To be filled by user
       for_groupe: 0, // To be filled by user
       status: "draft", // Default to draft
       questions: [], // Array to hold questions
       created_at: "",
-    });
+    })
     // Navigate to draft quiz page
-    navigate("/draftquiz");
-  };
+    navigate("/draftquiz")
+  }
 
   const handleCancel = () => {
     // Navigate back to generating page
-    navigate("/generating");
-  };
+    navigate("/generating")
+  }
 
   return (
     <div className="quiz-generator-container">
@@ -127,9 +127,7 @@ const Finalization1 = () => {
             {[1, 2, 3, 4, 5].map((step) => (
               <div
                 key={step}
-                className={`step ${currentStep === step ? "active" : ""} ${
-                  currentStep > step ? "completed" : ""
-                }`}
+                className={`step ${currentStep === step ? "active" : ""} ${currentStep > step ? "completed" : ""}`}
               >
                 {step}
               </div>
@@ -137,9 +135,9 @@ const Finalization1 = () => {
           </div>
 
           {/* Quiz Summary */}
-          <div className="quiz-summary">
+          <div className="quiz-summaryy">
             <h3>Quiz Summary</h3>
-            <div className="summary-details">
+            <div className="summary-detailss">
               <p>
                 <strong>Title:</strong> {quizData.title}
               </p>
@@ -150,25 +148,17 @@ const Finalization1 = () => {
                 <strong>Description:</strong> {quizData.description}
               </p>
               <p>
-                <strong>Duration:</strong>{" "}
-                {quizData.duration === -1
-                  ? "No time limit"
-                  : `${quizData.duration} minutes`}
+                <strong>Duration:</strong> {quizData.duration === -1 ? "No time limit" : `${quizData.duration} minutes`}
               </p>
               <p>
-                <strong>Attempts:</strong>{" "}
-                {quizData.nb_attempts === -1
-                  ? "Unlimited"
-                  : quizData.nb_attempts}
+                <strong>Attempts:</strong> {quizData.nb_attempts === -1 ? "Unlimited" : quizData.nb_attempts}
               </p>
               <p>
                 <strong>Score:</strong> {quizData.score}
               </p>
               <p>
                 <strong>Correction Type:</strong>{" "}
-                {quizData.correctionType === "auto"
-                  ? "Auto-graded"
-                  : "Manually graded"}
+                {quizData.correctionType === "auto" ? "Auto-graded" : "Manually graded"}
               </p>
             </div>
           </div>
@@ -180,38 +170,23 @@ const Finalization1 = () => {
               {questions.map((question, index) => (
                 <div key={index} className="question-card">
                   <div className="question-header">
-                    <span className="question-number">
-                      Question {question.question_number}
-                    </span>
-                    <span className="question-type">
-                      {question.question_type}
-                    </span>
+                    <span className="question-number">Question {question.question_number}</span>
+                    <span className="question-type">{question.question_type}</span>
                   </div>
                   <div className="question-content">
                     <p className="question-text">{question.question_text}</p>
                     <div className="question-details">
                       <span className="question-points">
-                        {question.points}{" "}
-                        {question.points === 1 ? "point" : "points"}
+                        {question.points} {question.points === 1 ? "point" : "points"}
                       </span>
-                      {question.duration > 0 && (
-                        <span className="question-duration">
-                          {question.duration} seconds
-                        </span>
-                      )}
+                      {question.duration > 0 && <span className="question-duration">{question.duration} seconds</span>}
                     </div>
                   </div>
                   <div className="question-actions">
-                    <button
-                      className="edit-btn"
-                      onClick={() => handleEdit(index)}
-                    >
+                    <button className="edit-btn" onClick={() => handleEdit(index)}>
                       <FontAwesomeIcon icon={faEdit} />
                     </button>
-                    <button
-                      className="delete-btn"
-                      onClick={() => handleDelete(index)}
-                    >
+                    <button className="delete-btn" onClick={() => handleDelete(index)}>
                       <FontAwesomeIcon icon={faTrash} />
                     </button>
                   </div>
@@ -241,9 +216,7 @@ const Finalization1 = () => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-
-export default Finalization1;
-
+export default Finalization1
