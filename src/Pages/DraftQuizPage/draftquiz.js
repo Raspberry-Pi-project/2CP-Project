@@ -7,6 +7,60 @@ import { useAuth } from "../../context/AuthProvider";
 import { useState, useEffect } from "react";
 import { useQuiz } from "../../context/QuizProvider"; // Import the QuizProvider context
 import LOGO from "../../photos/Frame 39 (2).png";
+const horizontalGridStyle = {
+  display: "flex",
+  overflowX: "auto",
+  scrollBehavior: "smooth",
+  padding: "10px 0",
+  marginBottom: "20px",
+  msOverflowStyle: "none", /* IE and Edge */
+  scrollbarWidth: "none", /* Firefox */
+};
+
+const quizCardStyle = {
+  flex: "0 0 calc(25% - 20px)",
+  minWidth: "calc(25% - 20px)",
+  marginRight: "20px",
+};
+
+const paginationStyle = {
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  margin: "20px 0",
+  gap: "10px",
+};
+
+const pageNumberStyle = {
+  width: "36px",
+  height: "36px",
+  borderRadius: "50%",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  cursor: "pointer",
+  backgroundColor: "#f0f0f0",
+  border: "none",
+  fontWeight: "500",
+};
+
+const activePageStyle = {
+  ...pageNumberStyle,
+  backgroundColor: "#7b68ee",
+  color: "white",
+};
+
+const pageArrowStyle = {
+  width: "36px",
+  height: "36px",
+  borderRadius: "50%",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  cursor: "pointer",
+  backgroundColor: "#f0f0f0",
+  border: "none",
+};
 
 const DraftQuiz = () => {
   const [draftQuizzzes, setDraftQuizzzes] = useState([]);
@@ -19,6 +73,7 @@ const DraftQuiz = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { setQuizData } = useQuiz(); // Get setQuiz function from QuizProvider context
+  const [totalPages, setTotalPages] = useState(0);
   // Filter options
   const filters = [
     "All",
@@ -47,6 +102,8 @@ const DraftQuiz = () => {
           console.log("Quizzes data:", response.data);
 
         setQuizzes(quizzesData); // Set quizzes data from the backend
+        setTotalPages(response.data.totalPages || 0); // Set total pages from the response
+
       } catch (error) {
         setError("Failed to fetch quizzes.");
         console.error("Error fetching quizzes:", error);
@@ -94,6 +151,10 @@ const DraftQuiz = () => {
     // if we want to add the option of delete or other things ...
     console.log(`Options for quiz ${quizId}`);
   };
+
+  useEffect(() => {
+    console.log("Page changed:", page); // Log the current page whenever it changes
+  }, [page]);
 
   return (
     <div className="history-container">
@@ -170,6 +231,19 @@ const DraftQuiz = () => {
             ) : (
               <p>No quizzes found</p>
             )}
+          </div>
+        )}
+        {/* Pagination - using inline styles */}
+        {!loading && !error && quizzes.length > 0 && (
+          <div style={paginationStyle}>
+            <button style={pageArrowStyle} onClick={()=>{if(page > 1) { setPage(page - 1)}}}>&#10094;</button>
+            <button style={activePageStyle}>{page}</button>
+            {totalPages - page >= 1 && <button style={pageNumberStyle} onClick={()=>{setPage(page + 1)}}>{page+1}</button>}
+            {totalPages - page >= 2 && <button style={pageNumberStyle} onClick={()=>{setPage(page + 2)}}>{page+2}</button>}
+            {totalPages - page >= 3 && <button style={pageNumberStyle} onClick={()=>{setPage(page + 3)}}>{page+3}</button>}
+            {totalPages - page >= 4 && <span>...</span>}
+            {totalPages - page >= 4 && <button style={pageNumberStyle} onClick={()=>{setPage(totalPages)}}>{totalPages}</button>}
+            <button style={pageArrowStyle} onClick={()=>{ if (totalPages - page >= 1) {setPage(page +1)}}}>&#10095;</button>
           </div>
         )}
       </div>
