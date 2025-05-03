@@ -15,9 +15,7 @@ const Infos = () => {
   const [file, setFile] = useState(null);
 
   const [image, setImage] = useState(quizData.image || null);
-  const [navigation, setNavigation] = useState(
-    quizData.navigation || "dynamic"
-  );
+  
 
   const [currentStep, setCurrentStep] = useState(1);
   const [error, setError] = useState(null);
@@ -50,7 +48,7 @@ const Infos = () => {
       subject,
       title,
       description,
-      navigation,
+      
     });
   }, [subject, title, description, user, image]);
 
@@ -78,7 +76,6 @@ const Infos = () => {
     formData.append("title", title);
     formData.append("description", description);
     formData.append("subject", subject);
-    formData.append("navigation", navigation);
     try {
       const craetedQuiz = await axios.post(
         "http://localhost:3000/teachers/createQuiz",
@@ -99,7 +96,7 @@ const Infos = () => {
         subject,
         title,
         description,
-        navigation,
+        
       });
       console.log("quizData", quizData);
       navigate("/duration");
@@ -173,15 +170,7 @@ const Infos = () => {
                 rows="4"
               />
             </div>
-            <div className="form-group">
-              <label>Navigation:</label>
-              <textarea
-                placeholder="Navigation between question"
-                value={navigation}
-                onChange={(e) => setNavigation(e.target.value)}
-                className="form-input"
-              />
-            </div>
+            
             <div className="form-group">
               <label>Image :</label>
               <div className="image-upload-container">

@@ -74,6 +74,7 @@ const HistoryPage = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const { setQuizData } = useQuiz();
+  const [totalPages, setTotalPages] = useState(0);
 
   // Filter options
   const filters = [
@@ -100,8 +101,9 @@ const HistoryPage = () => {
         const quizzesData = Array.isArray(response.data)
           ? response.data
           : response.data.quizzes || response.data.data || [];
-
+       
         setQuizzes(quizzesData);
+        setTotalPages(response.data.totalPages || 0); // Set total pages from the response
       } catch (error) {
         setError("Failed to fetch quizzes.");
         console.error("Error fetching quizzes:", error);
@@ -151,7 +153,7 @@ const HistoryPage = () => {
     : [];
 
   // Calculate total pages
-  const totalPages = Math.ceil(filteredQuizzes.length / 4) || 1;
+  
 
   return (
     <div className="history-container">
@@ -239,16 +241,17 @@ const HistoryPage = () => {
           </div>
         )}
         
-        {/* Pagination - using inline styles */}
-        {!loading && !error && quizzes.length > 0 && (
+         {/* Pagination - using inline styles */}
+         {!loading && !error && quizzes.length > 0 && (
           <div style={paginationStyle}>
-            <button style={pageArrowStyle}>&#10094;</button>
-            <button style={activePageStyle}>1</button>
-            {totalPages > 1 && <button style={pageNumberStyle}>2</button>}
-            {totalPages > 2 && <button style={pageNumberStyle}>3</button>}
-            {totalPages > 4 && <span>...</span>}
-            {totalPages > 3 && <button style={pageNumberStyle}>{totalPages}</button>}
-            <button style={pageArrowStyle}>&#10095;</button>
+            <button style={pageArrowStyle} onClick={()=>{if(page > 1) { setPage(page - 1)}}}>&#10094;</button>
+            <button style={activePageStyle}>{page}</button>
+            {totalPages - page >= 1 && <button style={pageNumberStyle} onClick={()=>{setPage(page + 1)}}>{page+1}</button>}
+            {totalPages - page >= 2 && <button style={pageNumberStyle} onClick={()=>{setPage(page + 2)}}>{page+2}</button>}
+            {totalPages - page >= 3 && <button style={pageNumberStyle} onClick={()=>{setPage(page + 3)}}>{page+3}</button>}
+            {totalPages - page >= 4 && <span>...</span>}
+            {totalPages - page >= 4 && <button style={pageNumberStyle} onClick={()=>{setPage(totalPages)}}>{totalPages}</button>}
+            <button style={pageArrowStyle} onClick={()=>{ if (totalPages - page >= 1) {setPage(page +1)}}}>&#10095;</button>
           </div>
         )}
       </div>
