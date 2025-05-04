@@ -126,4 +126,14 @@ export const studentAPI = {
   },
 };
 
+export const fetchAttemptDetails = async (id_attempt) => {
+  try {
+    const response = await api.post('/students/getAttemptAnswers', { id_attempt });
+    return response.data;
+  } catch (error) {
+    console.error('fetchAttemptDetails error:', error);
+    throw error;
+  }
+};
+
 export default api;

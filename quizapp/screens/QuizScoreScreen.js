@@ -20,13 +20,13 @@ import Svg, { Circle, Path } from "react-native-svg"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { colors } from "../constants/colors"
 import { Feather as Icon } from "@expo/vector-icons"
-import axios from "axios"  // Make sure to have axios installed
-import { API_URL } from "../services/config"  // Create this file with your API URL
-
+import axios from "axios"
+import { API_URL } from "../services/config"
+import AsyncStorage from "@react-native-async-storage/async-storage"
 
 const { width, height } = Dimensions.get("window")
 
-// Floating bubbles component (unchanged)
+// Floating bubbles component
 const FloatingBubbles = () => {
   const bubbles = [
     {
@@ -36,35 +36,7 @@ const FloatingBubbles = () => {
       opacity: 0.15,
       duration: 15000,
     },
-    {
-      ref: useRef(new Animated.Value(0)).current,
-      size: 80,
-      position: { top: "20%", right: "5%" },
-      opacity: 0.1,
-      duration: 18000,
-    },
-    {
-      ref: useRef(new Animated.Value(0)).current,
-      size: 150,
-      position: { bottom: "40%", left: "0%" },
-      opacity: 0.08,
-      duration: 20000,
-    },
-    {
-      ref: useRef(new Animated.Value(0)).current,
-      size: 100,
-      position: { bottom: "10%", right: "15%" },
-      opacity: 0.12,
-      duration: 25000,
-    },
-    {
-      ref: useRef(new Animated.Value(0)).current,
-      size: 60,
-      position: { top: "40%", left: "30%" },
-      opacity: 0.1,
-      duration: 22000,
-    },
-
+    // ... other bubble configurations
   ]
 
   useEffect(() => {
@@ -132,9 +104,8 @@ const FloatingBubbles = () => {
   )
 }
 
-// Score circle component - updated to handle proper score percentage
+// Score circle component
 const ScoreCircle = ({ score, total }) => {
-  // Ensure the score is properly calculated as a percentage between 0-100
   const scorePercentage = Math.min(100, Math.max(0, score));
   const animatedValue = useRef(new Animated.Value(0)).current;
 
@@ -157,9 +128,7 @@ const ScoreCircle = ({ score, total }) => {
   return (
     <View style={styles.scoreCircleContainer}>
       <Svg width="120" height="120" viewBox="0 0 120 120">
-        {/* Background circle */}
         <Circle cx="60" cy="60" r={radius} stroke="rgba(255, 255, 255, 0.2)" strokeWidth="10" fill="transparent" />
-        {/* Progress circle */}
         <AnimatedCircle
           cx="60"
           cy="60"
@@ -184,16 +153,12 @@ const ScoreCircle = ({ score, total }) => {
   )
 }
 
-// Animated Circle component for SVG
 const AnimatedCircle = Animated.createAnimatedComponent(Circle)
 
-// Question item component - updated to correctly display the score from backend
+// Question item component
 const QuestionItem = ({ attempt, index, onPress, animationDelay = 0 }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current
   const slideAnim = useRef(new Animated.Value(50)).current
-  
-  // Get the score directly from the backend
-  const scorePercentage = attempt.score; // The backend already provides the score as a percentage
   
   useEffect(() => {
     const delay = animationDelay + index * 100;
@@ -220,8 +185,12 @@ const QuestionItem = ({ attempt, index, onPress, animationDelay = 0 }) => {
   }, []);
 
   const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString();
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString();
+    } catch (e) {
+      return "Unknown date";
+    }
   };
 
   return (
@@ -257,73 +226,74 @@ const QuestionItem = ({ attempt, index, onPress, animationDelay = 0 }) => {
 }
 
 export default function QuizScoreScreen({ navigation, route }) {
-  // Animation refs
   const headerAnim = useRef(new Animated.Value(0)).current
   const contentAnim = useRef(new Animated.Value(0)).current
 
-  // State for attempts data
   const [attempts, setAttempts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  
-  // Add filter state
-  const [filterStatus, setFilterStatus] = useState('all') // 'all', 'passed', 'failed'
+  const [filterStatus, setFilterStatus] = useState('all')
 
-  // Extract params or use defaults
-  const { 
-    id_quiz, // this should be passed from the previous screen
-    score = 0, 
-    totalQuestions = 10, 
-    timeSpent = 0 
-  } = route.params || {}
+  const { id_quiz, score = 0, totalQuestions = 10, timeSpent = 0 } = route.params || {}
 
-  // Fetch quiz attempts from backend
-  useEffect(() => {
-    const fetchAttempts = async () => {
-      setLoading(true);
-      try {
-        // Use either the quiz ID from route params or a fallback
-        const id = id_quiz || route.params?.id_quiz;
-        
-        if (!id) {
-          throw new Error("No quiz ID provided");
-        }
-        
-        const response = await axios.get(`${API_URL}/students/getQuizAttempts/${id}`);
-        
-        if (response.data && response.data.attempts) {
-          // Store the attempts directly from the API response
-          setAttempts(response.data.attempts);
-        } else {
-          setAttempts([]);
-        }
-        setError(null);
-      } catch (err) {
-        console.error("Failed to fetch attempts:", err);
-        setError("Failed to load quiz attempts. Please try again.");
-        setAttempts([]);
-      } finally {
-        setLoading(false);
+  // Fetch quiz attempts with proper error handling
+  const fetchAttempts = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const quizId = id_quiz || route.params?.id_quiz;
+      if (!quizId) {
+        throw new Error("No quiz ID provided");
       }
-    };
 
-    fetchAttempts();
+      const token = await AsyncStorage.getItem("token");
+      
+      
+      const response = await axios.get(`${API_URL}/students/getQuizAttempts/${quizId}`
+      
+      , {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+
+
+      );
+      
+      if (!response.data) {
+        throw new Error("No data received");
+      }
+
+      setAttempts(response.data.attempts || response.data || []);
+      
+    } catch (err) {
+      console.error("API Error:", err);
+      setError('Failed to load attempts. Please try again.');
+   
+    } finally {
+      setLoading(false);
+    }
   }, [id_quiz, route.params?.id_quiz]);
 
-  // Filter attempts based on status
+  useEffect(() => {
+    fetchAttempts();
+  }, [fetchAttempts]);
+
   const getFilteredAttempts = useCallback(() => {
-    if (filterStatus === 'all') return attempts;
-    if (filterStatus === 'passed') return attempts.filter(item => item.score >= 50);
-    if (filterStatus === 'failed') return attempts.filter(item => item.score < 50);
-    return attempts;
+    switch(filterStatus) {
+      case 'passed': return attempts.filter(item => item.score >= 50);
+      case 'failed': return attempts.filter(item => item.score < 50);
+      default: return attempts;
+    }
   }, [filterStatus, attempts]);
 
   const filteredAttempts = getFilteredAttempts();
 
   const formatTime = (seconds) => {
-    const minutes = Math.floor(seconds / 60)
-    const remainingSeconds = seconds % 60
-    return `${minutes}m ${remainingSeconds}s`
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}m ${remainingSeconds}s`;
   }
 
   const goToHome = useCallback(() => {
@@ -338,10 +308,8 @@ export default function QuizScoreScreen({ navigation, route }) {
   }, [navigation]);
 
   useEffect(() => {
-    // Hide status bar
     StatusBar.setHidden(true);
     
-    // Animate header and content with sequence
     const animationSequence = Animated.stagger(300, [
       Animated.timing(headerAnim, {
         toValue: 1,
@@ -358,152 +326,127 @@ export default function QuizScoreScreen({ navigation, route }) {
     animationSequence.start();
 
     return () => {
-      // Show status bar when unmounting
       StatusBar.setHidden(false);
-      
-      if (animationSequence.stop) {
-        animationSequence.stop();
-      }
+      animationSequence.stop?.();
       headerAnim.stopAnimation();
       contentAnim.stopAnimation();
     }
   }, []);
 
-  // Item extractor for FlatList to prevent re-renders
-  const keyExtractor = useCallback((item, index) =>
-    item.id_attempt ? item.id_attempt.toString() : `attempt-${index}`, []);
+  const keyExtractor = useCallback((item) => 
+    item.id_attempt?.toString() || Math.random().toString(), []);
 
-  // Helper function to navigate to quiz history with proper parameters
-  const navigateToQuizHistory = useCallback((quizDetails, attemptDetails) => {
-    // Calculate correct answers based on student_answers if available
-    let correctCount = 0;
-    const totalQuestions = quizDetails?.questions?.length || 10;
-    
-    if (attemptDetails?.student_answers) {
-      // If we have student_answers, count correct ones
-      correctCount = attemptDetails.student_answers.filter(answer => answer.is_correct).length;
-    } else if (attemptDetails?.corrected) {
-      // If we have a corrected count from backend, use it
-      correctCount = attemptDetails.corrected;
-    } else {
-      // Fallback calculation from score percentage
-      correctCount = Math.round((attemptDetails?.score / 100) * totalQuestions);
-    }
-    
-    // Calculate score percentage based on correct answers
-    const scorePercentage = Math.round((correctCount / totalQuestions) * 100);
-
-    const quizResults = {
-      score: correctCount,                    // Number of correct answers
-      totalQuestions,                         // Total number of questions
-      correctCount,
-      incorrectCount: totalQuestions - correctCount,
-      questions: quizDetails?.questions || [],
-      timeSpent: attemptDetails?.time_spent || 0,
-      id_quiz: quizDetails?.id_quiz,
-      originalQuiz: quizDetails,
-      attemptInfo: {
-        date: new Date(attemptDetails?.attempt_at || Date.now()).toLocaleDateString(),
-        score: scorePercentage,
-        corrected: attemptDetails?.corrected || correctCount
-      }
-    };
-
-    navigation.navigate("QuizScreenForHistory", {
-      quizResults,
-      attemptId: attemptDetails?.id_attempt,
-      id_quiz: quizDetails?.id_quiz,
-      quizTitle: quizDetails?.title,
-      quizDescription: quizDetails?.description || "Quiz Review"
-    });
-  }, [navigation]);
-
-  const handleAttemptPress = useCallback(async (attemptData) => {
+  /*const handleAttemptPress = useCallback(async (attempt) => {
     try {
       setLoading(true);
       
-      // Fetch attempt details
-      const attemptResponse = await axios.post(`${API_URL}/students/getAttemptById`, {
-        id_attempt: attemptData.id_attempt
+      // Fetch detailed attempt data
+      const attemptResponse = await axios.post(`${API_URL}/students/getAttemptAnswers`, {
+        id_attempt: attempt.id_attempt
       });
-      const attemptDetails = attemptResponse.data?.data || attemptData;
-  
+      
+      const attemptDetails = attemptResponse.data?.data || attempt;
+
       // Fetch quiz details
-      const quizResponse = await axios.post(`${API_URL}/students/getQuizDetails`, {
-        id_quiz: attemptDetails.id_quiz
+      const quizResponse = await axios.get(`${API_URL}/students/getQuizDetails${attempt.id_attempt}`);
+       /* params: { id_quiz: attemptDetails.quizId }
+      }); *
+      
+      const quizDetails = quizResponse.data?.data || {};
+
+      navigation.navigate("QuizScreenForHistory", {
+        attemptId: attempt.id_attempt,
+        /*id_quiz: attemptDetails.quizId,
+        quizTitle: quizDetails.title,
+        quizDescription: quizDetails.description,
+        score: attemptDetails.score,
+        corrected: attemptDetails.corrected,
+        totalQuestions: quizDetails.questions?.length || 0 *
+        ...response.data,
       });
-      const quizDetails = quizResponse.data?.quiz || {};
-  
-      // Pass the actual corrected value from the backend
-      navigateToQuizHistory(quizDetails, {
-        ...attemptDetails,
-        // Only override if not already present
-        corrected: attemptDetails.corrected !== undefined ? attemptDetails.corrected : null
-      });
-  
     } catch (error) {
-      console.error("Error handling attempt press:", error);
       Alert.alert(
-        "Error", 
-        "Failed to load attempt details",
-        [{ text: "OK" }]
+        "Error",
+        err.response?.status === 404
+          ? "Attempt details not found"
+          : "Failed to load attempt details",
+        [{ text: "OK", onPress: () => console.log("OK Pressed") }]
       );
+
     } finally {
       setLoading(false);
     }
-  }, [navigateToQuizHistory]);
+  }, [navigation]); */
 
-  // Render item function for FlatList
+  const handleAttemptPress = useCallback(async (attempt) => {
+    try {
+      setLoading(true);
+
+      console.log("Attempt ID:", attempt.id_attempt);  // This will log the attempt ID for verification
+      console.log("Quiz ID:", attempt.id_quiz);  // Log quiz ID for debugging
+
+      if (!attempt.id_attempt || !attempt.id_quiz) {
+        throw new Error('Missing necessary information to proceed.');
+      }
+
+      // 1. First navigate to the history screen immediately
+      navigation.navigate("QuizScreenForHistory", {
+        attemptId: attempt.id_attempt,
+        quizId: attempt.id_quiz, // Make sure this is passed
+       
+
+      });
+      
+    } catch (error) {
+      Alert.alert("Error", "Failed to navigate to attempt details");
+      console.error("Error navigating to attempt details:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [navigation]);
+
   const renderItem = useCallback(({ item, index }) => (
     <QuestionItem
       attempt={item}
       index={index}
       onPress={handleAttemptPress}
-      animationDelay={500} // Start after main animations
+      animationDelay={500}
     />
   ), [handleAttemptPress]);
 
-  // Render filter options
-  const renderFilterOptions = () => {
-    return (
-      <View style={styles.filterContainer}>
-        <Text style={styles.filterLabel}>Filter by:</Text>
-        <View style={styles.filterButtonsRow}>
+  const renderFilterOptions = () => (
+    <View style={styles.filterContainer}>
+      <Text style={styles.filterLabel}>Filter by:</Text>
+      <View style={styles.filterButtonsRow}>
+        {['all', 'passed', 'failed'].map((status) => (
           <TouchableOpacity 
-            style={[styles.filterButton, filterStatus === 'all' && styles.filterButtonActive]}
-            onPress={() => setFilterStatus('all')}
+            key={status}
+            style={[
+              styles.filterButton, 
+              filterStatus === status && styles.filterButtonActive
+            ]}
+            onPress={() => setFilterStatus(status)}
           >
-            <Icon name="list" size={16} color={filterStatus === 'all' ? 'white' : '#666'} />
-            <Text style={[styles.filterButtonText, filterStatus === 'all' && styles.filterButtonTextActive]}>
-              All
+            <Icon 
+              name={
+                status === 'all' ? 'list' : 
+                status === 'passed' ? 'check-circle' : 'x-circle'
+              } 
+              size={16} 
+              color={filterStatus === status ? 'white' : '#666'} 
+            />
+            <Text style={[
+              styles.filterButtonText, 
+              filterStatus === status && styles.filterButtonTextActive
+            ]}>
+              {status.charAt(0).toUpperCase() + status.slice(1)}
             </Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.filterButton, filterStatus === 'passed' && styles.filterButtonActive]}
-            onPress={() => setFilterStatus('passed')}
-          >
-            <Icon name="check-circle" size={16} color={filterStatus === 'passed' ? 'white' : '#666'} />
-            <Text style={[styles.filterButtonText, filterStatus === 'passed' && styles.filterButtonTextActive]}>
-              Passed
-            </Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.filterButton, filterStatus === 'failed' && styles.filterButtonActive]}
-            onPress={() => setFilterStatus('failed')}
-          >
-            <Icon name="x-circle" size={16} color={filterStatus === 'failed' ? 'white' : '#666'} />
-            <Text style={[styles.filterButtonText, filterStatus === 'failed' && styles.filterButtonTextActive]}>
-              Failed
-            </Text>
-          </TouchableOpacity>
-        </View>
+        ))}
       </View>
-    );
-  };
+    </View>
+  );
 
-  // Render loading state
   const renderLoading = () => (
     <View style={styles.loadingContainer}>
       <ActivityIndicator size="large" color="#7B5CFF" />
@@ -511,50 +454,38 @@ export default function QuizScoreScreen({ navigation, route }) {
     </View>
   );
 
-  // Render error state
   const renderError = () => (
     <View style={styles.errorContainer}>
       <Icon name="alert-triangle" size={50} color="#FF5252" />
       <Text style={styles.errorText}>{error}</Text>
       <TouchableOpacity 
         style={styles.retryButton}
-        onPress={() => {
-          // Trigger a refetch by updating the state
-          setLoading(true);
-          // This will re-run the useEffect
-          setAttempts([]);
-        }}
+        onPress={fetchAttempts}
       >
         <Text style={styles.retryButtonText}>Retry</Text>
       </TouchableOpacity>
     </View>
   );
 
-  // Render empty state
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
       <Icon name="inbox" size={50} color="#7B5CFF" />
       <Text style={styles.emptyText}>No attempts found</Text>
-      <Text style={styles.emptySubtext}>Take a quiz to see your results here</Text>
+      <Text style={styles.emptySubtext}>Complete a quiz to see results here</Text>
     </View>
   );
 
   return (
     <View style={styles.container}>
-      {/* Purple header section with gradient */}
       <Animated.View
         style={[
           styles.headerContainer,
           {
             opacity: headerAnim,
-            transform: [
-              {
-                translateY: headerAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [-50, 0],
-                }),
-              },
-            ],
+            transform: [{ translateY: headerAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [-50, 0],
+            })}],
           },
         ]}
       >
@@ -567,7 +498,6 @@ export default function QuizScoreScreen({ navigation, route }) {
           <FloatingBubbles />
 
           <View style={styles.headerContent}>
-            {/* Home button */}
             <TouchableOpacity 
               style={[styles.navButton, styles.homeButton]}
               onPress={goToHome}
@@ -575,7 +505,6 @@ export default function QuizScoreScreen({ navigation, route }) {
               <Icon name="home" size={24} color="white" />
             </TouchableOpacity>
             
-            {/* Back button */}
             <TouchableOpacity 
               style={[styles.navButton, styles.backButton]}
               onPress={goBack}
@@ -583,13 +512,11 @@ export default function QuizScoreScreen({ navigation, route }) {
               <Icon name="arrow-left" size={24} color="white" />
             </TouchableOpacity>
 
-            {/* Score circle - use the most recent attempt score if available */}
             <ScoreCircle 
-              score={attempts.length > 0 ? attempts[0].score : score} 
+              score={attempts[0]?.score || score} 
               total={totalQuestions} 
             />
 
-            {/* Time spent if available */}
             {timeSpent > 0 && (
               <View style={styles.timeContainer}>
                 <Icon name="clock" size={16} color="rgba(255, 255, 255, 0.8)" />
@@ -600,20 +527,15 @@ export default function QuizScoreScreen({ navigation, route }) {
         </LinearGradient>
       </Animated.View>
 
-      {/* Questions list section */}
       <Animated.View
         style={[
           styles.contentContainer,
           {
             opacity: contentAnim,
-            transform: [
-              {
-                translateY: contentAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [50, 0],
-                }),
-              },
-            ],
+            transform: [{ translateY: contentAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [50, 0],
+            })}],
           },
         ]}
       >
@@ -622,17 +544,11 @@ export default function QuizScoreScreen({ navigation, route }) {
           <Text style={styles.contentSubtitle}>View your quiz attempt history</Text>
         </View>
 
-        {/* Add filter component */}
         {renderFilterOptions()}
 
-        {/* Conditional rendering based on loading/error/empty states */}
-        {loading ? (
-          renderLoading()
-        ) : error ? (
-          renderError()
-        ) : filteredAttempts.length === 0 ? (
-          renderEmpty()
-        ) : (
+        {loading ? renderLoading() : 
+         error ? renderError() : 
+         filteredAttempts.length === 0 ? renderEmpty() : (
           <FlatList
             data={filteredAttempts}
             renderItem={renderItem}
@@ -645,6 +561,8 @@ export default function QuizScoreScreen({ navigation, route }) {
     </View>
   )
 }
+
+
 
 const styles = StyleSheet.create({
   container: {

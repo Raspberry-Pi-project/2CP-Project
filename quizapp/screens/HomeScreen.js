@@ -420,13 +420,15 @@ export default function HomeScreen({ navigation }) {
   });
 
   const handleHistoryQuizPress = async (quiz) => {
+    const token = await AsyncStorage.getItem("token");
+    console.log("Token:", token);
 
     try {
       const quizDetails = await axios.post(`${API_URL}/students/getQuizDetails`, {
         id_quiz : quiz.id_quiz , page : 1 , limit : 1 
       },{
         headers: {
-          Authorization: `Bearer ${await AsyncStorage.getItem("token")}`}
+          Authorization: `Bearer ${token}`}
       })
 
       console.log("Quiz Details Response:", quizDetails.data); // Debugging line to see the full response

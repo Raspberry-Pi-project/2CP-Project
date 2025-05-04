@@ -51,3 +51,44 @@ export const getQuizDetails = async (quizId) => {
     throw error;
   }
 };
+
+
+export const fetchQuizAttempts = async (quizId) => {
+  try {
+    const response = await axios.get(`${API_URL}/students/getQuizAttempts/${quizId}`);
+    return response.data.attempts || [];
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to fetch attempts");
+  }
+};
+
+
+
+const fetchAttemptDetails = async () => {
+  try {
+    const response = await axios.post(`${API_URL}/students/getAttemptAnswers`, {
+      id_attempt: id_attempt
+    }, {
+      timeout: 10000, // 10 second timeout
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    console.log('API Response:', response.data); // Debug log
+
+    if (!response.data) {
+      throw new Error('Empty response from server');
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error('API Error Details:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      config: error.config
+    });
+    throw error;
+  }
+};

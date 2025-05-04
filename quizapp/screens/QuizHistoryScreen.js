@@ -4,7 +4,8 @@ import Icon from "react-native-vector-icons/Feather"
 import { UserContext } from "../App"
 import React, { useEffect, useState, useContext } from "react"
 import axios from "axios"
-import { API_URL } from "../services/config"
+import { API_URL } from "../services/config" 
+import AsyncStorage from "@react-native-async-storage/async-storage"
 
 const { width } = Dimensions.get("window")
 
@@ -43,10 +44,14 @@ useEffect(()=>{
   const fetchQuizDetails = async (quizId) => {
     setLoading(true)
     console.log("Fetching quiz details for ID:", quizId) // Check if quizId is correct
-
+  const token = await AsyncStorage.getItem("token");
     try {
       const response = await axios.post(`${API_URL}/students/getQuizDetails`, {
         id_quiz: quizId
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       })
       setQuizData(response.data)
     } catch (error) {
