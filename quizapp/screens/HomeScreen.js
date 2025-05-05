@@ -296,6 +296,7 @@ export default function HomeScreen({ navigation }) {
           limit: 10,
           for_groupe: parseInt(studentGroup),
           for_year: parseInt(studentYear),
+          status : "active"
         },
         {
           headers: {
@@ -379,7 +380,7 @@ export default function HomeScreen({ navigation }) {
 
     try {
       const quizDetails = await axios.post(`${API_URL}/students/getQuizDetails`, {
-        id_quiz : quiz.id_quiz , page : 1 , limit : 1 , status : "active"
+        id_quiz : quiz.id_quiz , page : 1 , limit : 1 
       },{
         headers: {
           Authorization: `Bearer ${await AsyncStorage.getItem("token")}`}
