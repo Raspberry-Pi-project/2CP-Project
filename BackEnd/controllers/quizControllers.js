@@ -185,7 +185,7 @@ const updateQuiz = async (req, res) => {
       },
     });
 
-    if (questions.length > 0) {
+    if (questions?.length > 0) {
       // Delete questions marked as deleted
       console.log("questions", questions);
       await prisma.questions.deleteMany({
