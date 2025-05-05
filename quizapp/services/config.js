@@ -4,9 +4,7 @@ import { Platform } from "react-native";
 const getApiUrl = () => {
   // For physical device, use your computer's IP address
 
-
   return "http://172.20.10.2:3000";
-
 
 };
 
