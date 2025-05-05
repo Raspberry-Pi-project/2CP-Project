@@ -234,6 +234,7 @@ export default function HomeScreen({ navigation }) {
           limit: 10,
           for_groupe: parseInt(studentGroup),
           for_year: parseInt(studentYear),
+          status:"active"
         },
         {
           headers: {
