@@ -296,6 +296,7 @@ export default function HomeScreen({ navigation }) {
           limit: 10,
           for_groupe: parseInt(studentGroup),
           for_year: parseInt(studentYear),
+          status:"active"
         },
         {
           headers: {
@@ -398,6 +399,7 @@ export default function HomeScreen({ navigation }) {
           nb_attempts: quizDetails.data.nb_attempts,
           subject: quizDetails.data.subject,
           totalQuestions: quiz.totalQuestions,
+          navigation: quiz.navigation,
           image : quizDetails.data.image,
           score : quizDetails.data.score,
           questions: quizDetails.data.questions || [],
@@ -702,7 +704,7 @@ export default function HomeScreen({ navigation }) {
                   key={item.id_quiz}
                   title={item.title}
                   date={item.created_at}
-                  icon={item.image}
+                  icon={null}
                   score={item.score}
                   onPress={() => handleHistoryQuizPress(item)}
                 />

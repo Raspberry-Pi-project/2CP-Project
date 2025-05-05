@@ -117,12 +117,15 @@ export default function QuizInfoScreen({ navigation, route }) {
         navigation.navigate("Home");
         return;
       } else if (attemptStarted.status === 201) {
+        
         navigation.navigate("Quizlet", {
           id_attempt: attemptStarted.data.newAttempt.id_attempt,
           quizId: quiz.id_quiz,
           quizTitle: quiz.title,
           quizData: quiz,
         });
+        
+        
       } else {
         throw new Error("Unexpected response status");
       }
@@ -130,6 +133,7 @@ export default function QuizInfoScreen({ navigation, route }) {
        
       console.error("Error starting quiz attempt:", error);
       Alert.alert("Error", "Attempts limit reached for this quiz");
+      navigation.navigate("Home");
     }
   };
 
