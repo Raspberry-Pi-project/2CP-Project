@@ -127,7 +127,7 @@ const getHistory = async (req, res) => {
         id_quiz: {
           in: quizIds,
         },
-        status : "active",
+        status : "published",
       },
       include: {
         attempts: {
