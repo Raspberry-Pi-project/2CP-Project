@@ -154,7 +154,6 @@ const updateQuiz = async (req, res) => {
       for_groupe,
       status,
       questions,
-      navigation,
     } = req.body;
     console.log(req.body);
     let for_year2 = for_year;
@@ -182,7 +181,7 @@ const updateQuiz = async (req, res) => {
         for_year: for_year2,
         for_groupe: for_groupe2,
         status,
-        navigation,
+        
       },
     });
 
