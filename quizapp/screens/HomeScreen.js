@@ -379,7 +379,7 @@ export default function HomeScreen({ navigation }) {
 
     try {
       const quizDetails = await axios.post(`${API_URL}/students/getQuizDetails`, {
-        id_quiz : quiz.id_quiz , page : 1 , limit : 1 
+        id_quiz : quiz.id_quiz , page : 1 , limit : 1 , status : "active"
       },{
         headers: {
           Authorization: `Bearer ${await AsyncStorage.getItem("token")}`}
