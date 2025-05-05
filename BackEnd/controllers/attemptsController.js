@@ -105,11 +105,70 @@ const getQuizAttempts = async (req, res) => {
 
 };
 
+const getAttemptAnswers = async (req, res) => {
+  const { id_attempt } = req.body; // or req.body depending on your API design
+
+  try {
+    // 1. Get the attempt details
+    const attempt = await prisma.attempts.findUnique({
+      where: { id_attempt: parseInt(id_attempt) },
+      include: {
+        quizzes: {
+          include: {
+            questions: {
+              include: {
+                answers: true // Include correct answers
+              }
+            }
+          }
+        },
+        student_answers: true // Include student's answers
+      }
+    });
+
+    if (!attempt) {
+      return res.status(404).json({ error: "Attempt not found" });
+    }
+
+    // 2. Structure the response with question details and student answers
+    const result = {
+      attemptId: attempt.id_attempt,
+      quizId: attempt.id_quiz,
+      score: attempt.score,
+      corrected: attempt.corrected,
+      totalQuestions: attempt.quizzes.questions.length,
+      questions: attempt.quizzes.questions.map(question => {
+        const studentAnswer = attempt.student_answers.find(
+          sa => sa.id_question === question.id_question
+        );
+        
+        return {
+          questionId: question.id_question,
+          questionText: question.question_text,
+          questionType: question.question_type,
+          correctAnswers: question.answers.filter(a => a.correct),
+          studentAnswer: studentAnswer ? {
+            answerText: studentAnswer.student_answer_text,
+            isCorrect: studentAnswer.correct,
+            submittedAt: studentAnswer.created_at
+          } : null
+        };
+      })
+    };
+
+    res.json(result);
+  } catch (error) {
+    console.error("Error fetching attempt answers:", error);
+    res.status(500).json({ error: "Failed to get attempt answers" });
+  }
+};
+
   // 
 
   module.exports = {
     startAttempt, 
     getAttemptById,
     getQuizAttempts,
+    getAttemptAnswers
   };
     
