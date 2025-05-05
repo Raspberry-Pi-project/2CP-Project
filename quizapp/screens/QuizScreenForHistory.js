@@ -285,7 +285,7 @@ const ScoreCircle = ({ score, total }) => {
 
 
   // Complete corrected QuestionItem component
-const QuestionItem = React.memo(({ question, index, isCorrect, onPress, animationDelay, studentAnswer }) => {
+/*const QuestionItem = React.memo(({ question, index, isCorrect, onPress, animationDelay }) => {
   const scaleAnim = useRef(new Animated.Value(0)).current
   const bounceAnim = useRef(new Animated.Value(1)).current
 
@@ -317,14 +317,16 @@ const QuestionItem = React.memo(({ question, index, isCorrect, onPress, animatio
       }),
     ]).start()
 
-    onPress && onPress(question, studentAnswer)
-  }, [onPress, question, studentAnswer])
+    onPress && onPress(question, question.studentAnswer)
+  }, [onPress, question])
 
-  const borderColor = isCorrect === true ? "#4ADE80" : isCorrect === false ? "#FF5252" : "#7B5CFF"
+  const isCorrect = question.correct === true || question.correct === 1;
+
+  const borderColor = isCorrect ? "#4ADE80" : "#FF5252";
 
   /*if (enrichedQuestions.length === 0) {
     return <Text>No questions found</Text>;
-  } */
+  } *
   
   return (
     <Animated.View
@@ -349,21 +351,21 @@ const QuestionItem = React.memo(({ question, index, isCorrect, onPress, animatio
         <View style={styles.questionItemContent}>
           <Text style={styles.questionText}>{question.question_text}</Text>
           
-          {studentAnswer && (
+          {question.studentAnswer && (
             <View style={styles.studentAnswerContainer}>
               <Text style={styles.studentAnswerLabel}>Your answer:</Text>
               <Text style={[
                 styles.studentAnswerText, 
                 { color: isCorrect ? "#4ADE80" : "#FF5252" }
               ]}>
-                {typeof studentAnswer === 'string' ? studentAnswer : "No answer selected"}
+                {typeof question.studentAnswer === 'string' ? question.studentAnswer : "No answer selected"}
               </Text>
             </View>
           )}
         </View>
         
         <View style={[styles.statusIcon, { backgroundColor: isCorrect ? "#4ADE80" : "#FF5252" }]}>
-          {isCorrect ? (
+          {isCorrect  ? (
             <Svg width="16" height="16" viewBox="0 0 24 24">
               <Path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="white" />
             </Svg>
@@ -379,7 +381,102 @@ const QuestionItem = React.memo(({ question, index, isCorrect, onPress, animatio
       </TouchableOpacity>
     </Animated.View>
   )
-})
+}) */
+
+  const QuestionItem = React.memo(({ question, index, onPress, animationDelay }) => {
+    const scaleAnim = useRef(new Animated.Value(0)).current
+    const bounceAnim = useRef(new Animated.Value(1)).current
+  
+    useEffect(() => {
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 500,
+        delay: animationDelay + index * 100,
+        useNativeDriver: true,
+      }).start()
+  
+      return () => {
+        scaleAnim.stopAnimation()
+        bounceAnim.stopAnimation()
+      }
+    }, [])
+  
+    const handlePress = useCallback(() => {
+      Animated.sequence([
+        Animated.timing(bounceAnim, {
+          toValue: 0.95,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.spring(bounceAnim, {
+          toValue: 1,
+          friction: 4,
+          useNativeDriver: true,
+        }),
+      ]).start()
+  
+      onPress && onPress(question)
+    }, [onPress, question])
+  
+    // Determine if the answer is correct - handle different data formats
+    const isCorrect = question.correct === true || question.correct === 1;
+    
+    const borderColor = question.correct ? "#4ADE80" : "#FF5252";
+    
+    return (
+      <Animated.View
+        style={{
+          opacity: scaleAnim,
+          transform: [
+            { scale: Animated.multiply(scaleAnim, bounceAnim) },
+            {
+              translateY: scaleAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [50, 0],
+              }),
+            },
+          ],
+        }}
+      >
+        <TouchableOpacity 
+          style={[styles.questionItem, { borderLeftWidth: 4, borderLeftColor: borderColor }]} 
+          onPress={handlePress} 
+          activeOpacity={0.8}
+        >
+          <View style={styles.questionItemContent}>
+            <Text style={styles.questionText}>{question.question_text}</Text>
+            
+            
+              <View style={styles.studentAnswerContainer}>
+                <Text style={styles.studentAnswerLabel}>Your answer:</Text>
+                <Text style={[
+                  styles.studentAnswerText, 
+                  { color: isCorrect ? "#4ADE80" : "#FF5252" }
+                ]}>
+                  {typeof question.studentAnswer === 'string' ? question.studentAnswer : "No answer selected"}
+                </Text>
+              </View>
+            
+          </View>
+          
+          <View style={[styles.statusIcon, { backgroundColor: question.correct  ? "#4ADE80" : "#FF5252" }]}>
+            {question.correct  ? (
+              <Svg width="16" height="16" viewBox="0 0 24 24">
+                <Path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="white" />
+              </Svg>
+            ) : (
+              <Svg width="16" height="16" viewBox="0 0 24 24">
+                <Path
+                  d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"
+                  fill="white"
+                />
+              </Svg>
+            )}
+          </View>
+        </TouchableOpacity>
+      </Animated.View>
+    )
+  })
 
 // Format time helper function
 const formatTime = (seconds) => {
@@ -451,7 +548,8 @@ export default function QuizScreenForHistory({ navigation, route }) {
       setLoading(true);
       setError(null);
       const token = await AsyncStorage.getItem("token");
-      console.log("Attempting to fetch attempt data for ID:", attemptId);
+
+      //console.log("Attempting to fetch attempt data for ID:", attemptId);
       const attemptResponse = await axios.post(`${API_URL}/students/getAttemptAnswers`, {
         id_attempt: attemptId,
       }, {
@@ -463,24 +561,41 @@ export default function QuizScreenForHistory({ navigation, route }) {
 
       if (!attemptResponse?.data) throw new Error("Attempt data unavailable");
 
-      console.log("Got attempt data:", attemptResponse.data);
+      console.log("Raw API response:", JSON.stringify(attemptResponse.data, null, 2));
 
-      setAttemptDetails(attemptResponse.data);
+      const questions = attemptResponse.data.questions || [];
+
+      //console.log("Got attempt data:", attemptResponse.data);
+
 
       const parsedAttempt = {
         attemptId: attemptResponse.data.id_attempt,
         quizId: attemptResponse.data.id_quiz,
         corrected: attemptResponse.data.corrected || 0,
         score: attemptResponse.data.score || 0,
-        totalQuestions: attemptResponse.data.questions?.length || 0,
+        totalQuestions: attemptResponse.data.questions.length,
         attempt_at: attemptResponse.data.attempt_at,
-        student_answers: (attemptResponse.data.questions || []).map((q) => ({
-          id_question: q.id_question,
-          is_correct: q.student_answers?.isCorrect || false,
-          selected_answer: q.student_answers?.student_answer_text || 'No answer selected',
-          question_text: q.question_text || '',
-        })),
-      }; 
+        student_answers: attemptResponse.data.questions?.map((q) => {
+
+         // const isCorrect = q.student_answers?.correct === 1 || q.student_answers?.correct === true;       
+         const isCorrect = q.studentAnswer?.isCorrect === 1 ||  q.studentAnswer?.isCorrect === true;
+          //const studentAnswerId = q.studentAnswer?.id_answer;
+
+          return {
+            id_question: q.questionId ,
+            correct: isCorrect,
+            selected_answer: q.studentAnswer?.answerText || 'No answer selected',
+            question_text: q.questionText,
+          };
+        }) || [],
+      };
+
+      console.log("Parsed attempt data:", JSON.stringify(parsedAttempt, null, 2));
+
+      setAttemptDetails(parsedAttempt);
+
+      //console.log("Raw attempt details:", JSON.stringify(parsedAttempt, null, 2)); 
+
 
       //setAttemptDetails(attemptResponse?.data);
 
@@ -506,12 +621,16 @@ export default function QuizScreenForHistory({ navigation, route }) {
       console.log('Quiz Response:', quizResponse?.data); */
 
       const quizData = quizResponse?.data?.data || quizResponse?.data;
+      console.log("Raw quiz data:", JSON.stringify(quizData, null, 2));
 
       if (!quizData || !Array.isArray(quizData.questions)) {
         throw new Error("Invalid quiz data structure");
       }
 
       setQuizDetails(quizData);
+
+      //console.log("Raw quiz details:", JSON.stringify(quizData, null, 2)); 
+
     } catch (err) {
       console.error("API Error:", err.message || err);
       setError(err.message || "An error occurred while fetching data.");
@@ -530,50 +649,81 @@ export default function QuizScreenForHistory({ navigation, route }) {
     };
   }, [fetchData, retryCount]);
 
-  const enrichedQuestions = useMemo(() => {
-    if (!quizDetails?.questions || !Array.isArray(quizDetails.questions)) return [];
-    if (!attemptDetails?.questions || !Array.isArray(attemptDetails.questions)) return [];
+  console.log("Attempt details before enrichment:", JSON.stringify(attemptDetails, null, 2));
+console.log("Quiz details before enrichment:", JSON.stringify(quizDetails, null, 2));
 
 
-    console.log("Quiz questions:", quizDetails.questions.length);
-    console.log("Attempt questions:", attemptDetails.questions.length);
+  /*const enrichedQuestions = useMemo(() => {
+    if (!quizDetails?.questions) return [];
+    if (!attemptDetails?.student_answers) return [];
+
+
+    //console.log("Quiz questions:", quizDetails.questions.length);
+    //console.log("Attempt answers:", attemptDetails.student_answers?.length);
 
 
     return quizDetails.questions.map((question) => {
 
       if (!question.id_question) return null;
 
-      const studentAnswerEntry = attemptDetails.questions.find(
-        (a) => a.questionId  === question.id_question || a.questionId === question.id_question
+      const studentAnswerEntry = attemptDetails.student_answers.find(
+        (a) => a.id_question === question.id_question
       ) ;
 
-      console.log("Attempt details questions:", attemptDetails.questions);
+      //console.log("Attempt details questions:", attemptDetails.questions);
 
 
       if (!studentAnswerEntry) {
-        
-        console.log("Could not find answer for question:", question.id_question);
-        return null;
+        return {
+          ...question,
+          correct: false,
+          studentAnswer: 'No answer selected',
+        };
       }
 
-      const studentAnswer = studentAnswerEntry.student_answers || {};
+      const isCorrect = studentAnswerEntry.correct === 1 || studentAnswerEntry.correct === true || studentAnswerEntry.is_correct === true || studentAnswerEntry.is_correct === 1;
+
+     // const isCorrect = studentAnswerEntry.correct === 1 || studentAnswerEntry.correct === true;
 
 
       return {
         ...question,
         //isCorrect: studentAnswer.is_correct ?? false,
         //studentAnswer,
-        isCorrect: studentAnswer.isCorrect === true,
-        studentAnswer: studentAnswer.student_answer_text || "No answer selected",
+        /*isCorrect: studentAnswer.isCorrect === true,
+        studentAnswer: studentAnswer.student_answer_text || "No answer selected", *
+        correct: isCorrect,
+        studentAnswer: studentAnswerEntry.selected_answer || studentAnswerEntry.student_answer_text || 'No answer selected',
       };
     }).filter(Boolean);
+  }, [quizDetails, attemptDetails]); */
+
+
+
+  const enrichedQuestions = useMemo(() => {
+    if (!quizDetails?.questions) return [];
+    if (!attemptDetails?.student_answers) return [];
+  
+    return quizDetails.questions.map((question) => {
+      const studentAnswer = attemptDetails.student_answers.find(
+        a => a.id_question === question.id_question
+      );
+
+     /* if (!studentAnswer) {
+        return {
+          ...question,
+          correct: false,
+          studentAnswer: 'No answer selected'
+        };
+      } */
+  
+      return {
+        ...question,
+        correct: studentAnswer?.correct || false,
+        studentAnswer: studentAnswer?.selected_answer || 'No answer selected',
+      };
+    });
   }, [quizDetails, attemptDetails]);
-
-  //console.log("Enriched Questions:", JSON.stringify(enrichedQuestions, null, 2));
-
-
-  //console.log("Attempt Details Full:", JSON.stringify(attemptDetails, null, 2));
-
 
   const scoreData = useMemo(() => {
     if (!attemptDetails) return {
@@ -614,16 +764,19 @@ export default function QuizScreenForHistory({ navigation, route }) {
     });
   }, [quizDetails, attemptDetails, scoreData, navigation]);
 
-  const renderItem = useCallback(({ item, index }) => (
+  const renderItem = useCallback(({ item, index }) => {
+
+    return (
     <QuestionItem
       question={item}
       index={index}
-      isCorrect={item.isCorrect}
-      studentAnswer={item.studentAnswer}  // Fix: Use the properly formatted studentAnswer from enrichedQuestions
+      //correct={item.correct}
+      //studentAnswer={item.studentAnswer}  // Fix: Use the properly formatted studentAnswer from enrichedQuestions
       onPress={() => handleQuestionPress(item, item.studentAnswer)}
       animationDelay={500}
     />
-  ), [handleQuestionPress]);
+    );
+  }, [handleQuestionPress]);  
 
   // === UI ===
 
