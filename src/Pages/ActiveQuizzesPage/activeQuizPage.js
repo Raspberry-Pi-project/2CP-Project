@@ -1,13 +1,15 @@
-import "./draftquiz.css";
+import { useState, useEffect } from "react";
+import axios from "axios";
+import "./activeQuizPage.css";
 import { useNavigate } from "react-router-dom";
 import { faEllipsisVertical } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import axios from "axios";
 import { useAuth } from "../../context/AuthProvider";
-import { useState, useEffect } from "react";
-import { useQuiz } from "../../context/QuizProvider"; // Import the QuizProvider context
+import { useQuiz } from "../../context/QuizProvider";
 import LOGO from "../../photos/Frame 39 (2).png";
 import { API_URL } from "../../config";
+
+// Add these styles directly in your component
 const horizontalGridStyle = {
   display: "flex",
   overflowX: "auto",
@@ -63,18 +65,18 @@ const pageArrowStyle = {
   border: "none",
 };
 
-const DraftQuiz = () => {
-  const [draftQuizzzes, setDraftQuizzzes] = useState([]);
+const ActiveQuizPage = () => {
+  const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState("All");
-  const [quizzes, setQuizzes] = useState([]); // State to store quizzes from the database
+  const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { user } = useAuth();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const { setQuizData } = useQuiz(); // Get setQuiz function from QuizProvider context
+  const { setQuizData } = useQuiz();
   const [totalPages, setTotalPages] = useState(0);
+
   // Filter options
   const filters = [
     "All",
@@ -85,83 +87,80 @@ const DraftQuiz = () => {
     "Arrays",
   ];
 
+  // Fetch quizzes from the backend API
   useEffect(() => {
     const fetchQuizzes = async () => {
       try {
-        // You might need to replace the URL with your own backend URL
         const response = await axios.post(
           `http://${API_URL}:3000/teachers/getQuizzes`,
-          { page, limit, id_teacher: user.id, status: "draft" },
-          { headers:{Authorization : `Bearer ${user.token}`} }
-        ); // Adjust the API endpoint accordingly
+          { page, limit, id_teacher: user.id, status: "active" },
+          { headers: { Authorization: `Bearer ${user.token}` } },
+          { withCredentials: true }
+        );
         console.log("API response:", response.data);
 
-        // Ensure response.data is an array before setting it to state
         const quizzesData = Array.isArray(response.data)
           ? response.data
           : response.data.quizzes || response.data.data || [];
-          console.log("Quizzes data:", response.data);
-
-        setQuizzes(quizzesData); // Set quizzes data from the backend
+       
+        setQuizzes(quizzesData);
         setTotalPages(response.data.totalPages || 0); // Set total pages from the response
-
       } catch (error) {
         setError("Failed to fetch quizzes.");
         console.error("Error fetching quizzes:", error);
-        setQuizzes([]); // Set empty array on error
+        setQuizzes([]);
       } finally {
-        setLoading(false); // Set loading to false when fetch is complete
+        setLoading(false);
       }
     };
-    setLoading(true); // Set loading to true before fetching
+    setLoading(true);
     fetchQuizzes();
-  }, [page, limit, user.id]); // Added user.id to dependency array
+  }, [page, limit, user.id]);
 
   useEffect(() => {
-    console.log("Quizzes updated:", quizzes); // Log quizzes data whenever it changes
+    console.log("Quizzes updated:", quizzes);
   }, [quizzes]);
 
-  // Handle starting a quiz
-  const handleStart = async (quizId) => {
+  // Handle consulting a quiz
+  const handleStop = async (quizId) => {
     try {
-      // Fetch quiz details from the backend API
       const response = await axios.post(
-        `http://${API_URL}:3000/teachers/getQuizDetails`,
-        { id_quiz: quizId },
+        `http://${API_URL}:3000/teachers/updateQuiz`,
+        { id_quiz: quizId , status: "published"},
         { headers: { Authorization: `Bearer ${user.token}` } },
         { withCredentials: true }
       );
-      //console.log("Quiz details response:", response.data);
       if (response.status !== 200) {
         throw new Error("Failed to fetch quiz details");
       } else {
-        setQuizData(response.data); // Set the selected quiz data in context
-        navigate(`/finalization2`); // will go to the page of finalization2 basing on its id
+        setQuizData(response.data);
+        
       }
     } catch (error) {
       console.error("Error fetching quiz details:", error);
     }
-
-    //setQuizData(quizzes.find((quiz) => quiz.id === quizId)); // Set the selected quiz data in context
-    // Navigate to the quiz details page
-    //
   };
 
   // Handle quiz options
   const handleQuizOptions = (quizId) => {
-    // if we want to add the option of delete or other things ...
     console.log(`Options for quiz ${quizId}`);
   };
 
-  useEffect(() => {
-    console.log("Page changed:", page); // Log the current page whenever it changes
-  }, [page]);
+  // Filter quizzes based on active filter
+  const filteredQuizzes = Array.isArray(quizzes)
+    ? activeFilter === "All"
+      ? quizzes
+      : quizzes.filter((quiz) => quiz.category === activeFilter)
+    : [];
+
+  // Calculate total pages
+  
 
   return (
     <div className="history-container">
       {/* Main Content */}
       <div className="history-content">
-      <h2 className="history-title">Draft</h2>
+        <h2 className="history-title">Active Quizzes</h2>
         {/* Filter Tabs */}
         <div className="filter-tabs">
           {filters.map((filter) => (
@@ -182,20 +181,22 @@ const DraftQuiz = () => {
 
         {/* Error state */}
         {error && <p>{error}</p>}
+        
         {/* No quizzes found state */}
         {quizzes.length === 0 && !loading && !error && (
           <div className="full-page-container">
             <div className="logo-container">
-              <img src={LOGO} alt="Logo" className="full-page-logo" />
+              <img src={LOGO || "/placeholder.svg"} alt="Logo" className="full-page-logo" />
             </div>
           </div>
         )}
-        {/* Quiz Grid */}
+        
+        {/* Quiz Grid - using inline styles */}
         {!loading && !error && quizzes.length > 0 && (
-          <div className="quiz-grid">
+          <div className="quiz-grid" style={horizontalGridStyle}>
             {Array.isArray(quizzes) && quizzes.length > 0 ? (
               quizzes.map((quiz, index) => (
-                <div key={quiz.id_quiz} className="quiz-card">
+                <div key={quiz.id_quiz} className="quiz-card" style={quizCardStyle}>
                   <div className="quiz-image">
                     <img
                       src={quiz.image || "/placeholder.svg"}
@@ -208,17 +209,23 @@ const DraftQuiz = () => {
                     <p className="quiz-questions">
                       {quiz.totalQuestions} Questions
                     </p>
-                    
+                    <p className="quiz-questions">
+                      For Year{" "}
+                      {quiz.for_year === 0 || quiz.for_year === NaN
+                        ? "all"
+                        : quiz.for_year}{" "}
+                      Group{" "}
+                      {quiz.for_groupe === 0 || quiz.for_groupe === NaN
+                        ? "all"
+                        : quiz.for_groupe}{" "}
+                    </p>
                     <div className="quiz-actions">
-                      {/* Button to consult the quiz details */}
                       <button
                         className="consult-btn"
-                        onClick={() => handleStart(quiz.id_quiz)}
+                        onClick={() => handleStop(quiz.id_quiz)}
                       >
-                        PUBLISH
+                        STOP
                       </button>
-
-                      {/* Button for quiz options */}
                       <button
                         className="options-btn"
                         onClick={() => handleQuizOptions(quiz.id_quiz)}
@@ -234,8 +241,9 @@ const DraftQuiz = () => {
             )}
           </div>
         )}
-        {/* Pagination - using inline styles */}
-        {!loading && !error && quizzes.length > 0 && (
+        
+         {/* Pagination - using inline styles */}
+         {!loading && !error && quizzes.length > 0 && (
           <div style={paginationStyle}>
             <button style={pageArrowStyle} onClick={()=>{if(page > 1) { setPage(page - 1)}}}>&#10094;</button>
             <button style={activePageStyle}>{page}</button>
@@ -251,53 +259,5 @@ const DraftQuiz = () => {
     </div>
   );
 };
-export default DraftQuiz;
 
-/*return (
-    <div className="draft-container">
-      {/* Main Content *}
-      <div className="draft-content">
-        <h1 className="page-title">Draft Quizzes</h1>
-
-        {loading ? (
-          <div className="loading-message">Loading draft quizzes...</div>
-        ) : error ? (
-          <div className="error-message">{error}</div>
-        ) : (
-          /* Draft Quiz Grid *
-          <div className="draft-grid">
-            {draftQuizzes.map((quiz) => (
-              <div key={quiz.id} className="draft-card">
-                <div className="draft-image">
-                  <img
-                    src={quiz.image || "/placeholder.svg"}
-                    alt={quiz.title}
-                  />
-                </div>
-                <div className="draft-info">
-                  <h3 className="draft-title">{quiz.title}</h3>
-                  <p className="draft-difficulty">{quiz.difficulty}</p>
-                  <p className="draft-questions">{quiz.questions} Questions</p>
-                  <div className="draft-actions">
-                    <button
-                      className="start-btn"
-                      onClick={() => handleStart(quiz.id)}
-                    >
-                      START
-                    </button>
-                    <button
-                      className="options-btn"
-                      onClick={() => handleQuizOptions(quiz.id)}
-                    >
-                      <FontAwesomeIcon icon={faEllipsisVertical} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};*/
+export default ActiveQuizPage;

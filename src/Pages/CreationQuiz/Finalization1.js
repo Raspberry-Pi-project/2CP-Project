@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { useQuiz } from "../../context/QuizProvider"
 import { useAuth } from "../../context/AuthProvider"
 import axios from "axios"
+import { API_URL } from "../../config"
 
 const Finalization1 = () => {
   const { user } = useAuth()
@@ -81,7 +82,7 @@ const Finalization1 = () => {
     })
     console.log("quizData", quizData)
     const publishedQuiz = await axios.post(
-      "http://localhost:3000/teachers/updateQuiz",
+      `http://${API_URL}:3000/teachers/updateQuiz`,
       quizData,
       { headers: { Authorization: `Bearer ${user.token}` } },
       { withCredentials: true },

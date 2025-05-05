@@ -5,6 +5,7 @@ import LOGO from "../photos/Design (3).png";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthProvider";
+import { API_URL } from "../config";
 const SignIn = () => {
   const { setUser , user } = useAuth();
   const navigate = useNavigate(); // Hook for navigation
@@ -25,7 +26,7 @@ const SignIn = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:3000/auth/login",
+        `http://${API_URL}:3000/auth/login`,
         { email, password, role },
         { withCredentials: true }
       );

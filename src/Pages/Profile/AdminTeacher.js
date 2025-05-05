@@ -5,6 +5,7 @@ import styles from "./AdminTeacher.module.css"; // Importing the CSS module
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthProvider";
 import axios from "axios";
+import { API_URL } from "../../config";
 
 const AdminTeacher = () => {
   const { user } = useAuth();
@@ -21,7 +22,7 @@ const AdminTeacher = () => {
     setLoadingAdmin(true);
     try { 
       const userr = await axios.post(
-        "http://localhost:3000/admins/getAdmin",
+        `http://${API_URL}:3000/admins/getAdmin`,
         { id_admin: user.id },
         { headers: { Authorization: `Bearer ${user.token}` } },
         { withCredentials: true }
@@ -41,7 +42,7 @@ const AdminTeacher = () => {
      setLoading(true);
       try {
         const response = await axios.post(
-          "http://localhost:3000/teachers/getTeachers",
+          `http://${API_URL}:3000/teachers/getTeachers`,
           { page, limit },
           { headers: { Authorization: `Bearer ${user.token}` } },
           { withCredentials: true }

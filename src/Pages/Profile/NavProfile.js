@@ -5,6 +5,7 @@ import styles from "./NavProfile.module.css"; // Import styles from the CSS modu
 import { useAuth } from "../../context/AuthProvider";
 import { useQuiz } from "../../context/QuizProvider";
 import axios from "axios";
+import { API_URL } from "../../config";
 
 export const NavProfile = () => {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ export const NavProfile = () => {
   const handleLogout = async () => {
     try {
       await axios.post(
-        "http://localhost:3000/auth/logout"
+        `http://${API_URL}:3000/auth/logout`
       );
       setQuizData({});
       setUser({});
