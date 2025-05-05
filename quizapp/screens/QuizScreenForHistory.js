@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useRef, useCallback } from "react"
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import {
   View,
   Text,
@@ -11,11 +11,17 @@ import {
   Animated,
   FlatList,
   Platform,
+  ActivityIndicator,
   Alert,
 } from "react-native"
+import axios from "axios"
+import { API_URL } from "../services/config"
+import { useNavigation } from "@react-navigation/native"
 import Icon from "react-native-vector-icons/Feather"
 import { LinearGradient } from "expo-linear-gradient"
 import Svg, { Circle, Path, Defs, LinearGradient as SvgLinearGradient, Stop } from "react-native-svg"
+
+import AsyncStorage from "@react-native-async-storage/async-storage"
 
 const { width, height } = Dimensions.get("window")
 const AnimatedCircle = Animated.createAnimatedComponent(Circle)
@@ -23,7 +29,6 @@ const AnimatedSvg = Animated.createAnimatedComponent(Svg)
 
 // Floating bubbles background component
 const FloatingBubbles = () => {
-  // Create multiple animated values for different bubbles
   const bubbles = [
     {
       ref: useRef(new Animated.Value(0)).current,
@@ -46,7 +51,6 @@ const FloatingBubbles = () => {
   ]
 
   useEffect(() => {
-    // Start animations for all bubbles
     bubbles.forEach((bubble, index) => {
       Animated.loop(
         Animated.sequence([
@@ -65,7 +69,6 @@ const FloatingBubbles = () => {
     })
 
     return () => {
-      // Clean up animations
       bubbles.forEach((bubble) => {
         bubble.ref.stopAnimation()
       })
@@ -112,14 +115,12 @@ const ScoreCircle = ({ score, total }) => {
   const pulseAnim = useRef(new Animated.Value(1)).current
 
   useEffect(() => {
-    // Animate the score
     Animated.timing(animatedValue, {
       toValue: score / total,
       duration: 1500,
       useNativeDriver: false,
     }).start()
 
-    // Pulse animation
     Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
@@ -187,13 +188,12 @@ const ScoreCircle = ({ score, total }) => {
   )
 }
 
-// Question item component with animations - making it a memoized component
-const QuestionItem = React.memo(({ question, index, isCorrect, onPress, animationDelay }) => {
+// Question item component with animations
+/*const QuestionItem = React.memo(({ question, index, isCorrect, onPress, animationDelay, studentAnswer }) => {
   const scaleAnim = useRef(new Animated.Value(0)).current
   const bounceAnim = useRef(new Animated.Value(1)).current
 
   useEffect(() => {
-    // Entrance animation with delay based on index
     Animated.timing(scaleAnim, {
       toValue: 1,
       duration: 500,
@@ -208,7 +208,6 @@ const QuestionItem = React.memo(({ question, index, isCorrect, onPress, animatio
   }, [])
 
   const handlePress = useCallback(() => {
-    // Bounce animation on press
     Animated.sequence([
       Animated.timing(bounceAnim, {
         toValue: 0.95,
@@ -222,11 +221,11 @@ const QuestionItem = React.memo(({ question, index, isCorrect, onPress, animatio
       }),
     ]).start()
 
-    onPress && onPress(question)
-  }, [onPress, question])
+    onPress && onPress(question, studentAnswer)
+  }, [onPress, question, studentAnswer])
 
-  // Determine border color based on correct/incorrect
   const borderColor = isCorrect === true ? "#4ADE80" : isCorrect === false ? "#FF5252" : "#7B5CFF"
+
 
   return (
     <Animated.View
@@ -243,11 +242,225 @@ const QuestionItem = React.memo(({ question, index, isCorrect, onPress, animatio
         ],
       }}
     >
-      <TouchableOpacity style={[styles.questionItem, { borderColor }]} onPress={handlePress} activeOpacity={0.8}>
-        <Text style={styles.questionText}>{question.text}</Text>
-        {isCorrect !== null && (
-          <View style={[styles.statusIcon, { backgroundColor: isCorrect ? "#4ADE80" : "#FF5252" }]}>
-            {isCorrect ? (
+      <TouchableOpacity 
+        style={[styles.questionItem, { borderLeftWidth: 4, borderLeftColor: borderColor }]} 
+        onPress={handlePress} 
+        activeOpacity={0.8}
+      >
+        <View style={styles.questionItemContent}>
+          <Text style={styles.questionText}>{question.question_text}</Text>
+          
+          {studentAnswer && (
+            <View style={styles.studentAnswerContainer}>
+              <Text style={styles.studentAnswerLabel}>Your answer:</Text>
+              <Text style={[
+                styles.studentAnswerText, 
+                { color: isCorrect ? "#4ADE80" : "#FF5252" }
+              ]}>
+              {typeof studentAnswer === 'string' ? studentAnswer : "No answer selected"}
+
+              </Text>
+            </View>
+          )}
+        </View>
+        
+        <View style={[styles.statusIcon, { backgroundColor: isCorrect ? "#4ADE80" : "#FF5252" }]}>
+          {isCorrect ? (
+            <Svg width="16" height="16" viewBox="0 0 24 24">
+              <Path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="white" />
+            </Svg>
+          ) : (
+            <Svg width="16" height="16" viewBox="0 0 24 24">
+              <Path
+                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"
+                fill="white"
+              />
+            </Svg>
+          )}
+        </View>
+      </TouchableOpacity>
+    </Animated.View>
+  )
+}) */
+
+
+  // Complete corrected QuestionItem component
+/*const QuestionItem = React.memo(({ question, index, isCorrect, onPress, animationDelay }) => {
+  const scaleAnim = useRef(new Animated.Value(0)).current
+  const bounceAnim = useRef(new Animated.Value(1)).current
+
+  useEffect(() => {
+    Animated.timing(scaleAnim, {
+      toValue: 1,
+      duration: 500,
+      delay: animationDelay + index * 100,
+      useNativeDriver: true,
+    }).start()
+
+    return () => {
+      scaleAnim.stopAnimation()
+      bounceAnim.stopAnimation()
+    }
+  }, [])
+
+  const handlePress = useCallback(() => {
+    Animated.sequence([
+      Animated.timing(bounceAnim, {
+        toValue: 0.95,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.spring(bounceAnim, {
+        toValue: 1,
+        friction: 4,
+        useNativeDriver: true,
+      }),
+    ]).start()
+
+    onPress && onPress(question, question.studentAnswer)
+  }, [onPress, question])
+
+  const isCorrect = question.correct === true || question.correct === 1;
+
+  const borderColor = isCorrect ? "#4ADE80" : "#FF5252";
+
+  /*if (enrichedQuestions.length === 0) {
+    return <Text>No questions found</Text>;
+  } *
+  
+  return (
+    <Animated.View
+      style={{
+        opacity: scaleAnim,
+        transform: [
+          { scale: Animated.multiply(scaleAnim, bounceAnim) },
+          {
+            translateY: scaleAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [50, 0],
+            }),
+          },
+        ],
+      }}
+    >
+      <TouchableOpacity 
+        style={[styles.questionItem, { borderLeftWidth: 4, borderLeftColor: borderColor }]} 
+        onPress={handlePress} 
+        activeOpacity={0.8}
+      >
+        <View style={styles.questionItemContent}>
+          <Text style={styles.questionText}>{question.question_text}</Text>
+          
+          {question.studentAnswer && (
+            <View style={styles.studentAnswerContainer}>
+              <Text style={styles.studentAnswerLabel}>Your answer:</Text>
+              <Text style={[
+                styles.studentAnswerText, 
+                { color: isCorrect ? "#4ADE80" : "#FF5252" }
+              ]}>
+                {typeof question.studentAnswer === 'string' ? question.studentAnswer : "No answer selected"}
+              </Text>
+            </View>
+          )}
+        </View>
+        
+        <View style={[styles.statusIcon, { backgroundColor: isCorrect ? "#4ADE80" : "#FF5252" }]}>
+          {isCorrect  ? (
+            <Svg width="16" height="16" viewBox="0 0 24 24">
+              <Path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="white" />
+            </Svg>
+          ) : (
+            <Svg width="16" height="16" viewBox="0 0 24 24">
+              <Path
+                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"
+                fill="white"
+              />
+            </Svg>
+          )}
+        </View>
+      </TouchableOpacity>
+    </Animated.View>
+  )
+}) */
+
+  const QuestionItem = React.memo(({ question, index, onPress, animationDelay }) => {
+    const scaleAnim = useRef(new Animated.Value(0)).current
+    const bounceAnim = useRef(new Animated.Value(1)).current
+  
+    useEffect(() => {
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 500,
+        delay: animationDelay + index * 100,
+        useNativeDriver: true,
+      }).start()
+  
+      return () => {
+        scaleAnim.stopAnimation()
+        bounceAnim.stopAnimation()
+      }
+    }, [])
+  
+    const handlePress = useCallback(() => {
+      Animated.sequence([
+        Animated.timing(bounceAnim, {
+          toValue: 0.95,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.spring(bounceAnim, {
+          toValue: 1,
+          friction: 4,
+          useNativeDriver: true,
+        }),
+      ]).start()
+  
+      onPress && onPress(question)
+    }, [onPress, question])
+  
+    // Determine if the answer is correct - handle different data formats
+    const isCorrect = question.correct === true || question.correct === 1;
+    
+    const borderColor = question.correct ? "#4ADE80" : "#FF5252";
+    
+    return (
+      <Animated.View
+        style={{
+          opacity: scaleAnim,
+          transform: [
+            { scale: Animated.multiply(scaleAnim, bounceAnim) },
+            {
+              translateY: scaleAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [50, 0],
+              }),
+            },
+          ],
+        }}
+      >
+        <TouchableOpacity 
+          style={[styles.questionItem, { borderLeftWidth: 4, borderLeftColor: borderColor }]} 
+          onPress={handlePress} 
+          activeOpacity={0.8}
+        >
+          <View style={styles.questionItemContent}>
+            <Text style={styles.questionText}>{question.question_text}</Text>
+            
+            
+              <View style={styles.studentAnswerContainer}>
+                <Text style={styles.studentAnswerLabel}>Your answer:</Text>
+                <Text style={[
+                  styles.studentAnswerText, 
+                  { color: isCorrect ? "#4ADE80" : "#FF5252" }
+                ]}>
+                  {typeof question.studentAnswer === 'string' ? question.studentAnswer : "No answer selected"}
+                </Text>
+              </View>
+            
+          </View>
+          
+          <View style={[styles.statusIcon, { backgroundColor: question.correct  ? "#4ADE80" : "#FF5252" }]}>
+            {question.correct  ? (
               <Svg width="16" height="16" viewBox="0 0 24 24">
                 <Path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="white" />
               </Svg>
@@ -260,11 +473,10 @@ const QuestionItem = React.memo(({ question, index, isCorrect, onPress, animatio
               </Svg>
             )}
           </View>
-        )}
-      </TouchableOpacity>
-    </Animated.View>
-  )
-})
+        </TouchableOpacity>
+      </Animated.View>
+    )
+  })
 
 // Format time helper function
 const formatTime = (seconds) => {
@@ -273,56 +485,43 @@ const formatTime = (seconds) => {
   return `${minutes}m ${remainingSeconds}s`
 }
 
-export default function QuizScreenForHistory({ navigation, route }) {
-  // Get quiz results from route params
-  const quizResultsRef = useRef(route.params?.quizResults);
-  const {
-    score = 0,
-    total = 10,
-    questions = [],
-    correctCount = 0,
-    incorrectCount = 0,
-    timeSpent = 0,
-    quizId = '',
-    originalQuiz = null,
-    attemptInfo = {}
-  } = quizResultsRef.current || {};
-
-  // Ensure normalized score for consistent display
-  const normalizedScore = {
-    score: score,
-    total: total,
-    correctCount: correctCount,
-    incorrectCount: incorrectCount
-  };
-
-  // Animation refs
-  const headerAnim = useRef(new Animated.Value(0)).current
-  const contentAnim = useRef(new Animated.Value(0)).current
-
-  // Track mount state to prevent state updates after unmount
-  const isMounted = useRef(true);
-
-  useEffect(() => {
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
-
-  const handleGoBack = useCallback(() => {
-    navigation.goBack();
-  }, [navigation]);
-
-  const handleHomePress = useCallback(() => {
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'Home' }],
+// Format date helper function
+const formatDate = (dateString) => {
+  if (!dateString) return "";
+  
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "";
+    
+    return date.toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
-  }, [navigation]);
+  } catch (e) {
+    console.error("Error formatting date:", e);
+    return "";
+  }
+}
+
+export default function QuizScreenForHistory({ navigation, route }) {
+  const [loading, setLoading] = useState(true);
+  const [attemptDetails, setAttemptDetails] = useState(null);
+  const [quizDetails, setQuizDetails] = useState(null);
+  const [error, setError] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
+
+  const isMounted = useRef(true);
+  const headerAnim = useRef(new Animated.Value(0)).current;
+  const contentAnim = useRef(new Animated.Value(0)).current;
+
+  const { attemptId, quizId } = route.params || {};
 
   useEffect(() => {
-    // Animate header and content with sequence
-    const animationSequence = Animated.stagger(300, [
+
+     Animated.parallel([
       Animated.timing(headerAnim, {
         toValue: 1,
         duration: 800,
@@ -330,141 +529,344 @@ export default function QuizScreenForHistory({ navigation, route }) {
       }),
       Animated.timing(contentAnim, {
         toValue: 1,
-        duration: 800,
+        duration: 1000,
+        delay: 300,
         useNativeDriver: true,
       }),
-    ]);
+    ]).start();
 
-    animationSequence.start();
 
-    return () => {
-      if (animationSequence.stop) {
-        animationSequence.stop();
+    if (!attemptId || !quizId) {
+      console.error("Missing attemptId or quizId in navigation params:", route.params);
+      setError("Invalid navigation parameters.");
+    }
+
+  }, [attemptId, quizId]);
+
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const token = await AsyncStorage.getItem("token");
+
+      //console.log("Attempting to fetch attempt data for ID:", attemptId);
+      const attemptResponse = await axios.post(`${API_URL}/students/getAttemptAnswers`, {
+        id_attempt: attemptId,
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       }
-      headerAnim.stopAnimation();
-      contentAnim.stopAnimation();
-    }
-  }, []);
+    );
 
-  const handleQuestionPress = useCallback((question) => {
-    // Find or create original question data to pass to ReviewQuestionHistory
-    let originalQuestion;
+      if (!attemptResponse?.data) throw new Error("Attempt data unavailable");
 
-    // First try to get the question from the original quiz
-    if (originalQuiz && originalQuiz.questions) {
-      const originalIndex = question.originalIndex || 0;
-      originalQuestion = originalQuiz.questions[originalIndex];
-    }
+      console.log("Raw API response:", JSON.stringify(attemptResponse.data, null, 2));
 
-    // If the original question isn't available, create a static fallback
-    if (!originalQuestion) {
-      // Create a fallback question with the same structure
-      originalQuestion = {
-        id: question.id || 1,
-        text: question.text || "Question",
-        options: [
-          "Option A",
-          "Option B",
-          "Option C",
-          "Option D"
-        ],
-        correctAnswer: question.isCorrect ? 0 : 1, // Mock correct answer
+      const questions = attemptResponse.data.questions || [];
+
+      //console.log("Got attempt data:", attemptResponse.data);
+
+
+      const parsedAttempt = {
+        attemptId: attemptResponse.data.id_attempt,
+        quizId: attemptResponse.data.id_quiz,
+        corrected: attemptResponse.data.corrected || 0,
+        score: attemptResponse.data.score || 0,
+        totalQuestions: attemptResponse.data.questions.length,
+        attempt_at: attemptResponse.data.attempt_at,
+        student_answers: attemptResponse.data.questions?.map((q) => {
+
+         // const isCorrect = q.student_answers?.correct === 1 || q.student_answers?.correct === true;       
+         const isCorrect = q.studentAnswer?.isCorrect === 1 ||  q.studentAnswer?.isCorrect === true;
+          //const studentAnswerId = q.studentAnswer?.id_answer;
+
+          return {
+            id_question: q.questionId ,
+            correct: isCorrect,
+            selected_answer: q.studentAnswer?.answerText || 'No answer selected',
+            question_text: q.questionText,
+          };
+        }) || [],
       };
-    }
 
-    // Navigate to ReviewQuestionHistory screen with either real or fallback data
+      console.log("Parsed attempt data:", JSON.stringify(parsedAttempt, null, 2));
+
+      setAttemptDetails(parsedAttempt);
+
+      //console.log("Raw attempt details:", JSON.stringify(parsedAttempt, null, 2)); 
+
+
+      //setAttemptDetails(attemptResponse?.data);
+
+      //const token = await AsyncStorage.getItem("token");
+
+      const id_quiz_to_use = parsedAttempt.quizId || quizId;
+      if (!id_quiz_to_use) throw new Error("Quiz ID missing");
+
+      console.log("Fetching quiz details for ID:", id_quiz_to_use);
+      const quizResponse = await axios.post(`${API_URL}/students/getQuizDetails`, {
+        id_quiz: id_quiz_to_use,
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    
+    );
+
+      /*console.log('Attempt Response:', attemptResponse?.data);
+      console.log(JSON.stringify(attemptResponse, null, 2));
+
+      console.log('Quiz Response:', quizResponse?.data); */
+
+      const quizData = quizResponse?.data?.data || quizResponse?.data;
+      console.log("Raw quiz data:", JSON.stringify(quizData, null, 2));
+
+      if (!quizData || !Array.isArray(quizData.questions)) {
+        throw new Error("Invalid quiz data structure");
+      }
+
+      setQuizDetails(quizData);
+
+      //console.log("Raw quiz details:", JSON.stringify(quizData, null, 2)); 
+
+    } catch (err) {
+      console.error("API Error:", err.message || err);
+      setError(err.message || "An error occurred while fetching data.");
+    } finally {
+      setLoading(false);
+    }
+  }, [attemptId, quizId]);
+  
+
+  useEffect(() => {
+    if (attemptId && quizId) {
+      fetchData();
+    }
+    return () => {
+      isMounted.current = false;
+    };
+  }, [fetchData, retryCount]);
+
+  console.log("Attempt details before enrichment:", JSON.stringify(attemptDetails, null, 2));
+console.log("Quiz details before enrichment:", JSON.stringify(quizDetails, null, 2));
+
+
+  /*const enrichedQuestions = useMemo(() => {
+    if (!quizDetails?.questions) return [];
+    if (!attemptDetails?.student_answers) return [];
+
+
+    //console.log("Quiz questions:", quizDetails.questions.length);
+    //console.log("Attempt answers:", attemptDetails.student_answers?.length);
+
+
+    return quizDetails.questions.map((question) => {
+
+      if (!question.id_question) return null;
+
+      const studentAnswerEntry = attemptDetails.student_answers.find(
+        (a) => a.id_question === question.id_question
+      ) ;
+
+      //console.log("Attempt details questions:", attemptDetails.questions);
+
+
+      if (!studentAnswerEntry) {
+        return {
+          ...question,
+          correct: false,
+          studentAnswer: 'No answer selected',
+        };
+      }
+
+      const isCorrect = studentAnswerEntry.correct === 1 || studentAnswerEntry.correct === true || studentAnswerEntry.is_correct === true || studentAnswerEntry.is_correct === 1;
+
+     // const isCorrect = studentAnswerEntry.correct === 1 || studentAnswerEntry.correct === true;
+
+
+      return {
+        ...question,
+        //isCorrect: studentAnswer.is_correct ?? false,
+        //studentAnswer,
+        /*isCorrect: studentAnswer.isCorrect === true,
+        studentAnswer: studentAnswer.student_answer_text || "No answer selected", *
+        correct: isCorrect,
+        studentAnswer: studentAnswerEntry.selected_answer || studentAnswerEntry.student_answer_text || 'No answer selected',
+      };
+    }).filter(Boolean);
+  }, [quizDetails, attemptDetails]); */
+
+
+
+  const enrichedQuestions = useMemo(() => {
+    if (!quizDetails?.questions) return [];
+    if (!attemptDetails?.student_answers) return [];
+  
+    return quizDetails.questions.map((question) => {
+      const studentAnswer = attemptDetails.student_answers.find(
+        a => a.id_question === question.id_question
+      );
+
+     /* if (!studentAnswer) {
+        return {
+          ...question,
+          correct: false,
+          studentAnswer: 'No answer selected'
+        };
+      } */
+  
+      return {
+        ...question,
+        correct: studentAnswer?.correct || false,
+        studentAnswer: studentAnswer?.selected_answer || 'No answer selected',
+      };
+    });
+  }, [quizDetails, attemptDetails]);
+
+  const scoreData = useMemo(() => {
+    if (!attemptDetails) return {
+      score: 0,
+      totalQuestions: 0,
+      correctCount: 0,
+      incorrectCount: 0,
+    };
+
+    const totalQuestions = quizDetails?.questions?.length || 0;
+    const correctCount = attemptDetails.corrected || 0;
+    const score = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
+
+    return {
+      score,
+      totalQuestions,
+      correctCount,
+      incorrectCount: totalQuestions - correctCount,
+    };
+  }, [attemptDetails, quizDetails]);
+
+  const handleGoBack = useCallback(() => navigation.goBack(), [navigation]);
+  const handleHomePress = useCallback(() => {
+    navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
+  }, [navigation]);
+
+  const handleQuestionPress = useCallback((question, studentAnswer) => {
     navigation.navigate("ReviewQuestionHistory", {
-      originalQuestion: originalQuestion,
-      quizId: quizId || "history-quiz",
-      selectedAnswers: question.selections || [question.answer].filter(Boolean) || [question.isCorrect ? 0 : 1],
-      title: (originalQuiz?.title || "History Quiz"),
+      originalQuestion: question,
+      quizId: quizDetails?.id_quiz,
+      selectedAnswers: studentAnswer ? [studentAnswer] : [],
+      title: quizDetails?.title || "Quiz Review",
       attemptInfo: {
-        ...attemptInfo,
-        date: attemptInfo.date || new Date().toLocaleDateString(),
-        isCorrect: question.isCorrect,
-        score: score
+        date: formatDate(attemptDetails?.attempt_at),
+        score: scoreData.score,
+        corrected: scoreData.correctCount,
       }
     });
-  }, [navigation, originalQuiz, quizId, attemptInfo, score]);
+  }, [quizDetails, attemptDetails, scoreData, navigation]);
 
-  // Item extractor for FlatList to prevent re-renders
-  const keyExtractor = useCallback((item) => item.id.toString(), []);
+  const renderItem = useCallback(({ item, index }) => {
 
-  // Render item function for FlatList
-  const renderItem = useCallback(({ item, index }) => (
+    return (
     <QuestionItem
       question={item}
       index={index}
-      isCorrect={item.isCorrect}
-      onPress={handleQuestionPress}
-      animationDelay={500} // Start after main animations
+      //correct={item.correct}
+      //studentAnswer={item.studentAnswer}  // Fix: Use the properly formatted studentAnswer from enrichedQuestions
+      onPress={() => handleQuestionPress(item, item.studentAnswer)}
+      animationDelay={500}
     />
-  ), [handleQuestionPress]);
+    );
+  }, [handleQuestionPress]);  
+
+  // === UI ===
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#7B5CFF" />
+        <Text style={styles.loadingText}>Loading attempt details...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Icon name="alert-triangle" size={50} color="#FF5252" />
+        <Text style={styles.errorText}>{error}</Text>
+        <Text style={styles.errorSubtext}>
+          {error.includes("attempt") ? "Attempt data unavailable" : "Quiz data unavailable"}
+        </Text>
+        <View style={styles.buttonRow}>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={() => setRetryCount(prev => prev + 1)}
+          >
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.retryButton, styles.secondaryButton]}
+            onPress={handleGoBack}
+          >
+            <Text style={styles.retryButtonText}>Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  console.log("Enriched Questions:", enrichedQuestions);
+
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Purple header section with gradient */}
-      <Animated.View
+      {/* Header with gradient and score circle */}
+      <Animated.View 
         style={[
-          styles.headerContainer,
-          {
+          styles.headerContainer, 
+          { 
             opacity: headerAnim,
-            transform: [
-              {
-                translateY: headerAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [-50, 0],
-                }),
-              },
-            ],
-          },
+            transform: [{ translateY: headerAnim.interpolate({ inputRange: [0, 1], outputRange: [-50, 0] }) }] 
+          }
         ]}
       >
         <LinearGradient
-          colors={["#A42FC1", "#7B5CFF"]}
-          style={styles.headerGradient}
+          colors={["#7B5CFF", "#A42FC1"]}
           start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.headerGradient}
         >
           <FloatingBubbles />
-
           <View style={styles.headerContent}>
-            {/* Back button and home button */}
             <View style={styles.buttonsContainer}>
-              <TouchableOpacity
-                style={styles.backButton}
-                onPress={handleGoBack}
-              >
-                <Icon name="arrow-left" size={24} color="white" />
+              <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
+                <Icon name="arrow-left" size={20} color="white" />
               </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.homeButton}
-                onPress={handleHomePress}
-              >
-                <Icon name="home" size={24} color="white" />
+              <TouchableOpacity style={styles.homeButton} onPress={handleHomePress}>
+                <Icon name="home" size={20} color="white" />
               </TouchableOpacity>
             </View>
-
-            {/* Large prominent score circle at the top */}
+            
+            <View>
+              <Text style={styles.screenTitle}>{quizDetails?.title || "Quiz Results"}</Text>
+              <Text style={styles.screenSubtitle}>
+                {formatDate(attemptDetails?.attempt_at || "")}
+              </Text>
+            </View>
+            
             <View style={styles.scoreCircleWrapper}>
-              <ScoreCircle score={normalizedScore.score} total={total} />
+              <ScoreCircle score={scoreData.correctCount} total={scoreData.totalQuestions} />
             </View>
-
-            {/* Title under the score */}
-            <Text style={styles.screenTitle}>Attempt Review</Text>
-            {attemptInfo.date && (
-              <Text style={styles.screenSubtitle}>{attemptInfo.date}</Text>
-            )}
-
-            {/* Simple score text display */}
+            
             <View style={styles.scoreTextSummary}>
               <View style={styles.scoreItem}>
-                <Text style={styles.scoreItemValue}>{normalizedScore.correctCount}</Text>
+                <Text style={styles.scoreItemValue}>{scoreData.correctCount}</Text>
                 <Text style={styles.scoreItemLabel}>Correct</Text>
               </View>
               <View style={styles.scoreItem}>
-                <Text style={[styles.scoreItemValue, { color: "#FF5252" }]}>{normalizedScore.incorrectCount}</Text>
+                <Text style={[styles.scoreItemValue, styles.incorrectValue]}>
+                  {scoreData.incorrectCount}
+                </Text>
                 <Text style={styles.scoreItemLabel}>Incorrect</Text>
               </View>
             </View>
@@ -473,34 +875,36 @@ export default function QuizScreenForHistory({ navigation, route }) {
       </Animated.View>
 
       {/* Questions list */}
-      <Animated.View
+      <Animated.View 
         style={[
-          styles.contentContainer,
+          styles.contentContainer, 
           {
             opacity: contentAnim,
-            transform: [
-              {
-                translateY: contentAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [100, 0],
-                }),
-              },
-            ],
-          },
+            transform: [{ translateY: contentAnim.interpolate({ inputRange: [0, 1], outputRange: [100, 0] }) }],
+          }
         ]}
       >
-        <FlatList
-          data={questions}
-          keyExtractor={keyExtractor}
-          renderItem={renderItem}
-          contentContainerStyle={styles.questionsContainer}
-          showsVerticalScrollIndicator={false}
-          initialNumToRender={20}
-        />
+        {enrichedQuestions.length > 0 ? (
+          <FlatList
+            data={enrichedQuestions}
+            keyExtractor={(item) => item.id_question.toString()}
+            renderItem={renderItem}
+            contentContainerStyle={styles.questionsContainer}
+            showsVerticalScrollIndicator={false}
+          />
+        ) : (
+          <View style={styles.noQuestionsContainer}>
+            <Icon name="help-circle" size={50} color="#7B5CFF" />
+            <Text style={styles.noQuestionsText}>
+              No questions available for this attempt
+            </Text>
+          </View>
+        )}
       </Animated.View>
     </SafeAreaView>
-  )
+  );
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -560,37 +964,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 0,
   },
-  scoreIndicators: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 10,
-  },
-  indicatorContainer: {
-    alignItems: "center",
-  },
-  indicatorValue: {
-    color: "#4ADE80",
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 5,
-  },
-  indicatorBar: {
-    width: 50,
-    height: 4,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    borderRadius: 2,
-    overflow: "hidden",
-    marginBottom: 5,
-  },
-  indicatorFill: {
-    height: "100%",
-    borderRadius: 2,
-  },
-  indicatorLabel: {
-    color: "rgba(255, 255, 255, 0.8)",
-    fontSize: 12,
-  },
   scoreCircleContainer: {
     alignItems: "center",
     justifyContent: "center",
@@ -627,7 +1000,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "white",
     borderRadius: 12,
-    borderWidth: 1,
     paddingVertical: 16,
     paddingHorizontal: 20,
     marginBottom: 12,
@@ -637,12 +1009,27 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
   },
-  questionText: {
+  questionItemContent: {
     flex: 1,
+  },
+  questionText: {
     fontSize: 16,
     color: "#333",
     fontWeight: "500",
-    marginRight: 10,
+    marginBottom: 8,
+  },
+  studentAnswerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  studentAnswerLabel: {
+    fontSize: 14,
+    color: "#666",
+    marginRight: 5,
+  },
+  studentAnswerText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
   statusIcon: {
     width: 24,
@@ -650,6 +1037,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
+    marginLeft: 10,
   },
   bubble: {
     position: "absolute",
@@ -671,9 +1059,105 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
   },
+  incorrectValue: {
+    color: "#FF5252",
+  },
   scoreItemLabel: {
     color: "rgba(255, 255, 255, 0.9)",
     fontSize: 14,
     marginTop: 5,
   },
-}) 
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: "#F8F9FA",
+  },
+  loadingText: {
+    fontSize: 16,
+    color: "#666",
+    marginTop: 20,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: "#F8F9FA",
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 18,
+    color: "#FF5252",
+    fontWeight: "bold",
+    marginTop: 20,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  errorSubtext: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '80%',
+    marginTop: 10,
+  },
+  retryButton: {
+    backgroundColor: "#7B5CFF",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    marginHorizontal: 5,
+    minWidth: 120,
+    alignItems: 'center',
+  },
+  secondaryButton: {
+    backgroundColor: "#6B7280",
+  },
+  retryButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  warningBanner: {
+    backgroundColor: "#FFF9E6",
+    flexDirection: "row",
+    padding: 10,
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderBottomWidth: 1,
+    borderBottomColor: "#FFE082",
+  },
+  warningText: {
+    fontSize: 12,
+    color: "#996500",
+    flex: 1,
+    marginHorizontal: 10,
+  },
+  retrySmallButton: {
+    backgroundColor: "#FFB238",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 4,
+  },
+  retrySmallButtonText: {
+    color: "white",
+    fontSize: 12,
+    fontWeight: "bold",
+  },
+  noQuestionsContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  noQuestionsText: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    marginTop: 20,
+  },
+});

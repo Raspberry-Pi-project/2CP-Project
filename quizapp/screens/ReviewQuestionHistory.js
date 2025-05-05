@@ -17,6 +17,9 @@ import Icon from "react-native-vector-icons/Feather"
 import { LinearGradient } from "expo-linear-gradient"
 import Svg, { Circle, Path } from "react-native-svg"
 import QuizBackground from "../components/QuizBackground"
+import axios from "axios"
+import { API_URL } from "../services/config"
+import AsyncStorage from "@react-native-async-storage/async-storage"
 
 const { width, height } = Dimensions.get("window")
 const AnimatedCircle = Animated.createAnimatedComponent(Circle)
