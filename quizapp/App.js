@@ -61,7 +61,7 @@ export default function App() {
   return (
     <UserContext.Provider value={{ userData, setUserData }}>
     <SafeAreaProvider>
-      
+      {/*<OfflineOnly>*/}
         <NavigationContainer>
           <StatusBar style="light" />
           <Stack.Navigator
@@ -113,7 +113,7 @@ export default function App() {
           {/* Advanced Notification Manager with ref */}
           <NotificationManager ref={notificationManager.ref} />
         </NavigationContainer>
-      
+      {/*</OfflineOnly>*/}
     </SafeAreaProvider>
     </UserContext.Provider>
   )
