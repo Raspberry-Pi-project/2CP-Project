@@ -8,8 +8,7 @@ const {
     
 } = require("../controllers/studentsControllers");
 const { getQuizzes, getQuizDetails } = require("../controllers/quizControllers");
-const { startAttempt, getAttemptById, getQuizAttempts } = require("../controllers/attemptsController");
-
+const { startAttempt, getAttemptById, getQuizAttempts, getAttemptAnswers } = require("../controllers/attemptsController");
 
 
 
@@ -25,11 +24,13 @@ router.post("/getAttemptById", getAttemptById);
 
 router.get("/getQuizAttempts/:id_quiz", getQuizAttempts);
 
+router.post("/getAttemptAnswers", getAttemptAnswers);
 
 router.post("/getQuizResults", getQuizResults);
 router.post("/history", getHistory);
 
 router.post("/profile",getStudents)
+
 
 
 
