@@ -139,25 +139,25 @@ const Finalization1 = () => {
             <h3>Quiz Summary</h3>
             <div className="summary-detailss">
               <p>
-                <strong>Title:</strong> {quizData.title}
+                <strong>Title</strong> {quizData.title}
               </p>
               <p>
-                <strong>Subject:</strong> {quizData.subject}
+                <strong>Subject</strong> {quizData.subject}
               </p>
               <p>
-                <strong>Description:</strong> {quizData.description}
+                <strong>Description</strong> {quizData.description}
               </p>
               <p>
-                <strong>Duration:</strong> {quizData.duration === -1 ? "No time limit" : `${quizData.duration} minutes`}
+                <strong>Duration</strong> {quizData.duration === -1 ? "No time limit" : `${quizData.duration} minutes`}
               </p>
               <p>
-                <strong>Attempts:</strong> {quizData.nb_attempts === -1 ? "Unlimited" : quizData.nb_attempts}
+                <strong>Attempts</strong> {quizData.nb_attempts === -1 ? "Unlimited" : quizData.nb_attempts}
               </p>
               <p>
-                <strong>Score:</strong> {quizData.score}
+                <strong>Score</strong> {quizData.score}
               </p>
               <p>
-                <strong>Correction Type:</strong>{" "}
+                <strong>Correction Type</strong>{" "}
                 {quizData.correctionType === "auto" ? "Auto-graded" : "Manually graded"}
               </p>
             </div>

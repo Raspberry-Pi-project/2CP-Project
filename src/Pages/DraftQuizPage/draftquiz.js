@@ -69,7 +69,7 @@ const DraftQuiz = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const [limit, setLimit] = useState(4);
   const navigate = useNavigate();
   const { user } = useAuth();
   const { setQuizData } = useQuiz(); // Get setQuiz function from QuizProvider context
@@ -236,15 +236,21 @@ const DraftQuiz = () => {
         {/* Pagination - using inline styles */}
         {!loading && !error && quizzes.length > 0 && (
           <div style={paginationStyle}>
-            <button style={pageArrowStyle} onClick={()=>{if(page > 1) { setPage(page - 1)}}}>&#10094;</button>
-            <button style={activePageStyle}>{page}</button>
-            {totalPages - page >= 1 && <button style={pageNumberStyle} onClick={()=>{setPage(page + 1)}}>{page+1}</button>}
-            {totalPages - page >= 2 && <button style={pageNumberStyle} onClick={()=>{setPage(page + 2)}}>{page+2}</button>}
-            {totalPages - page >= 3 && <button style={pageNumberStyle} onClick={()=>{setPage(page + 3)}}>{page+3}</button>}
-            {totalPages - page >= 4 && <span>...</span>}
-            {totalPages - page >= 4 && <button style={pageNumberStyle} onClick={()=>{setPage(totalPages)}}>{totalPages}</button>}
-            <button style={pageArrowStyle} onClick={()=>{ if (totalPages - page >= 1) {setPage(page +1)}}}>&#10095;</button>
-          </div>
+          {page > 1 && (
+            <button style={pageArrowStyle} onClick={() => setPage(page - 1)}>
+              &#10094;
+            </button>
+          )}
+        
+          <button style={activePageStyle}>{page}</button>
+        
+          {page < totalPages && (
+            <button style={pageArrowStyle} onClick={() => setPage(page + 1)}>
+              &#10095;
+            </button>
+          )}
+        </div>
+        
         )}
       </div>
     </div>
