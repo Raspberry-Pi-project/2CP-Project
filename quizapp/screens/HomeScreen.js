@@ -65,8 +65,9 @@ const SimpleQuizCard = ({ quiz, onPress }) => {
       <View style={styles.quizCardContent}>
         <View style={styles.quizCardIconContainer}>
           <View style={styles.quizCardIcon}>
-          { <Image source={{ uri : quiz.image}} style={styles.quizCardIcon}/>}
-            
+          {/* <Image source={{ uri : quiz.image}} style={styles.quizCardIcon}/> */}
+          <Text style={styles.quizCardIconText}>{quiz.image}</Text>
+ 
           </View>
         </View>
         <View style={styles.quizCardTextContainer}>
@@ -126,7 +127,7 @@ export default function HomeScreen({ navigation }) {
     setRefreshing(true);
 
     try {
-      setPage(page + 1);
+      //setPage(page + 1);
       await fetchQuizzes(page); // 
     } catch (error) {
       console.error("Refresh error:", error);
@@ -139,7 +140,12 @@ export default function HomeScreen({ navigation }) {
     const fetchHistoryData = async () => {
       try {
         const studentID = await AsyncStorage.getItem("userId");
+        const studentGroup = await AsyncStorage.getItem("studentGroup");
+        const studentYear = await AsyncStorage.getItem("studentYear");
+
         const token = await AsyncStorage.getItem("token");
+        
+        console.log("Student ID being sent:", studentID);
 
         if (!studentID || !token) {
           alert("Please log in again.");
@@ -148,16 +154,72 @@ export default function HomeScreen({ navigation }) {
         }
 
         const response = await api.post(
-          `${API_URL}/students/history`,{id_student: parseInt(studentID) , page : 1 , limit : 7},)
-          setHistoryData(response.data.data);
 
-        // Fetch history data here if needed
+          `${API_URL}/students/history`,{id_student: parseInt(studentID), page : 1, limit : 10},
+          {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+        )
+        console.log("History Response:", response.data.data);
+          
+        
+        setHistoryData(response.data.data);
+
+        if (response.data && response.data.data) {
+          setHistoryData(response.data.data.map(quiz => ({
+            id_quiz: quiz.id_quiz,
+            title: quiz.title,
+            created_at: formatDate(quiz.created_at),
+            image: quiz.image || "📚", // Default icon if none provided
+            score: quiz.attempts && quiz.attempts.length > 0 ? quiz.attempts[0].score : 0,
+            descreption: quiz.description,
+            duration: quiz.duration,
+            totalQuestions: quiz.totalQuestions || 0
+          })));
+        }
+
+
       } catch (error) {
         console.error("Error fetching history data:", error);
+        setHistoryData([]); // Set empty array to avoid rendering issues
+
       }
-    }
+    };
     fetchHistoryData();
   },[])
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+    } catch (error) {
+      return "N/A";
+    }
+  };
+
+  <ScrollView showsVerticalScrollIndicator={false}>
+  {historyData.length > 0 ? (
+    historyData.map((item) => (
+      <SimpleHistoryCard
+        key={item.id_quiz}
+        title={item.title}
+        date={item.created_at}
+        icon={item.image}
+        score={item.score}
+        onPress={() => handleHistoryQuizPress(item)}
+      />
+    ))
+  ) : (
+    <View style={styles.emptyHistoryContainer}>
+      <Text style={styles.emptyHistoryText}>No quiz history found</Text>
+    </View>
+  )}
+</ScrollView>
+
 
   // History data
   const historyDataa = [
@@ -324,6 +386,9 @@ export default function HomeScreen({ navigation }) {
           Authorization: `Bearer ${await AsyncStorage.getItem("token")}`}
       })
 
+      console.log("Quiz Details Response:", quizDetails.data); // Debugging line to see the full response
+
+
       navigation.navigate("QuizInfo", {
         id_quiz: quiz.id_quiz,
         basicQuizData: {
@@ -356,29 +421,75 @@ export default function HomeScreen({ navigation }) {
     outputRange: [80, height * 0.7],
   });
 
-  const handleHistoryQuizPress = (item) => {
+  const handleHistoryQuizPress = async (quiz) => {
+    const token = await AsyncStorage.getItem("token");
+    console.log("Token:", token);
+
+    try {
+      const quizDetails = await axios.post(`${API_URL}/students/getQuizDetails`, {
+        id_quiz : quiz.id_quiz , page : 1 , limit : 1 
+      },{
+        headers: {
+          Authorization: `Bearer ${token}`}
+      })
+
+      console.log("Quiz Details Response:", quizDetails.data); // Debugging line to see the full response
+
     navigation.navigate("QuizHistoryScreen", { 
       quiz: {
-        id: item.id,
-        title: item.title,
-        description: item.descreption,
-        time: item.duration,
-        attempts: 1,
-        questions: item.totalQuestions || 10
+        id: quizDetails.data.id,
+        title: quizDetails.data.title,
+        description: quizDetails.data.descreption || "View your previous quiz attempt results.",
+        time: quizDetails.data.duration,
+        nb_attempts: quizDetails.data.nb_attempts ||1,
+        questions: quizDetails.data.totalQuestions || 10
       },
-      score: item.score,
-      totalQuestions: item.totalQuestions,
+      score: quizDetails.data.score,
+      totalQuestions: quizDetails.data.totalQuestions,
+      timeSpent: quizDetails.data.timeSpent || quizDetails.data.duration * 60, // Convert minutes to seconds if timeSpent not available
+      id_quiz: quizDetails.data.id_quiz,
+      id_student: quizDetails.data.id_student 
     });
-  };
+  } catch (error) {
+    console.error("Error fetching quiz details:", error);
+    
+  }
+};
 
   const renderQuizItem = ({ item, onPress }) => {
+
+    console.log("Rendering Quiz Item:", item);
+
+    let icon = "📚"; // Default icon
+  
+    // Check if subject exists and assign appropriate icon
+    if (item.subject) {
+      const subject = item.subject.toLowerCase();
+      if (subject.includes("math") || subject.includes("mathematics")) {
+        icon = "🧮";
+      } else if (subject.includes("science") || subject.includes("chemistry") || subject.includes("physics")) {
+        icon = "🔬";
+      } else if (subject.includes("english") || subject.includes("language")) {
+        icon = "📝";
+      } else if (subject.includes("history")) {
+        icon = "🏛️";
+      } else if (subject.includes("geography")) {
+        icon = "🌍";
+      } else if (subject.includes("art")) {
+        icon = "🎨";
+      } else if (subject.includes("music")) {
+        icon = "🎵";
+      } else if (subject.includes("computer") || subject.includes("programming") || subject.includes("ai")) {
+        icon = "💻";
+      }
+    }
+
     return (
       <SimpleQuizCard
         quiz={{
           title: item.title,
-          subtitle: item.description || "No description available",
-          icon: "book", // Customize based on your data
-        }}
+          subject: item.subject || "Quiz",
+          image: icon, }}
         onPress={() => handleQuizPress(item)}
       />
     );

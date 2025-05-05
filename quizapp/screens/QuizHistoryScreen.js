@@ -2,17 +2,82 @@ import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar, Imag
 import { LinearGradient } from "expo-linear-gradient"
 import Icon from "react-native-vector-icons/Feather"
 import { UserContext } from "../App"
-import React, { useContext } from "react"
+import React, { useEffect, useState, useContext } from "react"
+import axios from "axios"
+import { API_URL } from "../services/config" 
+import AsyncStorage from "@react-native-async-storage/async-storage"
 
 const { width } = Dimensions.get("window")
 
 export default function QuizHistoryScreen({ navigation, route }) {
-  const { quiz, id_quiz, id_student } = route.params || {}
+  const {  score, timeSpent, id_quiz, id_student, basicQuizData,nb_attempts } = route.params || {};
   const { userData } = useContext(UserContext)
+  const [loading, setLoading] = useState(!basicQuizData)
+  const [quizData, setQuizData] = useState(null) 
+  const [quiz, setQuiz] = useState(basicQuizData); // State to manage quiz data
+  
+useEffect(()=>{
+    
+  },[basicQuizData])
+  
+  useEffect(() => {
+    // If we have a quiz object already passed in route params, use it
+    if (quiz || basicQuizData) {
+      setQuizData(quiz || basicQuizData)
+    } 
+    // Otherwise fetch quiz details from backend if we have id_quiz
+    else if (id_quiz) {
+      fetchQuizDetails(id_quiz)
+    } else {
+      setQuizData({
+        id_quiz: "1",
+        title: "Mathematics Quiz",
+        description: "Basic arithmetic operations quiz",
+        duration: "5",
+        nb_attempts: 1,
+        questions: [],
+        subject: "Mathematics"
+      })
+    }
+  }, [quiz, id_quiz, basicQuizData])
+
+  const fetchQuizDetails = async (quizId) => {
+    setLoading(true)
+    console.log("Fetching quiz details for ID:", quizId) // Check if quizId is correct
+  const token = await AsyncStorage.getItem("token");
+    try {
+      const response = await axios.post(`${API_URL}/students/getQuizDetails`, {
+        id_quiz: quizId
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+      setQuizData(response.data)
+    } catch (error) {
+      console.error("Error fetching quiz details:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (quizData) {
+      const needsUpdate = route.params?.nb_attempts !== undefined && quizData.nb_attempts !== route.params.nb_attempts;
+      
+      if (needsUpdate) {
+        setQuizData(prevData => ({
+          ...prevData,
+          nb_attempts: route.params.nb_attempts
+        }));
+      }
+    }
+  }, [route.params?.nb_attempts, quizData]);  // Ensure quizData is available before accessing it
+  
 
   // Create a default quiz object if none is provided
-  const quizInfo = quiz || {
-    id: id_quiz || "1",
+  const quizInfo = quizData || {
+    id: id_quiz ? id_quiz.toString() : "1",
     title: `Quiz #${id_quiz || "1"}`,
     description: "View your previous quiz attempt results.",
     time: "30 minutes",
@@ -22,18 +87,34 @@ export default function QuizHistoryScreen({ navigation, route }) {
 
   // Get an icon based on quiz type
   const getQuizIcon = () => {
-    switch (quizInfo.id) {
-      case "1": // English
-        return "book"
-      case "2": // Math
-        return "bar-chart-2"
-      case "3": // Science
-        return "thermometer"
-      case "4": // Physics
-        return "zap"
-      default:
-        return "help-circle"
+    // First check if quiz has a specific image set in the database
+    if (quiz && quiz.image) {
+      // If image field contains a recognizable icon name, use it
+      const iconName = quiz.image.toLowerCase();
+      if (iconName.includes("book")) return "book";
+      if (iconName.includes("math") || iconName.includes("chart")) return "bar-chart-2";
+      if (iconName.includes("science")) return "thermometer";
+      if (iconName.includes("physics")) return "zap";
+      if (iconName.includes("language")) return "edit";
+      if (iconName.includes("history")) return "clock";
+      if (iconName.includes("geography")) return "globe";
+      if (iconName.includes("computer")) return "code";
     }
+    
+    // Fallback based on subject if available
+    if (quizData && quizData.subject) {
+      const subject = quizData.subject.toLowerCase();
+      if (subject.includes("math")) return "bar-chart-2";
+      if (subject.includes("physics")) return "zap";
+      if (subject.includes("science")) return "thermometer";
+      if (subject.includes("english") || subject.includes("language")) return "book";
+      if (subject.includes("history")) return "clock";
+      if (subject.includes("geography")) return "globe";
+      if (subject.includes("computer")) return "code";
+    }
+    
+    // Default icon if no match
+    return "help-circle";
   }
 
   // Get the appropriate image based on quiz type
@@ -54,15 +135,28 @@ export default function QuizHistoryScreen({ navigation, route }) {
 
   const handleCheckResults = () => {
     // Navigate to the QuizScore screen with the necessary parameters
-    const { score, totalQuestions, timeSpent } = route.params;
+    const { score, timeSpent } = route.params;
 
     navigation.navigate("QuizScore", {
       score: score,
-      totalQuestions: totalQuestions || 10,
-      timeSpent: timeSpent || 300,
-      id_quiz: quizInfo.id,
+      totalQuestions: quizData?.questions?.length || 0,
+      timeSpent: timeSpent || 0,
+      id_quiz: quizData?.id_quiz,
       id_student: id_student || userData?.id_student
     })
+  }
+
+   // If quiz data is not loaded yet, show loading indicator or placeholder
+   if (!quizData) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="light-content" />
+        <LinearGradient colors={["#7B5CFF", "#A42FC1"]} style={StyleSheet.absoluteFill} />
+        <View style={styles.contentContainer}>
+          <Text style={styles.loadingText}>Loading quiz information...</Text>
+        </View>
+      </SafeAreaView>
+    )
   }
 
   return (
@@ -114,13 +208,16 @@ export default function QuizHistoryScreen({ navigation, route }) {
 
               <View style={styles.detailItem}>
                 <Text style={styles.detailLabel}>Number of attempts :</Text>
-                <Text style={styles.detailValue}>{quizInfo.attempts || 1}</Text>
+                <Text style={styles.detailValue}> {quizData ? quizData.nb_attempts : "Loading..."} 
+                </Text>
               </View>
 
               <View style={styles.detailItem}>
                 <Text style={styles.detailLabel}>Questions :</Text>
-                <Text style={styles.detailValue}>{quizInfo.questions ? quizInfo.questions.length : 0}</Text>
-              </View>
+                <Text style={styles.detailValue}> {quizData && quizData.questions ? quizData.questions.length : "Loading..."}
+                </Text>
+
+                </View>
             </View>
           </View>
 
@@ -133,6 +230,7 @@ export default function QuizHistoryScreen({ navigation, route }) {
     </SafeAreaView>
   )
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -148,6 +246,11 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 18,
     marginBottom: 20,
+    textAlign: "center",
+  },
+  loadingText: {
+    color: "white",
+    fontSize: 18,
     textAlign: "center",
   },
   backButtonLarge: {
@@ -298,4 +401,4 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
   },
-}) 
+})
