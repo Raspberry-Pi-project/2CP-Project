@@ -5,6 +5,7 @@ import styles from "./StudentProfile.module.css";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../../context/AuthProvider";
+import { API_URL } from "../../config";
 
 const StudentProfile = () => {
   const { user } = useAuth();
@@ -21,7 +22,7 @@ const StudentProfile = () => {
       setLoadingTeacher(true);
       try {
       const userr = await axios.post(
-        "http://localhost:3000/teachers/getTeachers",
+        `http://${API_URL}:3000/teachers/getTeachers`,
         { id_teacher: user.id, page: 1, limit: 1000000 },
         { headers: { Authorization: `Bearer ${user.token}` } },
         { withCredentials: true }
@@ -43,7 +44,7 @@ const StudentProfile = () => {
       setLoading(true);
       try {
         const response = await axios.post(
-          "http://localhost:3000/teachers/getStudents",
+          `http://${API_URL}:3000/teachers/getStudents`,
           { id_student: parseInt(id), page: 1, limit: 1 },
           { headers: { Authorization: `Bearer ${user.token}` } },
           { withCredentials: true }
@@ -65,7 +66,7 @@ const StudentProfile = () => {
     const fetchQuizzes = async () => {
       try {
         const response = await axios.post(
-          "http://localhost:3000/teachers/getStudentHistory",
+          `http://${API_URL}:3000/teachers/getStudentHistory`,
           { id_student: parseInt(id), page: 1, limit: 6 },
           { headers: { Authorization: `Bearer ${user.token}` } },
           { withCredentials: true }

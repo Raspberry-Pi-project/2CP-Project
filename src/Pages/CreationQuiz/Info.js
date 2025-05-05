@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuiz } from "../../context/QuizProvider";
 import { useAuth } from "../../context/AuthProvider";
 import axios from "axios";
+import { API_URL } from "../../config";
 const Infos = () => {
   const navigate = useNavigate();
   const { quizData, setQuizData } = useQuiz();
@@ -78,7 +79,7 @@ const Infos = () => {
     formData.append("subject", subject);
     try {
       const craetedQuiz = await axios.post(
-        "http://localhost:3000/teachers/createQuiz",
+        `http://${API_URL}:3000/teachers/createQuiz`,
         formData,
         {
           headers: {

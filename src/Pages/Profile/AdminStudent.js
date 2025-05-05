@@ -5,6 +5,7 @@ import styles from "./AdminStudent.module.css";
 import axios from "axios";
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthProvider";
+import { API_URL } from "../../config";
 
 const AdminStudent = () => {
   const students = [
@@ -28,7 +29,7 @@ const AdminStudent = () => {
     const getStudents = async () => {
       try {
         const response = await axios.post(
-          "http://localhost:3000/teachers/getStudents",
+          `http://${API_URL}:3000/teachers/getStudents`,
 
           { page, limit },
           { headers: { Authorization: `Bearer ${user.token}` } },
@@ -63,7 +64,7 @@ const AdminStudent = () => {
         userr.status = 200; // Initialize result status to 200
        if (user.role === "teacher") {
         userr = await axios.post(
-          "http://localhost:3000/teachers/getTeachers",
+          `http://${API_URL}:3000/teachers/getTeachers`,
           { id_teacher: user.id, page: 1, limit: 1000000 },
           { headers: { Authorization: `Bearer ${user.token}` } },
           { withCredentials: true }
@@ -71,7 +72,7 @@ const AdminStudent = () => {
       }
       else if (user.role === "admin") {
         userr = await axios.post(
-          "http://localhost:3000/admins/getAdmin",
+          `http://${API_URL}:3000/admins/getAdmin`,
           { id_admin: user.id },
           { headers: { Authorization: `Bearer ${user.token}` } },
           { withCredentials: true }

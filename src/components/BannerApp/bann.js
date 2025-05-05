@@ -41,6 +41,11 @@ const BannerApp = () => {
       icon: <FontAwesomeIcon icon={faUser} />,
     },
     {
+      name: "Active Quizzes",
+      path: "/activeQuizPage",
+      icon: <FontAwesomeIcon icon={faBook} />,
+    },
+    {
       name: "History",
       path: "/historypage",
       icon: <FontAwesomeIcon icon={faBook} />,

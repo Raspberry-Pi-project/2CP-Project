@@ -33,14 +33,18 @@ import TeacherStudent from "./Pages/Profile/TeacherStudents";
 import TeacherStudentProfile from "./Pages/Profile/TeacherStudentProfile";
 import TeacherProfile from "./Pages/Profile/TeacherProfile";
 import StudentProfile from "./Pages/Profile/StudentProfile";
+import ActiveQuizPage from "./Pages/ActiveQuizzesPage/activeQuizPage";
+import { QuizTimerProvider } from "./context/QuizTimerContext";
 
 export default function App() {
   return (
     <AuthProvider>
       <QuizProvider>
-        <Router>
-          <MainLayout />
-        </Router>
+        <QuizTimerProvider>
+          <Router>
+            <MainLayout />
+          </Router>
+        </QuizTimerProvider>
       </QuizProvider>
     </AuthProvider>
   );
@@ -74,6 +78,7 @@ function MainLayout() {
     "/quizdetails",
     "/results",
     "/draftquiz",
+    "/activeQuizPage",
   ];
 
   const isNoBannerOrNavbar = noBannerOrNavbarPages.some(
@@ -102,6 +107,7 @@ function MainLayout() {
         <Route path="/Finalization1" element={<Finalization1 />} />
         <Route path="/Finalization2" element={<Finalization2 />} />
         <Route path="/historypage" element={<HistoryPage />} />
+        <Route path="/activeQuizPage" element={<ActiveQuizPage />} />
         <Route path="/quizdetails" element={<QuizDetails />} />
         <Route path="/results" element={<Results />} />
         <Route path="/draftquiz" element={<DraftQuiz />} />

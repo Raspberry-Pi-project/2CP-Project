@@ -6,8 +6,11 @@ import { useAuth } from "../../context/AuthProvider"
 import axios from "axios"
 import PresentationConfirmationDialog from "./presentation-confirmation-dialog"
 import PresentationMode from "./presentation-mode"
+import { API_URL } from "../../config"
+import { useQuizTimer } from "../../context/QuizTimerContext"
 
 const Finalization2 = () => {
+  const { startTimer } = useQuizTimer();
   const { user } = useAuth()
   const navigate = useNavigate()
   const [currentStep, setCurrentStep] = useState(5)
@@ -27,7 +30,7 @@ const Finalization2 = () => {
       ...quizData,
       for_year: Number.parseInt(yearOfStudy),
       for_groupe: Number.parseInt(group),
-      status: "published",
+      status: "active",
     })
   }, [yearOfStudy, group])
 
@@ -37,7 +40,7 @@ const Finalization2 = () => {
       ...quizData,
       for_year: Number.parseInt(yearOfStudy),
       for_groupe: Number.parseInt(group),
-      status: "published",
+      status: "active",
     })
 
     // Show presentation confirmation dialog
@@ -51,13 +54,28 @@ const Finalization2 = () => {
     // Publish the quiz
     try {
       const publishedQuiz = await axios.post(
-        "http://localhost:3000/teachers/updateQuiz",
+        `http://${API_URL}:3000/teachers/updateQuiz`,
         quizData,
         { headers: { Authorization: `Bearer ${user.token}` } },
         { withCredentials: true },
       )
+      if (publishedQuiz.status !== 200) {
+        throw new Error("Failed to publish quiz")
+      }
       console.log("publishedQuiz", publishedQuiz)
-
+      startTimer(quizData.id_quiz,quizData.duration * 60, async () =>{
+        try {
+          const response = await axios.post(
+            `http://${API_URL}:3000/teachers/updateQuiz`,
+            { id_quiz: quizData.id_quiz, status: "published" },
+            { headers: { Authorization: `Bearer ${user.token}` } },
+            { withCredentials: true },
+          )
+          console.log("response", response)
+        } catch (error) {
+          console.error("Error updating quiz status:", error)
+        }
+      })
 
       setQuizData({
         ...quizData,
@@ -95,7 +113,7 @@ const Finalization2 = () => {
 
     try {
       const publishedQuiz = await axios.post(
-        "http://localhost:3000/teachers/updateQuiz",
+        `http://${API_URL}:3000/teachers/updateQuiz`,
         quizData,
         { headers: { Authorization: `Bearer ${user.token}` } },
         { withCredentials: true },

@@ -6,6 +6,7 @@ import { useAuth } from "../../context/AuthProvider";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useQuiz } from "../../context/QuizProvider";
+import { API_URL } from "../../config";
 
 const TeacherProfile = () => {
   const navigate = useNavigate();
@@ -31,7 +32,7 @@ const TeacherProfile = () => {
         result.status = 200; // Initialize result status to 200
         if (user.role === "teacher") {
           result = await axios.post(
-            "http://localhost:3000/teachers/getQuizzes",
+            `http://${API_URL}:3000/teachers/getQuizzes`,
             { id_teacher: user.id, page, limit, status: "published" },
             { headers: { Authorization: `Bearer ${user.token}` } },
             { withCredentials: true }
@@ -40,14 +41,14 @@ const TeacherProfile = () => {
         let userr;
         if (user.role === "teacher") {
           userr = await axios.post(
-            "http://localhost:3000/teachers/getTeachers",
+            `http://${API_URL}:3000/teachers/getTeachers`,
             { id_teacher: user.id, page: 1, limit: 1000000 },
             { headers: { Authorization: `Bearer ${user.token}` } },
             { withCredentials: true }
           );
         } else if (user.role === "admin") {
           userr = await axios.post(
-            "http://localhost:3000/admins/getAdmin",
+            `http://${API_URL}:3000/admins/getAdmin`,
             { id_admin: user.id },
             { headers: { Authorization: `Bearer ${user.token}` } },
             { withCredentials: true }
@@ -90,7 +91,7 @@ const TeacherProfile = () => {
     try {
       // Fetch quiz details from the backend API
       const response = await axios.post(
-        "http://localhost:3000/teachers/getQuizDetails",
+        `http://${API_URL}:3000/teachers/getQuizDetails`,
         { id_quiz: quizId },
         { headers: { Authorization: `Bearer ${user.token}` } },
         { withCredentials: true }

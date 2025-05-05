@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useAuth } from "../../context/AuthProvider";
 import { useQuiz } from "../../context/QuizProvider";
 import LOGO from "../../photos/Frame 39 (2).png";
+import { API_URL } from "../../config";
 
 // Add these styles directly in your component
 const horizontalGridStyle = {
@@ -91,7 +92,7 @@ const HistoryPage = () => {
     const fetchQuizzes = async () => {
       try {
         const response = await axios.post(
-          "http://localhost:3000/teachers/getQuizzes",
+          `http://${API_URL}:3000/teachers/getQuizzes`,
           { page, limit, id_teacher: user.id, status: "published" },
           { headers: { Authorization: `Bearer ${user.token}` } },
           { withCredentials: true }
@@ -124,7 +125,7 @@ const HistoryPage = () => {
   const handleConsult = async (quizId) => {
     try {
       const response = await axios.post(
-        "http://localhost:3000/teachers/getQuizDetails",
+        `http://${API_URL}:3000/teachers/getQuizDetails`,
         { id_quiz: quizId },
         { headers: { Authorization: `Bearer ${user.token}` } },
         { withCredentials: true }
