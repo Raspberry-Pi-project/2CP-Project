@@ -10,6 +10,10 @@ const { width, height } = Dimensions.get("window")
 
 // Logo component with animations
 const TrivioLogo = () => {
+
+  /*useEffect(()=>{
+    const testConnection
+  },[])*/
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current
   const scaleAnim = useRef(new Animated.Value(0.8)).current
