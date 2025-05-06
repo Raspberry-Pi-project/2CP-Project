@@ -4,16 +4,15 @@ import { useState, useRef, useEffect } from "react"
 import {
   View,
   Text,
-  ScrollView,
   StyleSheet,
-  Image,
   TouchableOpacity,
   FlatList,
+  ScrollView,
   Dimensions,
   Animated,
   TextInput,
-  RefreshControl, // Add this import
-  ActivityIndicator,
+  RefreshControl,
+  ImageBackground,
 } from "react-native"
 import { colors } from "../constants/colors"
 import CustomStatusBar from "../components/CustomStatusBar"
@@ -28,26 +27,26 @@ const { width, height } = Dimensions.get("window")
 // Add after imports
 const getQuizIcon = (type) => {
   switch (type?.toLowerCase()) {
-    case 'science':
-      return 'flask';
-    case 'physics':
-      return 'zap';
-    case 'math':
-      return 'percent';
-    case 'english':
-      return 'book-open';
-    case 'history':
-      return 'clock';
-    case 'chemistry':
-      return 'droplet';
-    case 'biology':
-      return 'heart';
-    case 'computer':
-      return 'monitor';
+    case "science":
+      return "activity" // Changed from 'flask' to valid Feather icon
+    case "physics":
+      return "zap"
+    case "math":
+      return "percent"
+    case "english":
+      return "book-open"
+    case "history":
+      return "clock"
+    case "chemistry":
+      return "droplet"
+    case "biology":
+      return "heart"
+    case "computer":
+      return "monitor"
     default:
-      return 'book';
+      return "book"
   }
-};
+}
 
 // Simple background component without complex animations
 const SimpleBackground = () => {
@@ -76,9 +75,36 @@ const SimpleBackground = () => {
   )
 }
 
-// Replace the existing quiz card component
-const QuizCard = ({ quiz, onPress }) => {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
+// Enhanced quiz card component with fade animation and new purple question mark background
+const QuizCard = ({ quiz, onPress, index = 0 }) => {
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current
+  const scaleAnim = useRef(new Animated.Value(0.95)).current
+
+  // Run entrance animation on component mount
+  useEffect(() => {
+    // Stagger the animation based on index for a cascade effect
+    const delay = index * 150
+
+    Animated.parallel([
+      // Fade in with a longer, smoother animation
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1000,
+        delay,
+        
+        useNativeDriver: true,
+      }),
+      // Scale up with improved spring physics
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 8,
+        tension: 40,
+        delay: delay + 100,
+        useNativeDriver: true,
+      }),
+    ]).start()
+  }, [])
 
   const animatePress = () => {
     Animated.sequence([
@@ -93,64 +119,73 @@ const QuizCard = ({ quiz, onPress }) => {
         tension: 40,
         useNativeDriver: true,
       }),
-    ]).start();
-  };
+    ]).start()
+  }
 
   return (
     <Animated.View
       style={[
         styles.quizCardContainer,
         {
+          opacity: fadeAnim,
           transform: [{ scale: scaleAnim }],
         },
       ]}
     >
-      <TouchableOpacity 
-        style={[styles.quizCard, styles.elevation]} 
+      <TouchableOpacity
+        style={styles.quizCard}
         onPress={() => {
-          animatePress();
-          onPress(quiz);
+          animatePress()
+          onPress(quiz)
         }}
         activeOpacity={0.95}
       >
-        <LinearGradient
-          colors={['rgba(164, 47, 193, 0.08)', 'rgba(164, 47, 193, 0.03)']}
-          style={styles.cardGradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        />
-        
-        <View style={styles.quizIconContainer}>
-          <Feather 
-            name={getQuizIcon(quiz.type)} 
-            size={24} 
-            color={colors.primary} 
-          />
-        </View>
-
-        <View style={styles.titleBand} />
-        
-        <Text style={styles.quizTitle} numberOfLines={2}>
-          {quiz.title}
-        </Text>
-        <Text style={styles.quizDescription} numberOfLines={2}>
-          {quiz.subtitle}
-        </Text>
-
-        <View style={styles.quizStats}>
-          <View style={styles.statItem}>
-            <Feather name="clock" size={16} color={colors.primary} />
-            <Text style={[styles.statText, { color: colors.primary }]}>{quiz.time}</Text>
+        {/* New purple question mark background */}
+        <ImageBackground
+          source={{
+            uri: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3d-rendering-questions-background_23-2151455632-F2jiVs6SUuHa7pD7sFJqffl8KUYEGA.png",
+          }}
+          style={styles.cardBackground}
+          imageStyle={styles.cardBackgroundImage}
+        >
+          {/* Quiz type icon with transparent background */}
+          <View style={styles.quizIconContainer}>
+            <Feather name={getQuizIcon(quiz.type)} size={28} color={colors.primary} />
           </View>
-          <View style={styles.statItem}>
-            <Feather name="help-circle" size={16} color={colors.primary} />
-            <Text style={[styles.statText, { color: colors.primary }]}>{quiz.questions} Questions</Text>
+
+          <View style={styles.titleBand} />
+
+          <Text style={styles.quizTitle} numberOfLines={2}>
+            {quiz.title}
+          </Text>
+          <Text style={styles.quizDescription} numberOfLines={2}>
+            {quiz.subtitle}
+          </Text>
+
+          {/* Quiz stats with colored borders instead of backgrounds */}
+          <View style={styles.quizStats}>
+            <View style={styles.statItem}>
+              <Feather name="clock" size={16} color={colors.primary} />
+              <Text style={styles.statText}>{quiz.time}</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Feather name="help-circle" size={16} color={colors.primary} />
+              <Text style={styles.statText}>{quiz.questions} Questions</Text>
+            </View>
           </View>
-        </View>
+
+          {/* Added attempts counter with colored border */}
+          <View style={styles.attemptsContainer}>
+            <View style={styles.statItem}>
+              <Feather name="repeat" size={16} color={colors.primary} />
+              <Text style={styles.statText}>{quiz.attempts || 2} Attempts</Text>
+            </View>
+          </View>
+        </ImageBackground>
       </TouchableOpacity>
     </Animated.View>
-  );
-};
+  )
+}
 
 const SimpleHistoryCard = ({ title, date, icon, score, onPress }) => {
   return (
@@ -184,8 +219,8 @@ export default function HomeScreen({ navigation }) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [isSearchActive, setIsSearchActive] = useState(false)
   const [searchText, setSearchText] = useState("")
-  const [refreshing, setRefreshing] = useState(false) // Add refreshing state
-  const [quizzes, setQuizzes] = useState(QUIZ_DATA) // Store quizzes in state
+  const [refreshing, setRefreshing] = useState(false)
+  const [quizzes, setQuizzes] = useState(QUIZ_DATA)
   const panelAnimation = useRef(new Animated.Value(0)).current
   const searchInputRef = useRef(null)
 
@@ -267,7 +302,7 @@ export default function HomeScreen({ navigation }) {
         ...quiz,
         description: getQuizDescription(quiz),
         time: getQuizTime(quiz),
-        attempts: 2, // Default number of attempts
+        attempts: quiz.attempts || 2, // Default number of attempts
       },
     })
   }
@@ -311,18 +346,18 @@ export default function HomeScreen({ navigation }) {
   })
 
   const handleHistoryQuizPress = (item) => {
-    navigation.navigate("QuizHistoryScreen", { 
+    navigation.navigate("QuizHistoryScreen", {
       quiz: {
         id: item.id,
         title: item.title,
         description: "Your previous quiz attempt. View your results.",
         time: "30 minutes",
         attempts: 1,
-        questions: item.totalQuestions || 10
+        questions: item.totalQuestions || 10,
       },
       score: item.score,
       totalQuestions: item.totalQuestions,
-      timeSpent: item.timeSpent
+      timeSpent: item.timeSpent,
     })
   }
 
@@ -334,7 +369,6 @@ export default function HomeScreen({ navigation }) {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        {/* Simple background */}
         <SimpleBackground />
 
         <CustomStatusBar time="9:41" />
@@ -353,83 +387,57 @@ export default function HomeScreen({ navigation }) {
         </View>
 
         {/* Main Content - Live Quizzes */}
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              colors={["#ffffff"]}
-              tintColor="#ffffff"
-              progressBackgroundColor="#7B5CFF"
-            />
-          }
-        >
-          <View style={styles.sectionTitleContainer}>
-            <View style={styles.sectionTitleDecoration} />
-            <Text style={styles.sectionTitle}>LIVE QUIZZES</Text>
+        <View style={styles.sectionTitleContainer}>
+          <View style={styles.sectionTitleDecoration} />
+          <Text style={styles.sectionTitle}>LIVE QUIZZES</Text>
 
-            {/* Search Input */}
-            {isSearchActive ? (
-              <View style={styles.searchInputContainer}>
-                <TextInput
-                  ref={searchInputRef}
-                  style={styles.searchInput}
-                  placeholder="Search quizzes..."
-                  placeholderTextColor="rgba(255, 255, 255, 0.6)"
-                  value={searchText}
-                  onChangeText={setSearchText}
-                  autoCapitalize="none"
-                />
-                <TouchableOpacity onPress={toggleSearch} style={styles.searchCloseButton}>
-                  <Feather name="x" size={18} color="white" />
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <TouchableOpacity onPress={toggleSearch} style={styles.searchButton}>
-                <Feather name="search" size={18} color="white" />
-              </TouchableOpacity>
-            )}
-          </View>
-
-          <View style={styles.liveQuizzes}>
-            {refreshing && (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#ffffff" />
-                <Text style={styles.loadingText}>Refreshing quizzes...</Text>
-              </View>
-            )}
-
-            {filteredQuizzes.length > 0 ? (
-              <FlatList
-                data={filteredQuizzes}
-                renderItem={({ item }) => (
-                  <QuizCard quiz={item} onPress={handleQuizPress} />
-                )}
-                keyExtractor={(item) => item.id}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ 
-                  flex: 1,
-                  justifyContent: 'center',
-                  paddingVertical: 8,
-                  minHeight: height * 0.6, // Reduced from 0.7 to 0.6
-                  marginTop: -50, // Add negative margin to move it up
-                }}
+          {/* Search Input */}
+          {isSearchActive ? (
+            <View style={styles.searchInputContainer}>
+              <TextInput
+                ref={searchInputRef}
+                style={styles.searchInput}
+                placeholder="Search quizzes..."
+                placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                value={searchText}
+                onChangeText={setSearchText}
+                autoCapitalize="none"
               />
-            ) : (
-              <View style={styles.noResultsContainer}>
-                <Feather name="search" size={40} color="rgba(255, 255, 255, 0.5)" />
-                <Text style={styles.noResultsText}>No quizzes found</Text>
-                <Text style={styles.noResultsSubtext}>Try a different search term</Text>
-              </View>
-            )}
-          </View>
+              <TouchableOpacity onPress={toggleSearch} style={styles.searchCloseButton}>
+                <Feather name="x" size={18} color="white" />
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity onPress={toggleSearch} style={styles.searchButton}>
+              <Feather name="search" size={18} color="white" />
+            </TouchableOpacity>
+          )}
+        </View>
 
-          {/* Spacer for bottom panel */}
-          <View style={{ height: 100 }} />
-        </ScrollView>
+        <View style={styles.liveQuizzes}>
+          <FlatList
+            data={filteredQuizzes}
+            renderItem={renderQuizItem}
+            keyExtractor={(item) => item.id}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{
+              flex: 1,
+              justifyContent: "center",
+              paddingVertical: 8,
+              minHeight: height * 0.6,
+              marginTop: -50,
+            }}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={["#ffffff"]}
+                tintColor="#ffffff"
+                progressBackgroundColor="#7B5CFF"
+              />
+            }
+          />
+        </View>
 
         {/* History Panel (Expandable) */}
         <Animated.View
@@ -624,8 +632,8 @@ const styles = StyleSheet.create({
   },
   liveQuizzes: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 24,
   },
   historyPanel: {
@@ -680,49 +688,59 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: colors.primary,
   },
-  // Updated Quiz card styles
+  // Enhanced Quiz card styles
   quizCardContainer: {
     width: width * 0.85,
-    alignSelf: 'center',
-    justifyContent: 'center',
-    flex: 1,
-  },
-  quizCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(164, 47, 193, 0.1)',
-    overflow: 'hidden',
-    alignItems: 'center',
-  },
-  cardGradient: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-  },
-  elevation: {
+    alignSelf: "center",
+    justifyContent: "center",
+    marginVertical: 12,
+    // Enhanced shadow for better visibility
     shadowColor: colors.primary,
     shadowOffset: {
       width: 0,
-      height: 8,
+      height: 15, // Increased for more dramatic shadow
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 16,
-    elevation: 10,
+    shadowOpacity: 0.6, // Increased for more visible shadow
+    shadowRadius: 30, // Increased for softer, more spread shadow
+    elevation: 25, // Increased for Android
+  },
+  quizCard: {
+    borderRadius: 20,
+    overflow: "hidden",
+    // Removed padding to allow background to extend to borders
+    borderWidth: 1,
+    borderColor: "rgba(164, 47, 193, 0.2)",
+    // Added direct shadow to quizCard
+    shadowColor: colors.primary,
+    shadowOffset: {
+      width: 0,
+      height: 15,
+    },
+    shadowOpacity: 0.6,
+    shadowRadius: 30,
+    elevation: 25,
+  },
+  cardBackground: {
+    width: "107%",
+    alignItems: "center",
+    padding: 20, // Moved padding here from quizCard
+    backgroundColor: "white", // Ensure white background under the image
+  },
+  cardBackgroundImage: {
+    opacity: 0.35, // Increased from 0.25 to 0.35
+    resizeMode: "cover", // Ensure it covers the entire card
   },
   quizIconContainer: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
-    backgroundColor: 'rgba(164, 47, 193, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: 60,
+    height: 60,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(164, 47, 193, 0.2)',
+    borderWidth: 2,
+    borderColor: "rgba(164, 47, 193, 0.5)",
+    // Completely transparent background
+    backgroundColor: "transparent",
   },
   titleBand: {
     width: 40,
@@ -740,43 +758,53 @@ const styles = StyleSheet.create({
   },
   quizTitle: {
     fontSize: 20,
-    fontWeight: '700',
-    color: '#1A1C1E',
+    fontWeight: "700",
+    color: "#1A1C1E",
     marginBottom: 8,
-    textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.1)',
+    textAlign: "center",
+    textShadowColor: "rgba(0, 0, 0, 0.1)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
   quizDescription: {
     fontSize: 14,
-    color: '#666666',
-    marginBottom: 20,
+    color: "#666666",
+    marginBottom: 16,
     lineHeight: 20,
-    textAlign: 'center',
+    textAlign: "center",
     opacity: 0.8,
   },
   quizStats: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 32,
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 16,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(164, 47, 193, 0.1)',
-    width: '100%',
+    borderTopColor: "rgba(164, 47, 193, 0.1)",
+    width: "100%",
+  },
+  attemptsContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 12,
+    width: "100%",
   },
   statItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
-    backgroundColor: 'rgba(164, 47, 193, 0.05)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: "rgba(164, 47, 193, 0.5)",
+    // Completely transparent background
+    backgroundColor: "transparent",
   },
   statText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
+    color: colors.primary,
   },
   // History card styles
   historyCard: {
