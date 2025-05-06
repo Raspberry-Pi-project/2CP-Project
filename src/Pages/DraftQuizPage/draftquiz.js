@@ -203,11 +203,16 @@ const DraftQuiz = () => {
                     />
                   </div>
                   <div className="quiz-info">
+                    <h3 className="quiz-title">{quiz.subject}</h3>
                     <h3 className="quiz-title">{quiz.title}</h3>
-                    <h3 className="quiz-title">ID :{quiz.id_quiz}</h3>
+                    
+                    <p className="quiz-questions">
+                      {quiz.duration} Minutes
+                    </p>
                     <p className="quiz-questions">
                       {quiz.totalQuestions} Questions
                     </p>
+
                     
                     <div className="quiz-actions">
                       {/* Button to consult the quiz details */}

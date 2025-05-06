@@ -75,10 +75,10 @@ function MainLayout() {
     "/finalization1",
     "/finalization2",
     "/historypage",
+    "/activequizpage",
     "/quizdetails",
     "/results",
     "/draftquiz",
-    "/activeQuizPage",
   ];
 
   const isNoBannerOrNavbar = noBannerOrNavbarPages.some(
@@ -107,7 +107,7 @@ function MainLayout() {
         <Route path="/Finalization1" element={<Finalization1 />} />
         <Route path="/Finalization2" element={<Finalization2 />} />
         <Route path="/historypage" element={<HistoryPage />} />
-        <Route path="/activeQuizPage" element={<ActiveQuizPage />} />
+        <Route path="/activequizpage" element={<ActiveQuizPage />} />
         <Route path="/quizdetails" element={<QuizDetails />} />
         <Route path="/results" element={<Results />} />
         <Route path="/draftquiz" element={<DraftQuiz />} />

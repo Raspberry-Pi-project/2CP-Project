@@ -15,7 +15,7 @@ import {
   faUser,
   faQuestionCircle,
   faCog,
-  faSignOutAlt,faUserCircle
+  faSignOutAlt,faUserCircle,faCircleCheck
 } from "@fortawesome/free-solid-svg-icons"
 import HamburgerMenu from "./hamburger-menu"
 
@@ -42,8 +42,8 @@ const BannerApp = () => {
     },
     {
       name: "Active Quizzes",
-      path: "/activeQuizPage",
-      icon: <FontAwesomeIcon icon={faBook} />,
+      path: "/activequizpage",
+      icon: <FontAwesomeIcon icon={faCircleCheck} />,
     },
     {
       name: "History",
