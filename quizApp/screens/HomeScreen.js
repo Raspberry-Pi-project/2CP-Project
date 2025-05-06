@@ -421,21 +421,24 @@ export default function HomeScreen({ navigation }) {
             keyExtractor={(item) => item.id}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{
-              flex: 1,
-              justifyContent: "center",
-              paddingVertical: 8,
-              minHeight: height * 0.6,
-              marginTop: -50,
+              paddingVertical: 24,
+              paddingBottom: 120,
+              gap: 20,
+              flexGrow: 1,         // Add this
+              justifyContent: 'center', // Add this
+              alignItems: 'center',     // Add this
             }}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                colors={["#ffffff"]}
-                tintColor="#ffffff"
-                progressBackgroundColor="#7B5CFF"
-              />
-            }
+            style={{
+              width: '100%',
+              height: '100%',
+            }}
+            scrollEnabled={true}
+            bounces={true}
+            overScrollMode="never"
+            initialNumToRender={4}
+            maxToRenderPerBatch={4}
+            windowSize={5}
+            removeClippedSubviews={true}
           />
         </View>
 
@@ -693,8 +696,7 @@ const styles = StyleSheet.create({
     width: width * 0.85,
     alignSelf: "center",
     justifyContent: "center",
-    marginVertical: 12,
-    // Enhanced shadow for better visibility
+    marginVertical: 24, // Increased from 12 to 24 for more spacing
     shadowColor: colors.primary,
     shadowOffset: {
       width: 0,
