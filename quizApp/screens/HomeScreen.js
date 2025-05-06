@@ -25,6 +25,30 @@ import { Feather } from "@expo/vector-icons"
 
 const { width, height } = Dimensions.get("window")
 
+// Add after imports
+const getQuizIcon = (type) => {
+  switch (type?.toLowerCase()) {
+    case 'science':
+      return 'flask';
+    case 'physics':
+      return 'zap';
+    case 'math':
+      return 'percent';
+    case 'english':
+      return 'book-open';
+    case 'history':
+      return 'clock';
+    case 'chemistry':
+      return 'droplet';
+    case 'biology':
+      return 'heart';
+    case 'computer':
+      return 'monitor';
+    default:
+      return 'book';
+  }
+};
+
 // Simple background component without complex animations
 const SimpleBackground = () => {
   return (
@@ -52,29 +76,81 @@ const SimpleBackground = () => {
   )
 }
 
-// Simple quiz card without complex animations
-const SimpleQuizCard = ({ quiz, onPress, index }) => {
+// Replace the existing quiz card component
+const QuizCard = ({ quiz, onPress }) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const animatePress = () => {
+    Animated.sequence([
+      Animated.timing(scaleAnim, {
+        toValue: 0.95,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 4,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
   return (
-    <TouchableOpacity style={styles.quizCard} activeOpacity={0.8} onPress={() => onPress(quiz)}>
-      <View style={styles.quizCardContent}>
-        <View style={styles.quizCardIconContainer}>
-          <View style={styles.quizCardIcon}>
-            <Text style={styles.quizCardIconText}>{quiz.icon === "book" ? "📚" : "📊"}</Text>
+    <Animated.View
+      style={[
+        styles.quizCardContainer,
+        {
+          transform: [{ scale: scaleAnim }],
+        },
+      ]}
+    >
+      <TouchableOpacity 
+        style={[styles.quizCard, styles.elevation]} 
+        onPress={() => {
+          animatePress();
+          onPress(quiz);
+        }}
+        activeOpacity={0.95}
+      >
+        <LinearGradient
+          colors={['rgba(164, 47, 193, 0.08)', 'rgba(164, 47, 193, 0.03)']}
+          style={styles.cardGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        />
+        
+        <View style={styles.quizIconContainer}>
+          <Feather 
+            name={getQuizIcon(quiz.type)} 
+            size={24} 
+            color={colors.primary} 
+          />
+        </View>
+
+        <View style={styles.titleBand} />
+        
+        <Text style={styles.quizTitle} numberOfLines={2}>
+          {quiz.title}
+        </Text>
+        <Text style={styles.quizDescription} numberOfLines={2}>
+          {quiz.subtitle}
+        </Text>
+
+        <View style={styles.quizStats}>
+          <View style={styles.statItem}>
+            <Feather name="clock" size={16} color={colors.primary} />
+            <Text style={[styles.statText, { color: colors.primary }]}>{quiz.time}</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Feather name="help-circle" size={16} color={colors.primary} />
+            <Text style={[styles.statText, { color: colors.primary }]}>{quiz.questions} Questions</Text>
           </View>
         </View>
-
-        <View style={styles.quizCardTextContainer}>
-          <Text style={styles.quizCardTitle}>{quiz.title}</Text>
-          <Text style={styles.quizCardSubtitle}>{quiz.subtitle}</Text>
-        </View>
-
-        <View style={styles.quizCardArrow}>
-          <Text style={styles.quizCardArrowText}>›</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
-  )
-}
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
 
 const SimpleHistoryCard = ({ title, date, icon, score, onPress }) => {
   return (
@@ -227,7 +303,7 @@ export default function HomeScreen({ navigation }) {
     }
   }
 
-  const renderQuizItem = ({ item, index }) => <SimpleQuizCard quiz={item} onPress={handleQuizPress} index={index} />
+  const renderQuizItem = ({ item, index }) => <QuizCard quiz={item} onPress={handleQuizPress} index={index} />
 
   const panelHeight = panelAnimation.interpolate({
     inputRange: [0, 1],
@@ -329,11 +405,18 @@ export default function HomeScreen({ navigation }) {
             {filteredQuizzes.length > 0 ? (
               <FlatList
                 data={filteredQuizzes}
-                renderItem={renderQuizItem}
+                renderItem={({ item }) => (
+                  <QuizCard quiz={item} onPress={handleQuizPress} />
+                )}
                 keyExtractor={(item) => item.id}
                 showsVerticalScrollIndicator={false}
-                scrollEnabled={false}
-                contentContainerStyle={{ paddingHorizontal: 24 }}
+                contentContainerStyle={{ 
+                  flex: 1,
+                  justifyContent: 'center',
+                  paddingVertical: 8,
+                  minHeight: height * 0.6, // Reduced from 0.7 to 0.6
+                  marginTop: -50, // Add negative margin to move it up
+                }}
               />
             ) : (
               <View style={styles.noResultsContainer}>
@@ -540,6 +623,9 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   liveQuizzes: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 24,
   },
   historyPanel: {
@@ -594,56 +680,103 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: colors.primary,
   },
-  // Quiz card styles
-  quizCard: {
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 15,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  quizCardContent: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  quizCardIconContainer: {
-    marginRight: 12,
-  },
-  quizCardIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: "rgba(123, 92, 255, 0.1)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  quizCardIconText: {
-    fontSize: 20,
-  },
-  quizCardTextContainer: {
+  // Updated Quiz card styles
+  quizCardContainer: {
+    width: width * 0.85,
+    alignSelf: 'center',
+    justifyContent: 'center',
     flex: 1,
   },
-  quizCardTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 4,
+  quizCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(164, 47, 193, 0.1)',
+    overflow: 'hidden',
+    alignItems: 'center',
   },
-  quizCardSubtitle: {
-    fontSize: 12,
-    color: "#666",
+  cardGradient: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
   },
-  quizCardArrow: {
-    width: 20,
-    alignItems: "center",
+  elevation: {
+    shadowColor: colors.primary,
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 10,
   },
-  quizCardArrowText: {
+  quizIconContainer: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: 'rgba(164, 47, 193, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(164, 47, 193, 0.2)',
+  },
+  titleBand: {
+    width: 40,
+    height: 4,
+    backgroundColor: colors.primary,
+    borderRadius: 4,
+    marginBottom: 12,
+    shadowColor: colors.primary,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  quizTitle: {
     fontSize: 20,
-    color: colors.primary,
+    fontWeight: '700',
+    color: '#1A1C1E',
+    marginBottom: 8,
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.1)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  quizDescription: {
+    fontSize: 14,
+    color: '#666666',
+    marginBottom: 20,
+    lineHeight: 20,
+    textAlign: 'center',
+    opacity: 0.8,
+  },
+  quizStats: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 32,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(164, 47, 193, 0.1)',
+    width: '100%',
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(164, 47, 193, 0.05)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  statText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
   // History card styles
   historyCard: {
