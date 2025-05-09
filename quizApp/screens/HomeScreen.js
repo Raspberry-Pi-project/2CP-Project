@@ -257,6 +257,14 @@ export default function HomeScreen({ navigation }) {
     { id: "4", title: "History Quiz", date: "APR", icon: "language", score: 88, totalQuestions: 8, timeSpent: 380 },
   ]
 
+  // Add a navigation handler for the View All button
+  const handleViewAllPress = () => {
+    // Navigate to FullHistory with history data
+    navigation.navigate('FullHistory', {
+      historyData: historyData // Pass the history data as a parameter
+    });
+  };
+
   // Filter quizzes based on search text - update to use quizzes state
   const filteredQuizzes = quizzes.filter(
     (quiz) =>
@@ -503,7 +511,10 @@ export default function HomeScreen({ navigation }) {
           >
             <View style={styles.historyHeader}>
               <Text style={styles.historyTitle}>Quiz History</Text>
-              <TouchableOpacity style={styles.viewAllButton}>
+              <TouchableOpacity 
+                style={styles.viewAllButton} 
+                onPress={handleViewAllPress}
+              >
                 <Text style={styles.viewAllText}>View All</Text>
               </TouchableOpacity>
             </View>

@@ -22,6 +22,7 @@ import { LogBox } from "react-native"
 import ReviewQuestionScreen from "./screens/ReviewQuestionScreen"
 import ReviewQuestionHistory from "./screens/ReviewQuestionHistory"
 import QuizScreenForHistory from "./screens/QuizScreenForHistory"
+import FullHistory from "./screens/FullHistory" // Import the FullHistory screen
 
 // Ignore specific warnings that might be causing issues
 LogBox.ignoreLogs([
@@ -103,6 +104,14 @@ export default function App() {
                 }}
                 initialParams={{
                   fromHistory: true
+                }}
+              />
+              <Stack.Screen 
+                name="FullHistory" 
+                component={FullHistory}
+                options={{
+                  headerShown: false, // This removes the white header
+                  animation: 'slide_from_right'
                 }}
               />
             </Stack.Navigator>
