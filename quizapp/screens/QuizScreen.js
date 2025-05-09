@@ -458,7 +458,7 @@ export default function QuizScreen({ navigation, route }) {
 
   const goToHome = useCallback(() => {
     // Reset the entire navigation stack and go to Home screen
-    navigation.navigation("Home");
+    navigation.navigate("Home");
   }, []);
 
   useEffect(() => {

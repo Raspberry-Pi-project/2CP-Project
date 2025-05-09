@@ -29,6 +29,7 @@ const { width, height } = Dimensions.get("window");
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 export default function QuizletScreen({ navigation, route }) {
+  
   // AppState reference to track app state changes
   const appState = useRef(AppState.currentState);
 
@@ -175,7 +176,7 @@ export default function QuizletScreen({ navigation, route }) {
       }
 
       // Update app state reference
-      appState.current = nextAppState;
+      appState.current = nextAppState
     });
 
     return () => {
@@ -538,9 +539,7 @@ export default function QuizletScreen({ navigation, route }) {
             })),
           }
           
-          navigation.navigate("Quiz", {
-            quizResults
-          });
+          navigation.navigate("Home");
         } else {
           throw new Error("Failed to update attempt");
         }
