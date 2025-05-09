@@ -750,20 +750,30 @@ console.log("Quiz details before enrichment:", JSON.stringify(quizDetails, null,
     navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
   }, [navigation]);
 
-  const handleQuestionPress = useCallback((question, studentAnswer) => {
+  const handleQuestionPress = useCallback((question) => {
     navigation.navigate("ReviewQuestionHistory", {
-      originalQuestion: question,
-      quizId: quizDetails?.id_quiz,
-      selectedAnswers: studentAnswer ? [studentAnswer] : [],
-      title: quizDetails?.title || "Quiz Review",
+      question: {  // Changed from originalQuestion to question
+        id_question: question.id_question,
+        question_text: question.question_text,
+        answers: question.answers || [], // Make sure answers are included
+        correctAnswer: question.correctAnswer // Add correct answer info
+      },
+      quiz: {
+        id_quiz: quizDetails?.id_quiz,
+        title: quizDetails?.title,
+      },
+      selectedAnswers: question.studentAnswer ? [{ 
+        student_answer_text: question.studentAnswer 
+      }] : [],
       attemptInfo: {
         date: formatDate(attemptDetails?.attempt_at),
         score: scoreData.score,
         corrected: scoreData.correctCount,
       }
     });
-  }, [quizDetails, attemptDetails, scoreData, navigation]);
+  }, [quizDetails, attemptDetails, scoreData]);
 
+  
   const renderItem = useCallback(({ item, index }) => {
 
     return (
