@@ -170,7 +170,11 @@ const QuizCard = ({ quiz, onPress, index = 0 }) => {
             </View>
             <View style={styles.statItem}>
               <Feather name="help-circle" size={16} color={colors.primary} />
-              <Text style={styles.statText}>{quiz.questions} Questions</Text>
+              <Text style={styles.statText}>
+                {Array.isArray(quiz.questions) 
+                  ? quiz.questions.length 
+                  : quiz.numberOfQuestions || 0} Questions
+              </Text>
             </View>
           </View>
 
@@ -224,18 +228,28 @@ export default function HomeScreen({ navigation }) {
   const panelAnimation = useRef(new Animated.Value(0)).current
   const searchInputRef = useRef(null)
 
-  // Add refresh function
+  // Update the onRefresh function
   const onRefresh = () => {
-    setRefreshing(true)
+    setRefreshing(true);
+    
+    // Fetch fresh data from QUIZ_DATA
+    const refreshData = () => {
+      try {
+        // Create a deep copy of QUIZ_DATA to avoid reference issues
+        const freshQuizzes = JSON.parse(JSON.stringify(QUIZ_DATA));
+        // Shuffle the array for visual feedback that refresh occurred
+        const shuffledQuizzes = freshQuizzes.sort(() => Math.random() - 0.5);
+        setQuizzes(shuffledQuizzes);
+      } catch (error) {
+        console.error('Refresh failed:', error);
+      } finally {
+        setRefreshing(false);
+      }
+    };
 
-    // Simulate API call with a timeout
-    setTimeout(() => {
-      // Simulate getting new data by shuffling the existing quizzes
-      const shuffledQuizzes = [...QUIZ_DATA].sort(() => Math.random() - 0.5)
-      setQuizzes(shuffledQuizzes)
-      setRefreshing(false)
-    }, 1500)
-  }
+    // Simulate network delay
+    setTimeout(refreshData, 1000);
+  };
 
   // History data
   const historyData = [
@@ -439,6 +453,14 @@ export default function HomeScreen({ navigation }) {
             maxToRenderPerBatch={4}
             windowSize={5}
             removeClippedSubviews={true}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={[colors.primary]}
+                tintColor={colors.primary}
+              />
+            }
           />
         </View>
 
