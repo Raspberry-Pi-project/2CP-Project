@@ -213,7 +213,7 @@ const ReviewQuestionHistory = ({ navigation, route }) => {
           {/* Options */}
           <View style={styles.optionsWrapper}>
             <View style={styles.optionsContainer}>
-              {questionData.options.map((option, index) => {
+              {questionData.options?.map((option, index) => {
                 // Determine option state
                 const isCorrectOption = typeof questionData.correctAnswer === 'number' 
                   ? index === questionData.correctAnswer
