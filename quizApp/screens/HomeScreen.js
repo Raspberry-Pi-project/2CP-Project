@@ -92,7 +92,7 @@ const QuizCard = ({ quiz, onPress, index = 0 }) => {
         toValue: 1,
         duration: 1000,
         delay,
-        
+
         useNativeDriver: true,
       }),
       // Scale up with improved spring physics
@@ -171,9 +171,7 @@ const QuizCard = ({ quiz, onPress, index = 0 }) => {
             <View style={styles.statItem}>
               <Feather name="help-circle" size={16} color={colors.primary} />
               <Text style={styles.statText}>
-                {Array.isArray(quiz.questions) 
-                  ? quiz.questions.length 
-                  : quiz.numberOfQuestions || 0} Questions
+                {Array.isArray(quiz.questions) ? quiz.questions.length : quiz.numberOfQuestions || 0} Questions
               </Text>
             </View>
           </View>
@@ -230,26 +228,26 @@ export default function HomeScreen({ navigation }) {
 
   // Update the onRefresh function
   const onRefresh = () => {
-    setRefreshing(true);
-    
+    setRefreshing(true)
+
     // Fetch fresh data from QUIZ_DATA
     const refreshData = () => {
       try {
         // Create a deep copy of QUIZ_DATA to avoid reference issues
-        const freshQuizzes = JSON.parse(JSON.stringify(QUIZ_DATA));
+        const freshQuizzes = JSON.parse(JSON.stringify(QUIZ_DATA))
         // Shuffle the array for visual feedback that refresh occurred
-        const shuffledQuizzes = freshQuizzes.sort(() => Math.random() - 0.5);
-        setQuizzes(shuffledQuizzes);
+        const shuffledQuizzes = freshQuizzes.sort(() => Math.random() - 0.5)
+        setQuizzes(shuffledQuizzes)
       } catch (error) {
-        console.error('Refresh failed:', error);
+        console.error("Refresh failed:", error)
       } finally {
-        setRefreshing(false);
+        setRefreshing(false)
       }
-    };
+    }
 
     // Simulate network delay
-    setTimeout(refreshData, 1000);
-  };
+    setTimeout(refreshData, 1000)
+  }
 
   // History data
   const historyData = [
@@ -301,10 +299,6 @@ export default function HomeScreen({ navigation }) {
   }, [])
 
   // Update the goToFeedback function and add a new goToProfile function
-  const goToFeedback = () => {
-    navigation.navigate("Feedback")
-  }
-
   const goToProfile = () => {
     navigation.navigate("Profile")
   }
@@ -438,13 +432,13 @@ export default function HomeScreen({ navigation }) {
               paddingVertical: 24,
               paddingBottom: 120,
               gap: 20,
-              flexGrow: 1,         // Add this
-              justifyContent: 'center', // Add this
-              alignItems: 'center',     // Add this
+              flexGrow: 1, // Add this
+              justifyContent: "center", // Add this
+              alignItems: "center", // Add this
             }}
             style={{
-              width: '100%',
-              height: '100%',
+              width: "100%",
+              height: "100%",
             }}
             scrollEnabled={true}
             bounces={true}
@@ -534,7 +528,6 @@ export default function HomeScreen({ navigation }) {
           onArrowPress={togglePanel}
           isPanelExpanded={isExpanded}
           onProfilePress={goToProfile}
-          onFeedbackPress={goToFeedback}
           onSearchPress={toggleSearch}
         />
       </LinearGradient>
