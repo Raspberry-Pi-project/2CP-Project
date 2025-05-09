@@ -1,35 +1,38 @@
 const express = require("express");
-const quizRoutes = require("./quizRoutes");
+const multer = require('multer');
+const { getQuizzes , createQuiz, deleteQuiz, updateQuiz, getQuizDetails } = require("../controllers/quizControllers");
+const { getAllResults } = require("../controllers/studentAnswersControllers");
+const { getStudents, countParticipants, getQuizResults, getHistory } = require("../controllers/studentsControllers");
+const { calculatePercentage } = require("../controllers/questionsControllers");
+const { logout } = require("../controllers/authControllers");
+const {getTeachers } = require("../controllers/teachersControllers");
 
-const answersRoutes = require("./answersRoutes");
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
-const {
-  createTeacher,
-  getTeachers,
-  deleteTeacher,
-  deleteTeachersGroupe,
-  updateTeacher,
-  changeTeachersGroupe,
-} = require("../controllers/teachersControllers");
-const {getAllResults} = require("../controllers/studentAnswersControllers");
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 const router = express.Router();
 
 router.use(express.json());
 
-router.use("/Quizzes", quizRoutes);
-router.use("/answers", answersRoutes);
+//quizzes functions
+router.post("/getQuizzes" , getQuizzes)
+router.post("/createQuiz",upload.single('file') , createQuiz);
+router.post("/deleteQuiz", deleteQuiz);
+router.post("/updateQuiz" , updateQuiz);
+router.post("/getQuizDetails" , getQuizDetails);
+
+//students functions
+router.post("/getStudents" , getStudents)
+router.post("countParticipants",countParticipants)
+router.post("/getStudentResults", getQuizResults);
+router.post("/getStudentHistory", getHistory);
 
 
-router.post("/createTeacher", createTeacher);
-router.get("/getTeachers", getTeachers);
-router.delete("/deleteTeacher", deleteTeacher);
-router.delete("/deleteTeachersGroupe", deleteTeachersGroupe);
-router.put("/updateTeacher", updateTeacher);
-router.put("/changeTeachersGroupe", changeTeachersGroupe);
+router.post("/getTeachers" , getTeachers )
 
-router.get("/getAllResults", getAllResults);
 
+router.put("/calculatePercentage",calculatePercentage);
+router.post("/getAllResults", getAllResults);
 
 
 module.exports = router;
