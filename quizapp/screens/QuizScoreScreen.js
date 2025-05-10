@@ -105,18 +105,20 @@ const FloatingBubbles = () => {
 }
 
 // Score circle component
-const ScoreCircle = ({ score, attemptCount = 0 }) => {
-  const scorePercentage = Math.min(100, Math.max(0, score));
+
+const ScoreCircle = ({ score, total }) => {
+  //const scorePercentage = Math.min(100, Math.max(0, score));
+
   const animatedValue = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.timing(animatedValue, {
-      toValue: scorePercentage / 100,
+      toValue: score / 100,
       duration: 1500,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: false,
     }).start()
-  }, [scorePercentage])
+  }, [score])
 
   const radius = 50
   const circleCircumference = 2 * Math.PI * radius
@@ -145,11 +147,12 @@ const ScoreCircle = ({ score, attemptCount = 0 }) => {
         />
       </Svg>
       <View style={styles.scoreTextContainer}>
-        <Text style={styles.scorePercentage}>{Math.round(scorePercentage)}%</Text>
+        <Text style={styles.scorePercentage}>{Math.round(score)}%</Text>
         <Text style={styles.scoreText}>
-          {/*questionsAttempted ? `${correctCount}/${questionsAttempted}` : `${Math.round(scorePercentage)}%`*/}
-          {attemptCount > 0 ? `${attemptCount} attempt${attemptCount !== 1 ? 's' : ''}` : 'No attempts'}
-        </Text> 
+
+          {total ? `${Math.round((score / 100) * total)}/${total}` : `${score}%`}
+        </Text>
+
       </View>
     </View>
   )
@@ -158,7 +161,7 @@ const ScoreCircle = ({ score, attemptCount = 0 }) => {
 const AnimatedCircle = Animated.createAnimatedComponent(Circle)
 
 // Question item component
-const QuestionItem = ({ attempt, index, onPress, animationDelay = 0 }) => {
+const QuestionItem = ({ attempt, index, onPress, animationDelay = 0 , totalScore}) => {
   const fadeAnim = useRef(new Animated.Value(0)).current
   const slideAnim = useRef(new Animated.Value(50)).current
   
@@ -218,9 +221,9 @@ const QuestionItem = ({ attempt, index, onPress, animationDelay = 0 }) => {
         <View style={styles.scoreDisplay}>
           <Text style={[
             styles.scoreValue, 
-            { color: attempt.score >= 50 ? '#4ADE80' : '#FF5252' }
+            { color: (attempt.score / totalScore)*100  >= 50 ? '#4ADE80' : '#FF5252' }
           ]}>
-            {Math.round(attempt.score)}%
+            {Math.round((attempt.score / totalScore)*100)}%
           </Text>
         </View>
       </TouchableOpacity>
@@ -236,12 +239,10 @@ export default function QuizScoreScreen({ navigation, route }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [filterStatus, setFilterStatus] = useState('all')
-  
-  // Track average score
-  const [averageScore, setAverageScore] = useState(0)
-  const [totalQuestionsAttempted, setTotalQuestionsAttempted] = useState(0)
-  const [attemptsCount, setAttemptsCount] = useState(0); // Add this line
-  const { id_quiz, score = 0, totalQuestions = 10, timeSpent = 0 } = route.params || {}
+
+
+  const { id_quiz, score , totalQuestions = 10, timeSpent = 0 } = route.params || {}
+
 
   // Calculate average score whenever attempts change
  /* useEffect(() => {
@@ -320,8 +321,17 @@ export default function QuizScoreScreen({ navigation, route }) {
       }
 
       const token = await AsyncStorage.getItem("token");
+
+      const studentID = await AsyncStorage.getItem("userId");
       
-      const response = await axios.get(`${API_URL}/students/getQuizAttempts/${quizId}`, {
+      const response = await axios.get(`${API_URL}/students/getQuizAttempts/${quizId}`
+      
+      , {
+        id_student : studentID,
+      },
+      
+      {
+
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -358,8 +368,8 @@ export default function QuizScoreScreen({ navigation, route }) {
 
   const getFilteredAttempts = useCallback(() => {
     switch(filterStatus) {
-      case 'passed': return attempts.filter(item => item.score >= 50);
-      case 'failed': return attempts.filter(item => item.score < 50);
+      case 'passed': return attempts.filter(item => (item.score/score) *100 >= 50);
+      case 'failed': return attempts.filter(item => (item.score/score) *100 < 50);
       default: return attempts;
     }
   }, [filterStatus, attempts]);
@@ -441,6 +451,7 @@ export default function QuizScoreScreen({ navigation, route }) {
     <QuestionItem
       attempt={item}
       index={index}
+      totalScore={score}
       onPress={handleAttemptPress}
       animationDelay={500}
     />
@@ -549,10 +560,10 @@ export default function QuizScoreScreen({ navigation, route }) {
             </TouchableOpacity>
 
             <ScoreCircle 
-              score={averageScore} 
-              //total={totalQuestionsAttempted}
-              //questionsAttempted={totalQuestionsAttempted}
-              attemptCount={attempts.length}
+
+              score={(attempts?.reduce((total,item) => total + item.score ,0) / (score*attempts.length)) * 100 } 
+              total={totalQuestions} 
+
             />
 
             {timeSpent > 0 && (
