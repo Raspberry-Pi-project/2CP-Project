@@ -115,6 +115,7 @@ const ScoreCircle = ({ score, total }) => {
   const pulseAnim = useRef(new Animated.Value(1)).current
 
   useEffect(() => {
+    const percentage = total > 0 ? score / total : 0
     Animated.timing(animatedValue, {
       toValue: score / total,
       duration: 1500,
@@ -180,7 +181,7 @@ const ScoreCircle = ({ score, total }) => {
       </AnimatedSvg>
       <View style={styles.scoreTextContainer}>
         <Text style={styles.scoreValue}>
-          {Math.round((score / total) * 100)}%
+        {total > 0 ? Math.round((score / total) * 100) : 0}%
         </Text>
         <Text style={styles.scoreLabel}>{score}/{total}</Text>
       </View>
@@ -726,15 +727,17 @@ console.log("Quiz details before enrichment:", JSON.stringify(quizDetails, null,
   }, [quizDetails, attemptDetails]);
 
   const scoreData = useMemo(() => {
-    if (!attemptDetails) return {
+    if (!attemptDetails || !quizDetails) return {
       score: 0,
       totalQuestions: 0,
       correctCount: 0,
       incorrectCount: 0,
     };
 
-    const totalQuestions = quizDetails?.questions?.length || 0;
-    const correctCount = attemptDetails.corrected || 0;
+    const totalQuestions = enrichedQuestions.length || quizDetails?.questions?.length || 0;
+
+    const correctCount = enrichedQuestions.filter(q => q.correct).length;
+
     const score = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
 
     return {
@@ -743,7 +746,7 @@ console.log("Quiz details before enrichment:", JSON.stringify(quizDetails, null,
       correctCount,
       incorrectCount: totalQuestions - correctCount,
     };
-  }, [attemptDetails, quizDetails]);
+  }, [attemptDetails, quizDetails, enrichedQuestions]);
 
   const handleGoBack = useCallback(() => navigation.goBack(), [navigation]);
   const handleHomePress = useCallback(() => {
@@ -773,7 +776,7 @@ console.log("Quiz details before enrichment:", JSON.stringify(quizDetails, null,
     });
   }, [quizDetails, attemptDetails, scoreData]);
 
-  
+
   const renderItem = useCallback(({ item, index }) => {
 
     return (
@@ -922,7 +925,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8F9FA",
   },
   headerContainer: {
-    height: height * 0.42,
+    height: height * 0.45,
     overflow: "hidden",
   },
   headerGradient: {
@@ -1002,7 +1005,7 @@ const styles = StyleSheet.create({
   },
   questionsContainer: {
     padding: 20,
-    paddingTop: 30,
+    paddingTop: 20,
   },
   questionItem: {
     flexDirection: "row",
@@ -1060,6 +1063,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 10,
     paddingHorizontal: 20,
+    marginBottom: 20, // Added to give more space at the bottom of the header
+
   },
   scoreItem: {
     alignItems: "center",
