@@ -42,16 +42,6 @@ const Finalization2 = () => {
       for_groupe: Number.parseInt(group),
       status: "active",
     })
-
-    // Show presentation confirmation dialog
-    setShowPresentationConfirmation(true)
-  }
-
-  const handleContinuePublish = async () => {
-    // Close the confirmation dialog
-    setShowPresentationConfirmation(false)
-
-    // Publish the quiz
     try {
       const publishedQuiz = await axios.post(
         `http://${API_URL}:3000/teachers/updateQuiz`,
@@ -67,36 +57,62 @@ const Finalization2 = () => {
         try {
           const response = await axios.post(
             `http://${API_URL}:3000/teachers/updateQuiz`,
-            { id_quiz: quizData.id_quiz, status: "published" },
+            { id_quiz: quizData.id_quiz, status: "active" },
             { headers: { Authorization: `Bearer ${user.token}` } },
             { withCredentials: true },
           )
           console.log("response", response)
+
+          const quizDetailsResponse = await axios.post(
+            `http://${API_URL}:3000/teachers/getQuizDetails`,
+            { id_quiz: quizData.id_quiz },
+            { headers: { Authorization: `Bearer ${user.token}` } },
+            { withCredentials: true }
+          );
+          if (quizDetailsResponse.status !== 200) {
+            throw new Error("Failed to fetch quiz details");
+          }
+          setQuizData(quizDetailsResponse.data);
+          setTimeout(() => {
+            navigate("/results");
+          }, 500); // Small delay
         } catch (error) {
           console.error("Error updating quiz status:", error)
         }
       })
 
-      setQuizData({
-        ...quizData,
-        title: "",
-        description: "",
-        subject: "",
-        nb_attempts: 1,
-        duration: 30,
-        correctionType: "auto",
-        score: 100,
-        for_year: 0,
-        for_groupe: 0,
-        status: "draft",
-        questions: [],
-      })
+      
 
 
-      navigate("/draftquiz")
+      
     } catch (error) {
       console.error("Error publishing quiz:", error)
     }
+    // Show presentation confirmation dialog
+    setShowPresentationConfirmation(true)
+  }
+
+  const handleContinuePublish = async () => {
+    // Close the confirmation dialog
+    setShowPresentationConfirmation(false)
+    setQuizData({
+      ...quizData,
+      title: "",
+      description: "",
+      subject: "",
+      nb_attempts: 1,
+      duration: 30,
+      correctionType: "auto",
+      score: 100,
+      for_year: 0,
+      for_groupe: 0,
+      status: "draft",
+      questions: [],
+    })
+    navigate("/draftquiz")
+
+    // Publish the quiz
+    
   }
 
   const handleStartPresentation = (selectedTimerType) => {
@@ -110,37 +126,22 @@ const Finalization2 = () => {
 
   const handlePresentationClose = async () => {
     setShowPresentation(false)
+    setQuizData({
+      ...quizData,
+      title: "",
+      description: "",
+      subject: "",
+      nb_attempts: 1,
+      duration: 30,
+      correctionType: "auto",
+      score: 100,
+      for_year: 0,
+      for_groupe: 0,
+      status: "draft",
+      questions: [],
+    })
+    navigate("/draftquiz")
 
-    try {
-      const publishedQuiz = await axios.post(
-        `http://${API_URL}:3000/teachers/updateQuiz`,
-        quizData,
-        { headers: { Authorization: `Bearer ${user.token}` } },
-        { withCredentials: true },
-      )
-      console.log("publishedQuiz", publishedQuiz)
-
-
-      setQuizData({
-        ...quizData,
-        title: "",
-        description: "",
-        subject: "",
-        nb_attempts: 1,
-        duration: 30,
-        correctionType: "auto",
-        score: 100,
-        for_year: 0,
-        for_groupe: 0,
-        status: "draft",
-        questions: [],
-      })
-
-      // Navigate to draft quiz page
-      navigate("/draftquiz")
-    } catch (error) {
-      console.error("Error publishing quiz:", error)
-    }
   }
 
   const handleCancel = () => {

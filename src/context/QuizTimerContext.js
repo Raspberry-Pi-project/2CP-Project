@@ -46,6 +46,8 @@ export const QuizTimerProvider = ({ children }) => {
 
     if (remaining <= 0) {
       clearTimer(quizId);
+      alert(`Quiz ${quizId} has finished! Proceed to results.`);
+      // Optionally, you can call onExpire immediately if the timer has already expired
       onExpire(quizId);
       return;
     }
