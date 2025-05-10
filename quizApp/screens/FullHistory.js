@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef } from "react"
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions, TextInput, StatusBar } from "react-native"
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions, TextInput, StatusBar, ActivityIndicator } from "react-native"
 import { colors } from "../constants/colors"
 import { LinearGradient } from "expo-linear-gradient"
 import { Feather } from "@expo/vector-icons"
@@ -77,6 +77,10 @@ export default function FullHistory({ navigation }) {
   const [isSearchActive, setIsSearchActive] = useState(false)
   const [searchText, setSearchText] = useState("")
   const searchInputRef = useRef(null)
+
+  const [loading, setLoading] = useState(false)
+  const [page, setPage] = useState(1)
+  const ITEMS_PER_PAGE = 10
 
   // History data - expanded with more entries
   const historyData = [
@@ -201,6 +205,17 @@ export default function FullHistory({ navigation }) {
     })
   }
 
+  const loadMoreQuizzes = () => {
+    if (!loading) {
+      setLoading(true)
+      // Simulate API call delay
+      setTimeout(() => {
+        setPage((prevPage) => prevPage + 1)
+        setLoading(false)
+      }, 1000)
+    }
+  }
+
   return (
     <View style={styles.container}>
       {/* Set status bar to transparent */}
@@ -253,7 +268,7 @@ export default function FullHistory({ navigation }) {
 
         <View style={styles.historyQuizzes}>
           <FlatList
-            data={filteredHistoryData}
+            data={filteredHistoryData.slice(0, page * ITEMS_PER_PAGE)}
             renderItem={({ item }) => <HistoryQuizCard item={item} onPress={handleHistoryQuizPress} />}
             keyExtractor={(item) => item.id}
             showsVerticalScrollIndicator={false}
@@ -267,11 +282,21 @@ export default function FullHistory({ navigation }) {
               width: "100%",
               height: "100%",
             }}
+            onEndReached={loadMoreQuizzes}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={() =>
+              loading ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color="#ffffff" />
+                  <Text style={styles.loadingText}>Loading more quizzes...</Text>
+                </View>
+              ) : null
+            }
             scrollEnabled={true}
             bounces={true}
             overScrollMode="never"
-            initialNumToRender={6}
-            maxToRenderPerBatch={4}
+            initialNumToRender={ITEMS_PER_PAGE}
+            maxToRenderPerBatch={5}
             windowSize={5}
             removeClippedSubviews={true}
             ListEmptyComponent={
@@ -462,5 +487,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "500",
     color: colors.primary,
+  },
+  loadingContainer: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: '#ffffff',
+    marginTop: 8,
+    fontSize: 14,
+    opacity: 0.8,
   },
 })
