@@ -554,7 +554,7 @@ export default function QuizletScreen({ navigation, route }) {
           );
           if (allCorrectSelected && onlyCorrectSelected) {
             question.isCorrect = true;
-            return totalScore + question.points;
+            return totalScore + 1;
           } else {
             question.isCorrect = false;
             return totalScore;
