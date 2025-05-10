@@ -1,8 +1,8 @@
-import { View, StyleSheet, TouchableOpacity, Animated } from "react-native"
+import { View, StyleSheet, TouchableOpacity, Text, Animated } from "react-native"
 import { Feather } from "@expo/vector-icons"
 import { colors } from "../constants/colors"
-import Svg, { Path, Circle } from "react-native-svg"
-import { useNavigation } from "@react-navigation/native"
+import Svg, { Path, Circle, G } from "react-native-svg"
+import { useNavigation } from '@react-navigation/native'
 
 // Update the component props to include onFeedbackPress
 export default function BottomNavigation({
@@ -20,8 +20,9 @@ export default function BottomNavigation({
         <Feather name="search" size={24} color={colors.primary} />
       </TouchableOpacity>
 
-      {/* Empty space to maintain layout */}
-      <View style={styles.emptySpace} />
+      <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate("StudentPrivateChart")}>
+        <HexagonIcon size={30} />
+      </TouchableOpacity>
 
       <TouchableOpacity style={styles.addButton} onPress={onArrowPress} activeOpacity={0.7}>
         <View style={styles.addButtonInner}>
@@ -39,8 +40,9 @@ export default function BottomNavigation({
         </View>
       </TouchableOpacity>
 
-      {/* Empty space to maintain layout */}
-      <View style={styles.emptySpace} />
+      <TouchableOpacity style={styles.navItem} onPress={onFeedbackPress}>
+        <FeedbackIcon size={24} color={colors.primary} />
+      </TouchableOpacity>
 
       <TouchableOpacity style={styles.navItem} onPress={onProfilePress}>
         <Feather name="user" size={24} color={colors.primary} />
@@ -129,6 +131,9 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: colors.muted,
   },
+  activeIcon: {
+    color: colors.primary,
+  },
   addButton: {
     marginTop: -32,
   },
@@ -144,9 +149,5 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 6,
     elevation: 4,
-  },
-  emptySpace: {
-    width: 50,
-    height: 50,
   },
 })

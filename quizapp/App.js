@@ -27,7 +27,6 @@ import OfflineOnly from "./components/OfflineOnly";
 import ReviewQuestionHistory from "./screens/ReviewQuestionHistory"
 import QuizScreenForHistory from "./screens/QuizScreenForHistory"
 import { createContext } from "react";
-import FullHistory from "./screens/FullHistory" // Import the FullHistory screen
 // Ignore specific warnings that might be causing issues
 LogBox.ignoreLogs([
   "Animated: `useNativeDriver` was not specified",
@@ -109,14 +108,6 @@ export default function App() {
                   fromHistory: true
                 }}
             />
-              <Stack.Screen 
-                name="FullHistory" 
-                component={FullHistory}
-                options={{
-                  headerShown: false, // This removes the white header
-                  animation: 'slide_from_right'
-                }}
-              />
           </Stack.Navigator>
 
           {/* Advanced Notification Manager with ref */}
