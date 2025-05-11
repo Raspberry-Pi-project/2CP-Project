@@ -55,23 +55,32 @@ export default function QuizInfoScreen({ navigation, route }) {
   } */
 
   // Get an icon based on quiz type
-  const getQuizIcon = () => {
-    if (!quiz?.subject) return "help-circle";
-
-    switch (quiz.id) {
-      case "1": // English
-        return "book";
-      case "2": // Math
-        return "bar-chart-2";
-      case "3": // Science
-        return "thermometer";
-      case "4": // Physics
-        return "zap";
-      default:
-        return "help-circle";
-    }
+  const getQuizIcon = (title) => {
+    const subject = title?.toLowerCase() || '';
+    
+    // First try to match exact words
+    if (/math|algebra|calculus/.test(subject)) return 'calculator';
+    if (/science|physics|chemistry/.test(subject)) return 'atom';
+    if (/english|literature|writing/.test(subject)) return 'book-open';
+    if (/history|social studies/.test(subject)) return 'clock';
+    if (/geography/.test(subject)) return 'map';
+    if (/computer|programming|coding/.test(subject)) return 'code';
+    if (/biology|anatomy/.test(subject)) return 'activity';
+    if (/art|music/.test(subject)) return 'music';
+    
+    // Then try partial matches
+    if (subject.includes('math')) return 'percent';
+    if (subject.includes('science')) return 'flask';
+    if (subject.includes('physics')) return 'zap';
+    if (subject.includes('english')) return 'book';
+    if (subject.includes('history')) return 'clock';
+    if (subject.includes('geo')) return 'globe';
+    if (subject.includes('comp')) return 'cpu';
+    
+    return 'help-circle'; // Default icon
   };
 
+  
   // Get the appropriate image based on quiz type
   const getQuizImage = () => {
     switch (quiz.id) {
