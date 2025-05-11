@@ -145,9 +145,7 @@ const ScoreCircle = ({ score, total }) => {
       </Svg>
       <View style={styles.scoreTextContainer}>
         <Text style={styles.scorePercentage}>{Math.round(score)}%</Text>
-        <Text style={styles.scoreText}>
-          {total ? `${Math.round((score / 100) * total)}/${total}` : `${score}%`}
-        </Text>
+       
       </View>
     </View>
   )
