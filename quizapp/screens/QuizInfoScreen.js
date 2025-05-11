@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 20,
-    paddingTop: 10,
+    paddingTop: 70,
     paddingBottom: 20,
   },
   backButton: {
@@ -341,6 +341,7 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   cardContainer: {
+    paddingTop : 70,
     flex: 1,
     alignItems: "center",
   },

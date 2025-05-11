@@ -249,7 +249,7 @@ const QuizCard = ({ quiz, onPress, index = 0 }) => {
                 <View style={styles.statIcon}>
                   <Feather name="clock" size={16} color={colors.primary} />
                 </View>
-                <Text style={styles.statText}>{quiz.duration} min</Text>
+                <Text style={styles.statText}>{quiz.duration} min |</Text>
               </View>
               
               <View style={styles.statItem}>
@@ -257,7 +257,7 @@ const QuizCard = ({ quiz, onPress, index = 0 }) => {
                   <Feather name="help-circle" size={16} color={colors.primary} />
                 </View>
                 <Text style={styles.statText}>
-                  {quiz.totalQuestions} Qs
+                  {quiz.totalQuestions} Qsts |
                 </Text>
               </View>
               
@@ -966,7 +966,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 24,
-    paddingTop: 16,
+    paddingTop: 50,
     paddingBottom: 24,
     flexDirection: "row",
     justifyContent: "space-between",
@@ -1128,6 +1128,7 @@ const styles = StyleSheet.create({
   },
   // Enhanced Quiz card styles
   quizCardContainer: {
+    textAlign : "center",
     width: width * 0.85,
     alignSelf: "center",
     justifyContent: "center",
@@ -1142,6 +1143,7 @@ const styles = StyleSheet.create({
     elevation: 25, // Increased for Android
   },
   quizCard: {
+    alignItems : "center",
     borderRadius: 20,
     overflow: "hidden",
     // Removed padding to allow background to extend to borders
@@ -1158,7 +1160,7 @@ const styles = StyleSheet.create({
     elevation: 25,
   },
   cardBackground: {
-    width: "107%",
+    width: "110%",
     alignItems: "center",
     padding: 20, // Moved padding here from quizCard
     backgroundColor: "white", // Ensure white background under the image
