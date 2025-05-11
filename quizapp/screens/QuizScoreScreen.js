@@ -105,8 +105,10 @@ const FloatingBubbles = () => {
 }
 
 // Score circle component
+
 const ScoreCircle = ({ score, total }) => {
   //const scorePercentage = Math.min(100, Math.max(0, score));
+
   const animatedValue = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -124,6 +126,7 @@ const ScoreCircle = ({ score, total }) => {
     inputRange: [0, 1],
     outputRange: [circleCircumference, 0],
   })
+
 
   return (
     <View style={styles.scoreCircleContainer}>
@@ -145,7 +148,7 @@ const ScoreCircle = ({ score, total }) => {
       </Svg>
       <View style={styles.scoreTextContainer}>
         <Text style={styles.scorePercentage}>{Math.round(score)}%</Text>
-       
+
       </View>
     </View>
   )
@@ -191,6 +194,7 @@ const QuestionItem = ({ attempt, index, onPress, animationDelay = 0 , totalScore
     }
   };
 
+
   return (
     <Animated.View 
       style={[
@@ -232,9 +236,76 @@ export default function QuizScoreScreen({ navigation, route }) {
   const [error, setError] = useState(null)
   const [filterStatus, setFilterStatus] = useState('all')
 
+
   const { id_quiz, score , totalQuestions = 10, timeSpent = 0 } = route.params || {}
 
+
+  // Calculate average score whenever attempts change
+ /* useEffect(() => {
+    if (attempts.length > 0) {
+     // const sum = attempts.reduce((acc, attempt) => acc + attempt.score, 0);
+     const sum = attempts.reduce((acc, attempt) => {
+      // Ensure the score is a number
+      const attemptScore = Number(attempt.score) || 0;
+      return acc + attemptScore;
+    }, 0);
+
+     const avg = sum / attempts.length;
+      setAverageScore(avg);
+      
+      const questionsPerAttempt = totalQuestions || 10;
+
+      const totalQuestionsCount = attempts.reduce((acc, attempt) => {
+        // If the attempt has correct_answers and total_questions fields, use them
+        if (attempt.correct_answers && attempt.total_questions) {
+          return acc + attempt.total_questions;
+        }
+        // Otherwise use the totalQuestions from route params for each attempt
+        return acc + (totalQuestions || 10);
+      }, 0);
+    
+      
+      setTotalQuestionsAttempted(totalQuestionsCount);
+    } else if (score) {
+      // If no attempts but we have a score parameter (from the last quiz), use that
+      setAverageScore(Number(score) || 0);
+      setTotalQuestionsAttempted(totalQuestions || 0);
+    } else {
+      // Default values if no data
+      setAverageScore(0);
+      setTotalQuestionsAttempted(0);
+    }
+  }, [attempts, score, totalQuestions]); */
+
+  useEffect(() => {
+    if (attempts.length > 0) {
+      const validAttempts = attempts.filter(attempt => !isNaN(Number(attempt.score)));
+      
+      if (validAttempts.length > 0) {
+        const totalScore = validAttempts.reduce((sum, attempt) => sum + Number(attempt.score), 0);        const avg = totalScore / validAttempts.length;
+        const avgScore = totalScore / validAttempts.length;
+      
+        console.log("Calculated average:", avgScore); // Debug log
+        setAverageScore(avgScore);
+      } else {
+        setAverageScore(0);
+      }
+
+      setAttemptsCount(attempts.length);
+
+    } else if (score > 0) {
+      setAverageScore(parseFloat(score));
+      setAttemptsCount(1);
+    } else {
+      setAverageScore(0);
+      setAttemptsCount(0);
+    }
+  }, [attempts, score]);
+
+
   // Fetch quiz attempts with proper error handling
+
+
   const fetchAttempts = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -246,6 +317,7 @@ export default function QuizScoreScreen({ navigation, route }) {
       }
 
       const token = await AsyncStorage.getItem("token");
+
       const studentID = await AsyncStorage.getItem("userId");
       
       const response = await axios.get(`${API_URL}/students/getQuizAttempts/${quizId}`
@@ -255,19 +327,27 @@ export default function QuizScoreScreen({ navigation, route }) {
       },
       
       {
+
         headers: {
           Authorization: `Bearer ${token}`
         }
-      }
-
-
-      );
+      });
       
       if (!response.data) {
         throw new Error("No data received");
       }
 
-      setAttempts(response.data.attempts || response.data || []);
+      //const fetchedAttempts = response.data.attempts || response.data || [];
+      //setAttempts(fetchedAttempts);
+
+      const fetchedAttempts = (response.data.attempts || response.data || []).map(attempt => ({
+        ...attempt,
+        score: parseFloat(attempt.score) || 0, // Ensure score is a number
+        // Remove correct/total questions if not needed
+      }));
+      
+      console.log("Fetched attempts:", fetchedAttempts); // Debug log
+      setAttempts(fetchedAttempts);
       
     } catch (err) {
       console.error("API Error:", err);
@@ -338,48 +418,6 @@ export default function QuizScoreScreen({ navigation, route }) {
   const keyExtractor = useCallback((item) => 
     item.id_attempt?.toString() || Math.random().toString(), []);
 
-  /*const handleAttemptPress = useCallback(async (attempt) => {
-    try {
-      setLoading(true);
-      
-      // Fetch detailed attempt data
-      const attemptResponse = await axios.post(`${API_URL}/students/getAttemptAnswers`, {
-        id_attempt: attempt.id_attempt
-      });
-      
-      const attemptDetails = attemptResponse.data?.data || attempt;
-
-      // Fetch quiz details
-      const quizResponse = await axios.get(`${API_URL}/students/getQuizDetails${attempt.id_attempt}`);
-       /* params: { id_quiz: attemptDetails.quizId }
-      }); *
-      
-      const quizDetails = quizResponse.data?.data || {};
-
-      navigation.navigate("QuizScreenForHistory", {
-        attemptId: attempt.id_attempt,
-        /*id_quiz: attemptDetails.quizId,
-        quizTitle: quizDetails.title,
-        quizDescription: quizDetails.description,
-        score: attemptDetails.score,
-        corrected: attemptDetails.corrected,
-        totalQuestions: quizDetails.questions?.length || 0 *
-        ...response.data,
-      });
-    } catch (error) {
-      Alert.alert(
-        "Error",
-        err.response?.status === 404
-          ? "Attempt details not found"
-          : "Failed to load attempt details",
-        [{ text: "OK", onPress: () => console.log("OK Pressed") }]
-      );
-
-    } finally {
-      setLoading(false);
-    }
-  }, [navigation]); */
-
   const handleAttemptPress = useCallback(async (attempt) => {
     try {
       setLoading(true);
@@ -395,8 +433,6 @@ export default function QuizScoreScreen({ navigation, route }) {
       navigation.navigate("QuizScreenForHistory", {
         attemptId: attempt.id_attempt,
         quizId: attempt.id_quiz, // Make sure this is passed
-       
-
       });
       
     } catch (error) {
@@ -478,6 +514,10 @@ export default function QuizScoreScreen({ navigation, route }) {
     </View>
   );
 
+
+  
+
+
   return (
     <View style={styles.container}>
       <Animated.View
@@ -516,8 +556,10 @@ export default function QuizScoreScreen({ navigation, route }) {
             </TouchableOpacity>
 
             <ScoreCircle 
+
               score={(attempts?.reduce((total,item) => total + item.score ,0) / (score*attempts.length)) * 100 } 
               total={totalQuestions} 
+
             />
 
             {timeSpent > 0 && (
@@ -564,8 +606,6 @@ export default function QuizScoreScreen({ navigation, route }) {
     </View>
   )
 }
-
-
 
 const styles = StyleSheet.create({
   container: {
@@ -817,5 +857,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#888',
     textAlign: 'center',
+  },
+  scoreSubtext: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginTop: 2,
+  },
+  attemptItemContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+  },
+  scoreDisplay: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(245, 245, 250, 0.8)',
+    minWidth: 60,
+    alignItems: 'center',
+  },
+  scoreValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
   }
 })
