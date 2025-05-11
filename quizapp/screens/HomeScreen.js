@@ -275,7 +275,6 @@ export default function HomeScreen({ navigation }) {
 
       const token = await AsyncStorage.getItem("token");
 
-      console.log("Student ID being sent:", studentID);
 
       if (!studentID || !token) {
         alert("Please log in again.");
@@ -294,7 +293,6 @@ export default function HomeScreen({ navigation }) {
       );
       console.log("History Response:", response.data.data);
 
-      setHistoryData(response.data.data);
 
       if (response.data && response.data.data) {
         setHistoryData(
@@ -435,7 +433,6 @@ export default function HomeScreen({ navigation }) {
           },
         }
       );
-      console.log(response.data.data);
       setQuizzes(response.data.data);
     } catch (err) {
       console.error("Failed to fetch quizzes", err);
@@ -519,7 +516,6 @@ export default function HomeScreen({ navigation }) {
         }
       );
 
-      console.log("Quiz Details Response:", quizDetails.data); // Debugging line to see the full response
 
       navigation.navigate("QuizInfo", {
         id_quiz: quiz.id_quiz,
@@ -551,7 +547,6 @@ export default function HomeScreen({ navigation }) {
 
   const handleHistoryQuizPress = async (quiz) => {
     const token = await AsyncStorage.getItem("token");
-    console.log("Token:", token);
 
     try {
       const quizDetails = await axios.post(
@@ -568,7 +563,6 @@ export default function HomeScreen({ navigation }) {
         }
       );
 
-      console.log("Quiz Details Response:", quizDetails.data); // Debugging line to see the full response
 
       navigation.navigate("QuizHistoryScreen", {
         quiz: {
