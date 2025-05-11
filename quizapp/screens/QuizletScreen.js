@@ -735,6 +735,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   headerControls: {
+    
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
