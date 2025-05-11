@@ -597,7 +597,7 @@ export default function HomeScreen({ navigation }) {
 
     Animated.spring(panelAnimation, {
       toValue,
-      friction: 8,
+      friction: 7,
       tension: 40,
       useNativeDriver: false,
     }).start();

@@ -17,17 +17,15 @@ import { API_URL } from "../services/config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width } = Dimensions.get("window");
-import { useNavigation, useRoute } from "@react-navigation/native";
+
 
 export default function QuizInfoScreen({ navigation, route }) {
-  const { id_quiz, basicQuizData } = route.params ; // Get quizId from route params
+  const { id_quiz, basicQuizData } = route.params; // Get quizId from route params
   const [quiz, setQuiz] = useState(basicQuizData); // State to manage quiz data
 
   const [loading, setLoading] = useState(!basicQuizData); // State to manage loading
   const [error, setError] = useState(null); // State to manage errors
-  useEffect(()=>{
-    
-  },[basicQuizData])
+  useEffect(() => {}, [basicQuizData]);
 
   /*useEffect(() => {
     if (id_quiz) {
@@ -56,31 +54,30 @@ export default function QuizInfoScreen({ navigation, route }) {
 
   // Get an icon based on quiz type
   const getQuizIcon = (title) => {
-    const subject = title?.toLowerCase() || '';
-    
+    const subject = title?.toLowerCase() || "";
+
     // First try to match exact words
-    if (/math|algebra|calculus/.test(subject)) return 'calculator';
-    if (/science|physics|chemistry/.test(subject)) return 'atom';
-    if (/english|literature|writing/.test(subject)) return 'book-open';
-    if (/history|social studies/.test(subject)) return 'clock';
-    if (/geography/.test(subject)) return 'map';
-    if (/computer|programming|coding/.test(subject)) return 'code';
-    if (/biology|anatomy/.test(subject)) return 'activity';
-    if (/art|music/.test(subject)) return 'music';
-    
+    if (/math|algebra|calculus/.test(subject)) return "calculator";
+    if (/science|physics|chemistry/.test(subject)) return "atom";
+    if (/english|literature|writing/.test(subject)) return "book-open";
+    if (/history|social studies/.test(subject)) return "clock";
+    if (/geography/.test(subject)) return "map";
+    if (/computer|programming|coding/.test(subject)) return "code";
+    if (/biology|anatomy/.test(subject)) return "activity";
+    if (/art|music/.test(subject)) return "music";
+
     // Then try partial matches
-    if (subject.includes('math')) return 'percent';
-    if (subject.includes('science')) return 'flask';
-    if (subject.includes('physics')) return 'zap';
-    if (subject.includes('english')) return 'book';
-    if (subject.includes('history')) return 'clock';
-    if (subject.includes('geo')) return 'globe';
-    if (subject.includes('comp')) return 'cpu';
-    
-    return 'help-circle'; // Default icon
+    if (subject.includes("math")) return "percent";
+    if (subject.includes("science")) return "flask";
+    if (subject.includes("physics")) return "zap";
+    if (subject.includes("english")) return "book";
+    if (subject.includes("history")) return "clock";
+    if (subject.includes("geo")) return "globe";
+    if (subject.includes("comp")) return "cpu";
+
+    return "help-circle"; // Default icon
   };
 
-  
   // Get the appropriate image based on quiz type
   const getQuizImage = () => {
     switch (quiz.id) {
@@ -136,7 +133,6 @@ export default function QuizInfoScreen({ navigation, route }) {
         throw new Error("Unexpected response status");
       }
     } catch (error) {
-       
       console.error("Error starting quiz attempt:", error);
       Alert.alert("Error", "Attempts limit reached for this quiz");
     }
@@ -341,7 +337,7 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   cardContainer: {
-    paddingTop : 70,
+    paddingTop: 70,
     flex: 1,
     alignItems: "center",
   },
