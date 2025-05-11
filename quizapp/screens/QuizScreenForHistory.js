@@ -183,7 +183,6 @@ const ScoreCircle = ({ score, total }) => {
         <Text style={styles.scoreValue}>
         {total > 0 ? Math.round((score / total) * 100) : 0}%
         </Text>
-        <Text style={styles.scoreLabel}>{score}/{total}</Text>
       </View>
     </Animated.View>
   )

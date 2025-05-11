@@ -28,11 +28,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import api from "../services/api";
 import { API_URL } from "../services/config";
-// jhhg
+
+
 const { width, height } = Dimensions.get("window");
 
 // Add after imports
-const getQuizIcon = (type) => {
+/*const getQuizIcon = (type) => {
   switch (type?.toLowerCase()) {
     case "science":
       return "flask";
@@ -53,7 +54,97 @@ const getQuizIcon = (type) => {
     default:
       return "book";
   }
+}; */
+
+const AnimatedBackground = () => {
+  const animatedValue = useRef(new Animated.Value(0)).current;
+  
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(animatedValue, {
+          toValue: 1,
+          duration: 15000,
+          useNativeDriver: false,
+        }),
+        Animated.timing(animatedValue, {
+          toValue: 0,
+          duration: 15000,
+          useNativeDriver: false,
+        }),
+      ])
+    ).start();
+  }, []);
+
+  const interpolateColor = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['#6A4DE0', '#8B65FF'],
+  });
+
+  return (
+    <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: interpolateColor }]}>
+      {/* Floating bubbles */}
+      {[...Array(15)].map((_, i) => {
+        const size = Math.random() * 100 + 50;
+        const left = Math.random() * width;
+        const top = Math.random() * height;
+        const opacity = Math.random() * 0.2 + 0.05;
+        
+        return (
+          <Animated.View
+            key={i}
+            style={{
+              position: 'absolute',
+              width: size,
+              height: size,
+              borderRadius: size / 2,
+              backgroundColor: 'rgba(255,255,255,0.15)',
+              left,
+              top,
+              opacity,
+              transform: [
+                {
+                  translateY: animatedValue.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, i % 2 === 0 ? 20 : -20],
+                  }),
+                },
+              ],
+            }}
+          />
+        );
+      })}
+    </Animated.View>
+  );
 };
+
+const getQuizIcon = (title) => {
+  const subject = title?.toLowerCase() || '';
+  
+  // First try to match exact words
+  if (/math|algebra|calculus/.test(subject)) return 'calculator';
+  if (/science|physics|chemistry/.test(subject)) return 'atom';
+  if (/english|literature|writing/.test(subject)) return 'book-open';
+  if (/history|social studies/.test(subject)) return 'clock';
+  if (/geography/.test(subject)) return 'map';
+  if (/computer|programming|coding/.test(subject)) return 'code';
+  if (/biology|anatomy/.test(subject)) return 'activity';
+  if (/art|music/.test(subject)) return 'music';
+  
+  // Then try partial matches
+  if (subject.includes('math')) return 'percent';
+  if (subject.includes('science')) return 'flask';
+  if (subject.includes('physics')) return 'zap';
+  if (subject.includes('english')) return 'book';
+  if (subject.includes('history')) return 'clock';
+  if (subject.includes('geo')) return 'globe';
+  if (subject.includes('comp')) return 'cpu';
+  
+  return 'help-circle'; // Default icon
+};
+
+
+
 const SimpleBackground = React.memo(() => {
   return (
     <View style={StyleSheet.absoluteFill}>
@@ -126,79 +217,67 @@ const QuizCard = ({ quiz, onPress, index = 0 }) => {
     ]).start();
   };
 
-  return (
-    <Animated.View
-      style={[
-        styles.quizCardContainer,
-        {
-          opacity: fadeAnim,
-          transform: [{ scale: scaleAnim }],
-        },
-      ]}
-    >
-      <TouchableOpacity
-        style={styles.quizCard}
-        onPress={() => {
-          animatePress();
-          onPress(quiz);
-        }}
-        activeOpacity={0.95}
-      >
-        {/* New purple question mark background */}
-        <ImageBackground
-          source={require('../assets/quiz-background.png')}
-          style={styles.cardBackground}
-          imageStyle={styles.cardBackgroundImage}
-        >
-          {/* Quiz type icon with transparent background */}
-          <View style={styles.quizIconContainer}>
-            <Feather
-              name={getQuizIcon(quiz.type)}
-              size={28}
-              color={colors.primary}
-            />
-          </View>
-
-          <View style={styles.titleBand} />
-
-          <Text style={styles.quizTitle} numberOfLines={2}>
-            {quiz.title}
-          </Text>
-          <Text style={styles.quizDescription} numberOfLines={2}>
-            {quiz.description}
-          </Text>
-
-          {/* Quiz stats with colored borders instead of backgrounds */}
-          <View style={styles.quizStats}>
-            <View style={styles.statItem}>
-              <Feather name="clock" size={16} color={colors.primary} />
-              <Text style={styles.statText}>{quiz.duration}</Text>
+    return (
+      <Animated.View style={[styles.quizCardContainer, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
+        <TouchableOpacity style={styles.quizCard} onPress={() => { animatePress(); onPress(quiz); }} activeOpacity={0.95}>
+          <ImageBackground source={require('../assets/quiz-background.png')} style={styles.cardBackground} imageStyle={styles.cardBackgroundImage}>
+            
+            {/* Enhanced Icon with Gradient Border */}
+            <View style={styles.iconOuter}>
+              <LinearGradient 
+                colors={["#A42FC1", "#7B5CFF"]}
+                style={styles.quizIconContainer}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Feather
+                  name={getQuizIcon(quiz.title)} // Use quiz title for more accurate icons
+                  size={28}
+                  color="white"
+                />
+              </LinearGradient>
             </View>
-            <View style={styles.statItem}>
-              <Feather name="help-circle" size={16} color={colors.primary} />
-              <Text style={[styles.statText, { color: colors.primary }]}>
-                {quiz.totalQuestions} Question
-                {quiz.totalQuestions > 1 ? "" : "s"}
-              </Text>
+  
+            <View style={styles.titleBand} />
+  
+            <Text style={styles.quizTitle} numberOfLines={2}>{quiz.title}</Text>
+            <Text style={styles.quizDescription} numberOfLines={2}>{quiz.description}</Text>
+  
+            {/* Stats with improved layout */}
+            <View style={styles.quizStats}>
+              <View style={styles.statItem}>
+                <View style={styles.statIcon}>
+                  <Feather name="clock" size={16} color={colors.primary} />
+                </View>
+                <Text style={styles.statText}>{quiz.duration} min</Text>
+              </View>
+              
+              <View style={styles.statItem}>
+                <View style={styles.statIcon}>
+                  <Feather name="help-circle" size={16} color={colors.primary} />
+                </View>
+                <Text style={styles.statText}>
+                  {quiz.totalQuestions} Qs
+                </Text>
+              </View>
+              
+              <View style={styles.statItem}>
+                <View style={styles.statIcon}>
+                  <Feather name="repeat" size={16} color={colors.primary} />
+                </View>
+                <Text style={styles.statText}>
+                  {quiz.nb_attempts || 0} tries
+                </Text>
+              </View>
             </View>
-          </View>
-
-          {/* Added attempts counter with colored border */}
-          <View style={styles.attemptsContainer}>
-            <View style={styles.statItem}>
-              <Feather name="repeat" size={16} color={colors.primary} />
-              <Text style={styles.statText}>
-                {quiz.nb_attempts || 2} Attempts
-              </Text>
-            </View>
-          </View>
-        </ImageBackground>
-      </TouchableOpacity>
-    </Animated.View>
-  );
+          </ImageBackground>
+        </TouchableOpacity>
+      </Animated.View>
+    );
+  
 };
 
-const SimpleHistoryCard = ({ title, date, icon, score, onPress }) => {
+/*const SimpleHistoryCard = ({ title, date, icon, score, onPress }) => {
   return (
     <TouchableOpacity style={styles.historyCard} onPress={onPress}>
       <View style={styles.historyCardContent}>
@@ -223,9 +302,38 @@ const SimpleHistoryCard = ({ title, date, icon, score, onPress }) => {
           <Text style={styles.historyCardTitle}>{title}</Text>
           <Text style={styles.historyCardDate}>{date}</Text>
         </View>
-        <View style={styles.historyCardScoreContainer}>
-          <Text style={styles.historyCardScore}>{score}%</Text>
+     
+      </View>
+    </TouchableOpacity>
+  );
+}; */
+
+const SimpleHistoryCard = ({ title, date, onPress }) => {
+  return (
+    <TouchableOpacity style={styles.historyCard} onPress={onPress}>
+      <View style={styles.historyCardContent}>
+        {/* Gradient Icon matching QuizCard */}
+        <View style={styles.iconOuter}>
+          <LinearGradient 
+            colors={["#A42FC1", "#7B5CFF"]}
+            style={styles.historyIconContainer}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <Feather
+              name={getQuizIcon(title)}
+              size={20}
+              color="white"
+            />
+          </LinearGradient>
         </View>
+
+        <View style={styles.historyCardTextContainer}>
+          <Text style={styles.historyCardTitle}>{title}</Text>
+          <Text style={styles.historyCardDate}>{date}</Text>
+        </View>
+        
+        <Feather name="chevron-right" size={20} color="#7B5CFF" />
       </View>
     </TouchableOpacity>
   );
@@ -244,6 +352,23 @@ export default function HomeScreen({ navigation }) {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [historyData, setHistoryData] = useState([]); // State for history data
+
+  const [studentID, setStudentID] = useState('');
+  useEffect(() => {
+    const fetchStudentData = async () => {
+      try {
+        const id = await AsyncStorage.getItem("userId");
+        setStudentID(id);
+      } catch (error) {
+        console.error("Error fetching student ID:", error);
+      }
+    };
+  
+    fetchStudentData();
+    fetchQuizzes(page);
+    fetchHistoryData(page);
+  }, []);
+
 
   // Add refresh function
   const onRefresh = async () => {
@@ -343,6 +468,7 @@ export default function HomeScreen({ navigation }) {
           date={item.created_at}
           icon={item.image}
           score={item.score}
+          type={item.type || item.subject} // Use quiz type/subject
           onPress={() => handleHistoryQuizPress(item)}
         />
       ))
@@ -352,6 +478,8 @@ export default function HomeScreen({ navigation }) {
       </View>
     )}
   </ScrollView>;
+
+
 
   // History data
   const historyDataa = [
@@ -622,14 +750,7 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={["#6A4DE0", "#7B5CFF", "#8B65FF"]}
-        style={styles.background}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      >
-        {/* Simple background */}
-        <SimpleBackground />
+          <AnimatedBackground />
 
         <CustomStatusBar time="9:41" />
 
@@ -637,7 +758,10 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.header}>
           <View>
             <Text style={styles.greeting}>GOOD MORNING</Text>
-            <Text style={styles.title}>#Matricule</Text>
+            <Text style={styles.title}>
+            {studentID ? `ID: ${studentID}` : '#Matricule'}
+
+            </Text>
           </View>
           <View style={styles.headerActions}>
             <TouchableOpacity style={styles.refreshButton} onPress={onRefresh}>
@@ -825,7 +949,7 @@ export default function HomeScreen({ navigation }) {
           onProfilePress={goToProfile}
           onSearchPress={toggleSearch}
         />
-      </LinearGradient>
+      
     </View>
   );
 }
@@ -833,6 +957,7 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    position: 'relative', // Important for absolute positioning
   },
   background: {
     flex: 1,
@@ -1088,12 +1213,11 @@ const styles = StyleSheet.create({
   },
   quizStats: {
     flexDirection: "row",
-    justifyContent: "center",
-    gap: 16,
+    justifyContent: "space-between",
+    marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: "rgba(164, 47, 193, 0.1)",
-    width: "100%",
+    borderTopColor: "rgba(123, 92, 255, 0.1)",
   },
   attemptsContainer: {
     flexDirection: "row",
@@ -1104,19 +1228,20 @@ const styles = StyleSheet.create({
   statItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    /*gap: 8,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
     borderWidth: 1.5,
     borderColor: "rgba(164, 47, 193, 0.5)",
     // Completely transparent background
-    backgroundColor: "transparent",
+    backgroundColor: "transparent", */
   },
   statText: {
     fontSize: 14,
     fontWeight: "600",
     color: colors.primary,
+    fontWeight: '500',
   },
   // History card styles
   historyCard: {
@@ -1124,19 +1249,29 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     padding: 15,
     marginBottom: 15,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    //shadowColor: "#000",
+    shadowColor: "#7B5CFF",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 3,
+    transform: [{ scale: 1 }],
+    transition: 'transform 0.3s ease',
   },
+
+  historyCardPressed: {
+    transform: [{ scale: 0.98 }],
+  },
+
   historyCardContent: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+   //justifyContent: "space-between",
   },
   historyCardIconContainer: {
-    marginRight: 12,
+    //marginRight: 12,
+    flex: 1,
+    marginLeft: 16,
   },
   historyCardIcon: {
     width: 40,
@@ -1155,11 +1290,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#333",
-    marginBottom: 4,
+    //marginBottom: 4,
   },
   historyCardDate: {
     fontSize: 12,
-    color: "#666",
+    color: "#888",
+    marginTop: 4,
   },
   historyCardScoreContainer: {
     backgroundColor: "rgba(74, 222, 128, 0.1)",
@@ -1195,4 +1331,33 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 8,
   },
+
+  iconOuter: {
+    borderRadius: 18,
+    padding: 2,
+    backgroundColor: 'white',
+    shadowColor: '#7B5CFF',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  quizIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  historyIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  statIcon: {
+    marginRight: 6,
+  },
+
 });

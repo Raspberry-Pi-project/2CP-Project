@@ -148,12 +148,7 @@ const ScoreCircle = ({ score, total }) => {
       </Svg>
       <View style={styles.scoreTextContainer}>
         <Text style={styles.scorePercentage}>{Math.round(score)}%</Text>
-        <Text style={styles.scoreText}>
-
-          {total ? `${Math.round((score / 100) * total)}/${total}` : `${score}%`}
-        </Text>
-
-      </View>
+    </View>
     </View>
   )
 }
@@ -281,6 +276,8 @@ export default function QuizScoreScreen({ navigation, route }) {
     }
   }, [attempts, score, totalQuestions]); */
 
+  const [averageScore, setAverageScore] = useState(0);
+  const [attemptsCount, setAttemptsCount] = useState(0);
   useEffect(() => {
     if (attempts.length > 0) {
       const validAttempts = attempts.filter(attempt => !isNaN(Number(attempt.score)));
@@ -324,11 +321,7 @@ export default function QuizScoreScreen({ navigation, route }) {
 
       const studentID = await AsyncStorage.getItem("userId");
       
-      const response = await axios.get(`${API_URL}/students/getQuizAttempts/${quizId}`
-      
-      , {
-        id_student : studentID,
-      },
+      const response = await axios.get(`${API_URL}/students/getQuizAttempts/${quizId}`,
       
       {
 
