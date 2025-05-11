@@ -153,7 +153,7 @@ export default function QuizHistoryScreen({ navigation, route }) {
   const formatDuration = (durationStr) => {
     const duration = parseInt(durationStr);
     if (isNaN(duration)) return durationStr || "30 minutes";
-    return duration === 1 ? "1 minute" : `${duration} minutes`;
+    return duration === 1 ? "1 min" : `${duration} min`;
   }
 
   // If quiz data is not loaded yet, show loading indicator
@@ -336,6 +336,7 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   headerTitle: {
+    paddingTop: 100,
     fontSize: 20,
     fontWeight: "700",
     color: "white",
@@ -497,7 +498,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   statLabel: {
-    fontSize: 14,
+    fontSize: 13,
     color: "#9E9E9E",
     marginBottom: 4,
   },
