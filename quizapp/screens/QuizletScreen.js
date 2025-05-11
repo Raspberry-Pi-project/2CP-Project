@@ -33,12 +33,10 @@ const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
 export default function QuizletScreen({ navigation, route }) {
-
-  // Refs for cleanup
-  const timeoutRef = useRef(null);
-  const intervalRef = useRef(null);
-  const isSubmittingRef = useRef(false);
-
+  // Get safe area insets for proper layout on notched devices
+  const insets = useSafeAreaInsets();
+  
+  // AppState reference to track app state changes
   const appState = useRef(AppState.currentState);
 
   // Check if quiz data exists in route params
@@ -50,12 +48,6 @@ export default function QuizletScreen({ navigation, route }) {
         [{ text: "Go Back", onPress: () => navigation.goBack() }]
       );
     }
-
-    return () => {
-      // Cleanup on unmount
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
   }, []);
 
   // Get quiz data from route params or use a default quiz
@@ -81,16 +73,18 @@ export default function QuizletScreen({ navigation, route }) {
   // Ensure questions array exists
   const questions = quiz.questions || [];
   const [currentQuestion, setCurrentQuestion] = useState(0);
-
+  
   const currentQuestionData = questions[currentQuestion];
-
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [customAnswer, setCustomAnswer] = useState("");
+  const [score, setScore] = useState(0);
+  const [answers, setAnswers] = useState(Array(questions.length).fill(null));
+  const [timeLeft, setTimeLeft] = useState(currentQuestionData.duration === 0 ? 60 : currentQuestionData.duration);
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [correctAnswers, setCorrectAnswers] = useState(0);
+  const [incorrectAnswers, setIncorrectAnswers] = useState(0);
   const [timerActive, setTimerActive] = useState(true);
-  const [timeLeft, setTimeLeft] = useState(
-    currentQuestionData.duration === 0 ? 60 : currentQuestionData.duration
-  );
   const [selectedAnswers, setSelectedAnswers] = useState(
     Array(questions.length).fill([])
   );
@@ -104,25 +98,32 @@ export default function QuizletScreen({ navigation, route }) {
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const customInputAnim = useRef(new Animated.Value(0)).current;
   const nextButtonAnim = useRef(new Animated.Value(0)).current;
+  const backButtonAnim = useRef(new Animated.Value(0)).current;
+  const headerAnim = useRef(new Animated.Value(0)).current;
+  const progressBarAnim = useRef(new Animated.Value(0)).current;
+  const backgroundAnim = useRef(new Animated.Value(0)).current;
 
+  // Create option animations for each question
   const optionsAnim = useRef(
     Array(5)
       .fill()
       .map(() => new Animated.Value(0))
   ).current;
 
-  // Reset quiz function
+  // Reset quiz function to be called when app returns to foreground
   const resetQuiz = () => {
+    // Reset all quiz state
     setCurrentQuestion(0);
+    setSelectedAnswer(null);
     setCustomAnswer("");
-
-    setSelectedAnswers(Array(questions.length).fill([]));
-
+    setScore(0);
+    setAnswers(Array(questions.length).fill(null));
+    setTimeLeft(questions[0].duration === 0 ? 60 : questions[0].duration);
     setShowCustomInput(false);
-    setTimeLeft(
-      currentQuestionData.duration === 0 ? 60 : currentQuestionData.duration
-    );
+    setCorrectAnswers(0);
+    setIncorrectAnswers(0);
     setTimerActive(true);
+    setSelectedAnswers(Array(questions.length).fill([]));
 
     // Reset animations
     questionAnim.setValue(0);
@@ -138,28 +139,108 @@ export default function QuizletScreen({ navigation, route }) {
     progressBarAnim.setValue(0);
     backgroundAnim.setValue(0);
 
+    // Start animations for first question
+    runEntryAnimations();
 
+    // Alert user that quiz has been reset
     Alert.alert(
       "Quiz Reset",
       "Your quiz progress was lost because you left the app. Please start over.",
       [{ text: "OK" }]
     );
+  };
 
+  // Run initial animations when component mounts
+  useEffect(() => {
+    runEntryAnimations();
+  }, []);
 
-  // AppState listener with improved handling
+  const runEntryAnimations = () => {
+    // Animate header elements
+    Animated.sequence([
+      Animated.timing(backgroundAnim, {
+        toValue: 1,
+        duration: 600,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }),
+      Animated.parallel([
+        Animated.timing(headerAnim, {
+          toValue: 1,
+          duration: 500,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(backButtonAnim, {
+          toValue: 1,
+          duration: 400,
+          easing: Easing.out(Easing.back(1.5)),
+          useNativeDriver: true,
+        }),
+        Animated.timing(progressBarAnim, {
+          toValue: 1,
+          duration: 800,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: false,
+        }),
+      ]),
+    ]).start();
+
+    // Animate question and options with sequence
+    Animated.sequence([
+      Animated.timing(questionAnim, {
+        toValue: 1,
+        duration: 500,
+        delay: 200,
+        easing: Easing.out(Easing.back(1.5)),
+        useNativeDriver: true,
+      }),
+      Animated.stagger(
+        100,
+        optionsAnim.slice(0, currentQuestionData?.answers?.length || 0).map((anim) =>
+          Animated.timing(anim, {
+            toValue: 1,
+            duration: 400,
+            easing: Easing.out(Easing.back(1.2)),
+            useNativeDriver: true,
+          })
+        )
+      ),
+      Animated.timing(nextButtonAnim, {
+        toValue: 1,
+        duration: 500,
+        easing: Easing.out(Easing.back(1.5)),
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Animate progress
+    Animated.timing(progressAnim, {
+      toValue: (currentQuestion + 1) / questions.length,
+      duration: 600,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+  };
+
+  // Listen for AppState changes
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (nextAppState) => {
+      // If app goes from background to active, reset quiz
       if (
-        appState.current === "active" &&
-        nextAppState.match(/inactive|background/)
+        appState.current.match(/inactive|background/) &&
+        nextAppState === "active"
       ) {
         resetQuiz();
       }
 
+      // Update app state reference
       appState.current = nextAppState;
     });
 
-    return () => subscription.remove();
+    return () => {
+      subscription.remove();
+    };
   }, [questions]);
 
   // Timer settings
@@ -167,12 +248,94 @@ export default function QuizletScreen({ navigation, route }) {
   const timerStroke = 4;
   const timerCircumference = 2 * Math.PI * timerRadius;
 
+  // Reset animations and move to next question
+  const prepareNextQuestion = () => {
+    // Fade out current question and options
+    Animated.parallel([
+      Animated.timing(questionAnim, {
+        toValue: 0,
+        duration: 300,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      ...optionsAnim.map((anim) =>
+        Animated.timing(anim, {
+          toValue: 0,
+          duration: 200,
+          easing: Easing.in(Easing.cubic),
+          useNativeDriver: true,
+        })
+      ),
+      Animated.timing(nextButtonAnim, {
+        toValue: 0,
+        duration: 200,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      // Update current question state
+      setCurrentQuestion((prev) => prev + 1);
+      setSelectedAnswer(null);
+      setTimeLeft(
+        questions[currentQuestion + 1]?.duration === 0
+          ? 60
+          : questions[currentQuestion + 1]?.duration
+      );
+      setTimerActive(true);
+      
+      // Prepare animations for new question
+      questionAnim.setValue(0);
+      optionsAnim.forEach((anim) => anim.setValue(0));
+      nextButtonAnim.setValue(0);
+      timerProgress.setValue(1);
+      timerOpacity.setValue(1);
+      pulseAnim.setValue(1);
+      
+      // Animate progress bar
+      Animated.timing(progressAnim, {
+        toValue: (currentQuestion + 2) / questions.length,
+        duration: 600,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: false,
+      }).start();
+      
+      // Fade in new question and options
+      Animated.sequence([
+        Animated.timing(questionAnim, {
+          toValue: 1,
+          duration: 500,
+          easing: Easing.out(Easing.back(1.5)),
+          useNativeDriver: true,
+        }),
+        Animated.stagger(
+          100,
+          optionsAnim
+            .slice(0, questions[currentQuestion + 1]?.answers?.length || 0)
+            .map((anim) =>
+              Animated.timing(anim, {
+                toValue: 1,
+                duration: 400,
+                easing: Easing.out(Easing.back(1.2)),
+                useNativeDriver: true,
+              })
+            )
+        ),
+        Animated.timing(nextButtonAnim, {
+          toValue: 1,
+          duration: 500,
+          easing: Easing.out(Easing.back(1.5)),
+          useNativeDriver: true,
+        }),
+      ]).start();
+    });
+  };
 
-  // Timer effect with cleanup
   useEffect(() => {
-    if (timerActive) {
-      intervalRef.current = setInterval(() => {
+    // Timer animation
+    let timerInterval;
 
+    if (timerActive && currentQuestionData.duration !== 0) {
+      timerInterval = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 0) {
             handleNext();
@@ -183,16 +346,12 @@ export default function QuizletScreen({ navigation, route }) {
           const newTime = prev - 1;
 
           Animated.timing(timerProgress, {
-            toValue:
-              newTime /
-              (currentQuestionData.duration === 0
-                ? 60
-                : currentQuestionData.duration),
-
+            toValue: newTime / (currentQuestionData.duration === 0 ? 60 : currentQuestionData.duration),
             duration: 1000,
             useNativeDriver: true,
           }).start();
 
+          // Pulse animation when time is running low
           if (newTime <= 5) {
             Animated.sequence([
               Animated.timing(pulseAnim, {
@@ -221,14 +380,11 @@ export default function QuizletScreen({ navigation, route }) {
       }, 1000);
     }
 
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [currentQuestion, timerActive]);
+    return () => clearInterval(timerInterval);
+  }, [currentQuestion, timerActive, currentQuestionData]);
 
-
-  // Keyboard listeners with cleanup
   useEffect(() => {
+    // Keyboard listeners
     const keyboardDidShowListener = Keyboard.addListener(
       "keyboardDidShow",
       () => {
@@ -248,61 +404,11 @@ export default function QuizletScreen({ navigation, route }) {
     };
   }, []);
 
-  // Question change effect with cleanup
-  useEffect(() => {
-    // Reset animations for new question
-    optionsAnim.forEach((anim) => anim.setValue(0));
-    questionAnim.setValue(0);
-    nextButtonAnim.setValue(0);
-
-    // Animate progress and question
-    Animated.parallel([
-      Animated.timing(progressAnim, {
-        toValue: (currentQuestion + 1) / questions.length,
-        duration: 600,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: false,
-      }),
-      Animated.timing(questionAnim, {
-        toValue: 1,
-        duration: 500,
-        easing: Easing.out(Easing.back(1.5)),
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    // Animate options
-    const currentOptions = questions[currentQuestion]?.answers || [];
-    const numOptions = currentOptions.length + 1;
-
-    Animated.stagger(
-      100,
-      optionsAnim.slice(0, numOptions).map((anim) =>
-        Animated.timing(anim, {
-          toValue: 1,
-          duration: 400,
-          easing: Easing.out(Easing.back(1.5)),
-          useNativeDriver: true,
-        })
-      )
-    ).start();
-
-    // Reset custom input state
-    setShowCustomInput(false);
-    setCustomAnswer("");
-    customInputAnim.setValue(0);
-    setTimeLeft(
-      currentQuestionData.duration === 0 ? 60 : currentQuestionData.duration
-    );
-    timerProgress.setValue(1);
-    timerOpacity.setValue(1);
-    setTimerActive(true);
-  }, [currentQuestion]);
-
   const handleAnswer = (index) => {
+    // If "Other" option is selected
     if (index === (questions[currentQuestion]?.answers?.length || 0)) {
       setShowCustomInput(true);
-      setTimerActive(false);
+      setTimerActive(false); // Pause timer when custom input is shown
       Animated.timing(customInputAnim, {
         toValue: 1,
         duration: 300,
@@ -312,7 +418,7 @@ export default function QuizletScreen({ navigation, route }) {
       return;
     }
 
-
+    // Animate the selection with a quick scale effect
     Animated.sequence([
       Animated.timing(optionsAnim[index], {
         toValue: 0.95,
@@ -326,18 +432,25 @@ export default function QuizletScreen({ navigation, route }) {
       }),
     ]).start();
 
+    // Get the current question's selected answers or initialize an empty array
     const currentQuestionAnswers = selectedAnswers[currentQuestion] || [];
+
+    // Check if this answer is already selected
     const existingAnswerIndex = currentQuestionAnswers.findIndex(
       (answer) =>
         answer.student_answer_text ===
         questions[currentQuestion].answers[index].answer_text
     );
 
+    // Create a new array for the current question's answers
     let newQuestionAnswers;
+
     if (existingAnswerIndex >= 0) {
+      // If the answer is already selected, remove it (toggle off)
       newQuestionAnswers = [...currentQuestionAnswers];
       newQuestionAnswers.splice(existingAnswerIndex, 1);
     } else {
+      // If the answer is not selected, add it (toggle on)
       const newAnswer = {
         id_attempt,
         id_question: questions[currentQuestion].id_question,
@@ -347,26 +460,42 @@ export default function QuizletScreen({ navigation, route }) {
       newQuestionAnswers = [...currentQuestionAnswers, newAnswer];
     }
 
+    // Update the selectedAnswers array
     const newSelectedAnswers = [...selectedAnswers];
     newSelectedAnswers[currentQuestion] = newQuestionAnswers;
     setSelectedAnswers(newSelectedAnswers);
+
+    // For backward compatibility, set the most recent selection
+    setSelectedAnswer(index);
+
+    // Update the answers array to match selectedAnswers
+    setAnswers(newSelectedAnswers);
   };
 
   const handleCustomAnswer = () => {
     if (customAnswer.trim()) {
+      const index = -1; // Special index for custom answer
+      setSelectedAnswer(index);
+
+      // Create a custom answer object
       const customAnswerObj = {
         id_attempt,
         id_question: questions[currentQuestion].id_question,
         student_answer_text: customAnswer.trim(),
       };
 
+      // Update both selectedAnswers and answers arrays
       const newSelectedAnswers = [...selectedAnswers];
       newSelectedAnswers[currentQuestion] = [customAnswerObj];
       setSelectedAnswers(newSelectedAnswers);
+      setAnswers(newSelectedAnswers);
 
       Keyboard.dismiss();
+
+      // Move to next question after submitting custom answer
       handleNext();
     } else {
+      // Shake animation for empty input
       Animated.sequence([
         Animated.timing(shakeAnim, {
           toValue: 10,
@@ -393,29 +522,21 @@ export default function QuizletScreen({ navigation, route }) {
   };
 
   const handleNext = async () => {
-
-    if (isSubmittingRef.current) return;
-
     if (currentQuestion < questions.length - 1) {
-      // Move to next question
-      setCurrentQuestion((prev) => prev + 1);
-      setTimeLeft(
-        currentQuestionData.duration === 0 ? 60 : currentQuestionData.duration
-      );
-      setTimerActive(true);
+      // Animate transition to next question
+      prepareNextQuestion();
     } else {
-      // Submit answers
-      isSubmittingRef.current = true;
+      // Quiz is complete - calculate score based on selected answers
+      const finalScore = questions.reduce((totalScore, question, idx) => {
+        const userAnswers = selectedAnswers[idx] || [];
+        const correctAnswer = question.answers.filter(
+          (answer) => answer.correct === 1
+        );
 
-      try {
-        const finalScore = questions.reduce((totalScore, question, idx) => {
-          const userAnswers = selectedAnswers[idx] || [];
-          const correctAnswers = question.answers.filter(
-            (answer) => answer.correct === 1
-          );
-
-          const allCorrectSelected = correctAnswers.every((ans) =>
-
+        // If there are multiple correct answers
+        if (Array.isArray(correctAnswer)) {
+          // Check if user selected all correct answers and only correct answers
+          const allCorrectSelected = correctAnswer.every((ans) =>
             selectedAnswers[idx].some((userAns) => {
               if (userAns.student_answer_text === ans.answer_text) {
                 userAns.correct = 1;
@@ -426,13 +547,11 @@ export default function QuizletScreen({ navigation, route }) {
               }
             })
           );
-
           const onlyCorrectSelected = userAnswers.every((userAns) =>
-            correctAnswers.some(
+            correctAnswer.some(
               (ans) => ans.answer_text === userAns.student_answer_text
             )
           );
-
           if (allCorrectSelected && onlyCorrectSelected) {
             question.isCorrect = true;
             return totalScore + question.points;
@@ -440,98 +559,167 @@ export default function QuizletScreen({ navigation, route }) {
             question.isCorrect = false;
             return totalScore;
           }
-        }, 0);
-
-
-        const token = await AsyncStorage.getItem("token");
-
-        // Store the score in AsyncStorage to prevent multiple submissions
-        const submissionKey = `quiz_submission_${id_attempt}`;
-        const hasSubmitted = await AsyncStorage.getItem(submissionKey);
-
-        if (hasSubmitted) {
-          console.log(
-            "Quiz already submitted, preventing duplicate submission"
-          );
-          return;
         }
 
-        const response = await axios.post(
+        return totalScore;
+      }, 0);
+
+      // Show loading animation
+      Animated.parallel([
+        Animated.timing(headerAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(questionAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        ...optionsAnim.map((anim) =>
+          Animated.timing(anim, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: true,
+          })
+        ),
+        Animated.timing(nextButtonAnim, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start();
+
+      // Submit quiz results
+      const attemptResult = {
+        id_attempt: id_attempt,
+        answers: selectedAnswers.flat(),
+        score: finalScore,
+      };
+      
+      try {
+        const token = await AsyncStorage.getItem("token");
+        const updatedAttempt = await axios.post(
           `${API_URL}/students/submitAnswers`,
           {
-            id_attempt,
-            score: finalScore,
-            answers: selectedAnswers.flat(),
+            id_attempt: attemptResult.id_attempt,
+            score: attemptResult.score,
+            answers: attemptResult.answers,
           },
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-
-        if (response.status === 200) {
-          // Mark this attempt as submitted
-          await AsyncStorage.setItem(submissionKey, "true");
-
-          // Clear all timers and intervals before navigation
-          if (timeoutRef.current) clearTimeout(timeoutRef.current);
-          if (intervalRef.current) clearInterval(intervalRef.current);
-
-          // Reset the submitting flag
-          isSubmittingRef.current = false;
-
-          // Navigate and reset the navigation state
-          navigation.reset({
-            index: 0,
-            routes: [
-              {
-                name: "Home",
-                params: {
-                  screen: "Results",
-                  params: {
-                    id_quiz: quiz.id_quiz,
-                    score: finalScore,
-                    totalQuestions: quiz.totalQuestions,
-                    correctCount: finalScore,
-                    incorrectCount: questions.length - finalScore,
-                  },
-                },
-              },
-            ],
+        
+        if (updatedAttempt.status === 200) {
+          console.log("Attempt updated successfully");
+          const quizResults = {
+            id_quiz: quiz.id_quiz,
+            totalQuizScore: quiz.score,
+            score: finalScore,
+            total: quiz.totalQuestions,
+            correctCount: finalScore,
+            incorrectCount: questions.length - finalScore,
+            questions: questions.map((q, index) => ({
+              ...q,
+              id_question: q.id_question,
+              id: q.question_number || index + 1,
+              text: q.question_text,
+              isCorrect: q.isCorrect,
+              selectedAnswers: selectedAnswers[index] || [],
+            })),
+          };
+          
+          // Show success animation before navigation
+          Animated.timing(backgroundAnim, {
+            toValue: 0,
+            duration: 300,
+            useNativeDriver: true,
+          }).start(() => {
+            navigation.navigate("Home");
           });
+        } else {
+          throw new Error("Failed to update attempt");
         }
       } catch (error) {
         console.error("Error updating attempt:", error);
-        Alert.alert("Error", "Failed to submit answers. Please try again.");
-        isSubmittingRef.current = false;
+        Alert.alert("Error", "Failed to update attempt. Please try again.");
+        navigation.navigate("Home");
       }
     }
   };
 
-  // Add cleanup effect
-  useEffect(() => {
-    return () => {
-      // Clear all timers and intervals
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      if (intervalRef.current) clearInterval(intervalRef.current);
-
-      // Reset submitting flag
-      isSubmittingRef.current = false;
-    };
-  }, []);
+  // Calculate progress percentage for the progress bar
+  const progressPercentage = ((currentQuestion + 1) / questions.length) * 100;
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <SafeAreaView style={styles.container}>
-        <View style={styles.content}>
-          <View style={styles.purpleHeader}>
-            <LinearGradient
-              colors={["#A42FC1", "#8B27A3"]}
-              style={styles.headerGradient}
-            >
-              <QuizBackground />
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <StatusBar barStyle="light-content" />
+        
+        {/* Quiz Background with Animation */}
+        <Animated.View 
+          style={[
+            styles.backgroundContainer,
+            {
+              opacity: backgroundAnim,
+              transform: [
+                {
+                  translateY: backgroundAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-20, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          <LinearGradient
+            colors={["#8E2DE2", "#4A00E0"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.backgroundGradient}
+          >
+            <QuizBackground />
+          </LinearGradient>
+        </Animated.View>
 
-              <View style={styles.headerControls}>
-
+        <SafeAreaView style={styles.content}>
+          {/* Header Section */}
+          <Animated.View 
+            style={[
+              styles.header,
+              {
+                opacity: headerAnim,
+                transform: [
+                  {
+                    translateY: headerAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [-20, 0],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
+            <View style={styles.headerTop}>
+              {/* Back Button */}
+              <Animated.View
+                style={[
+                  styles.backButtonContainer,
+                  {
+                    opacity: backButtonAnim,
+                    transform: [
+                      {
+                        translateX: backButtonAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [-20, 0],
+                        }),
+                      },
+                    ],
+                  },
+                ]}
+              >
                 <TouchableOpacity
                   onPress={() => navigation.goBack()}
                   style={styles.backButton}
@@ -540,6 +728,15 @@ export default function QuizletScreen({ navigation, route }) {
                 </TouchableOpacity>
               </Animated.View>
 
+              {/* Quiz Title */}
+              <View style={styles.titleContainer}>
+                <Text style={styles.quizTitle} numberOfLines={1}>
+                  {quiz.title || "Quiz"}
+                </Text>
+              </View>
+
+              {/* Timer Circle */}
+              {currentQuestionData.duration !== 0 && (
                 <Animated.View
                   style={[
                     styles.timerContainer,
@@ -609,33 +806,36 @@ export default function QuizletScreen({ navigation, route }) {
                   ]}
                 />
               </View>
+              
+              <Text style={styles.progressText}>
+                Question {currentQuestion + 1} of {questions.length}
+              </Text>
+            </View>
+          </Animated.View>
 
-              <View style={styles.questionCounterContainer}>
-                <Text style={styles.questionCounter}>
-                  Question {currentQuestion + 1}/{quiz.totalQuestions}
-                </Text>
-              </View>
-
-              <Animated.View
-                style={[
-                  styles.questionTextContainer,
-
+          {/* Question Card */}
+          <Animated.View
+            style={[
+              styles.questionCard,
+              {
+                opacity: questionAnim,
+                transform: [
                   {
                     translateY: questionAnim.interpolate({
                       inputRange: [0, 1],
                       outputRange: [20, 0],
                     }),
                   },
-                ]}
-              >
-                <Text style={styles.questionText}>
-                  {currentQuestionData.question_text}
-                </Text>
-              </Animated.View>
-            </LinearGradient>
-          </View>
+                ],
+              },
+            ]}
+          >
+            <Text style={styles.questionText}>
+              {currentQuestionData.question_text}
+            </Text>
+          </Animated.View>
 
-
+          {/* Options Section */}
           <View style={styles.optionsWrapper}>
             <View style={styles.optionsContainer}>
               {showCustomInput ? (
@@ -683,44 +883,33 @@ export default function QuizletScreen({ navigation, route }) {
                   </TouchableOpacity>
                 </Animated.View>
               ) : (
-                (currentQuestionData.answers || []).map((option, index) => (
-                  <Animated.View
-                    key={index}
-                    style={{
-                      opacity: optionsAnim[index],
-                      transform: [
-                        {
-                          translateY: optionsAnim[index].interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [20, 0],
-                          }),
-                        },
-                      ],
-                    }}
-                  >
-                    <TouchableOpacity
-                      style={[
-                        selectedAnswers[currentQuestion]?.some(
-                          (answer) =>
-                            answer.student_answer_text === option.answer_text
-                        )
-                          ? styles.selectedOption
-                          : styles.option,
-                      ]}
-                      onPress={() => handleAnswer(index)}
-                      disabled={showCustomInput}
-                      activeOpacity={0.7}
-
+                (currentQuestionData.answers || []).map((option, index) => {
+                  const isSelected = selectedAnswers[currentQuestion]?.some(
+                    (answer) => answer.student_answer_text === option.answer_text
+                  );
+                  
+                  return (
+                    <Animated.View
+                      key={index}
+                      style={{
+                        opacity: optionsAnim[index],
+                        transform: [
+                          {
+                            translateY: optionsAnim[index].interpolate({
+                              inputRange: [0, 1],
+                              outputRange: [20, 0],
+                            }),
+                          },
+                          {
+                            scale: optionsAnim[index],
+                          },
+                        ],
+                      }}
                     >
                       <TouchableOpacity
                         style={[
-                          selectedAnswers[currentQuestion]?.some(
-                            (answer) =>
-                              answer.student_answer_text === option.answer_text
-                          )
-                            ? styles.selectedOptionText
-                            : styles.optionText,
-
+                          styles.option,
+                          isSelected && styles.selectedOption,
                         ]}
                         onPress={() => handleAnswer(index)}
                         disabled={showCustomInput}
@@ -807,15 +996,39 @@ export default function QuizletScreen({ navigation, route }) {
               )}
             </View>
           </View>
-            <View style={styles.navigationButtons}>
-              <TouchableOpacity
-                style={[styles.navButton, styles.nextButton]}
-                onPress={handleNext}
-                disabled={
-                  selectedAnswers[currentQuestion]?.length === 0 &&
-                  !customAnswer.trim() &&
-                  !showCustomInput
 
+          {/* Next Question Button */}
+          <Animated.View
+            style={[
+              styles.nextButtonContainer,
+              {
+                opacity: nextButtonAnim,
+                transform: [
+                  {
+                    translateY: nextButtonAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [20, 0],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
+            <TouchableOpacity
+              style={[
+                styles.nextButton,
+                selectedAnswers[currentQuestion]?.length === 0 &&
+                  styles.disabledButton,
+              ]}
+              onPress={handleNext}
+              disabled={selectedAnswers[currentQuestion]?.length === 0}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={
+                  selectedAnswers[currentQuestion]?.length === 0
+                    ? ["#CCCCCC", "#AAAAAA"]
+                    : ["#8E2DE2", "#4A00E0"]
                 }
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
@@ -848,19 +1061,16 @@ export default function QuizletScreen({ navigation, route }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F9FA",
-
+    backgroundColor: "#F8F8F8",
   },
   backgroundContainer: {
     ...StyleSheet.absoluteFillObject,
     height: height * 0.35,
   },
-  purpleHeader: {
-    height: 220,
-    borderBottomLeftRadius: 25,
-    borderBottomRightRadius: 25,
-    overflow: "hidden",
-
+  backgroundGradient: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   content: {
     flex: 1,
@@ -947,14 +1157,9 @@ const styles = StyleSheet.create({
   },
   optionsWrapper: {
     flex: 1,
-    backgroundColor: "#F8F9FA",
   },
   optionsContainer: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 30,
-    paddingBottom: 80,
-
+    marginBottom: 20,
   },
   option: {
     borderRadius: 12,
