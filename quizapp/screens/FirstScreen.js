@@ -1,28 +1,22 @@
 "use client"
 
-import { useEffect, useRef } from "react"
-import { View, Text, StyleSheet, Animated, Easing, Dimensions } from "react-native"
+import { useEffect, useRef, useState } from "react"
+import { View, Text, StyleSheet, Animated, Easing, Dimensions, Alert } from "react-native"
 import { LinearGradient } from "expo-linear-gradient"
 import Svg, { Path, Rect } from "react-native-svg"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-
+import axios from "axios"
+import { API_URL } from "../services/config"
 const { width, height } = Dimensions.get("window")
 
 // Logo component with animations
 const TrivioLogo = () => {
-
-  /*useEffect(()=>{
-    const testConnection
-  },[])*/
-  // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current
   const scaleAnim = useRef(new Animated.Value(0.8)).current
   const iconAnim = useRef(new Animated.Value(0)).current
 
   useEffect(() => {
-    // Sequence of animations
     Animated.sequence([
-      // First fade in and scale up the logo
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
@@ -37,7 +31,6 @@ const TrivioLogo = () => {
           easing: Easing.out(Easing.back()),
         }),
       ]),
-      // Then animate the icon
       Animated.timing(iconAnim, {
         toValue: 1,
         duration: 800,
@@ -58,7 +51,6 @@ const TrivioLogo = () => {
       ]}
     >
       <View style={styles.logoContent}>
-        {/* Computer Icon */}
         <Animated.View
           style={{
             transform: [
@@ -84,12 +76,9 @@ const TrivioLogo = () => {
             <Path d="M6 7H18M6 11H14" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
           </Svg>
         </Animated.View>
-
-        {/* TRIVIO Text */}
         <Text style={styles.logoText}>TRIVIO</Text>
       </View>
 
-      {/* Tagline */}
       <Animated.Text
         style={[
           styles.tagline,
@@ -107,7 +96,7 @@ const TrivioLogo = () => {
   )
 }
 
-// Animated bubbles component
+// Animated background bubbles
 const AnimatedBubbles = () => {
   const bubbles = [
     {
@@ -141,7 +130,6 @@ const AnimatedBubbles = () => {
   ]
 
   useEffect(() => {
-    // Start animations for all bubbles
     bubbles.forEach((bubble) => {
       Animated.loop(
         Animated.sequence([
@@ -157,7 +145,7 @@ const AnimatedBubbles = () => {
             easing: Easing.inOut(Easing.ease),
             useNativeDriver: true,
           }),
-        ]),
+        ])
       ).start()
     })
   }, [])
@@ -202,24 +190,41 @@ const AnimatedBubbles = () => {
   )
 }
 
+// Main screen
 export default function FirstScreen({ navigation }) {
   const insets = useSafeAreaInsets()
   const fadeAnim = useRef(new Animated.Value(0)).current
+  const [error, setError] = useState(null)
+  const [connectionOk, setConnectionOk] = useState(null)
 
   useEffect(() => {
-    // Fade in the entire screen
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 800,
       useNativeDriver: true,
     }).start()
 
-    // Auto navigate to the next screen after a delay
-    const timer = setTimeout(() => {
-      navigation.replace("Login") // Navigate to login screen
-    }, 4000)
+    const testConnection = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/testConnection`	)
+        if (response.status === 200) {
+          setConnectionOk(true)
+          setError(null)
+          setTimeout(() => {
+            navigation.replace("Login")
+          }, 4000)
+        } else {
+          setConnectionOk(false)
+          setError("Server responded with an error.")
+        }
+      } catch (err) {
+        setConnectionOk(false)
+        setError("Connection failed. Please check your internet.")
+        Alert.alert("Connection Failed", "Unable to connect to the server.")
+      }
+    }
 
-    return () => clearTimeout(timer)
+    testConnection()
   }, [])
 
   return (
@@ -228,8 +233,17 @@ export default function FirstScreen({ navigation }) {
         <AnimatedBubbles />
         <View style={[styles.content, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
           <TrivioLogo />
+          {connectionOk === false && (
+            <Text style={{ color: "white", marginTop: 20 }}>❌ Connection failed. Try again later.</Text>
+          )}
         </View>
       </LinearGradient>
+
+      {error && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      )}
     </Animated.View>
   )
 }
@@ -271,5 +285,19 @@ const styles = StyleSheet.create({
     position: "absolute",
     borderRadius: 999,
     backgroundColor: "white",
+  },
+  errorContainer: {
+    position: "absolute",
+    bottom: 20,
+    left: 20,
+    right: 20,
+    backgroundColor: "rgba(255, 0, 0, 0.7)",
+    padding: 15,
+    borderRadius: 10,
+  },
+  errorText: {
+    color: "white",
+    fontSize: 16,
+    textAlign: "center",
   },
 })

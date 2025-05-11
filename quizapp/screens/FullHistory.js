@@ -1,62 +1,205 @@
-"use client"
+"use client";
 
-import { useState, useRef } from "react"
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions, TextInput, StatusBar, ActivityIndicator } from "react-native"
-import { colors } from "../constants/colors"
-import { LinearGradient } from "expo-linear-gradient"
-import { Feather } from "@expo/vector-icons"
+import React, { useState, useEffect, useRef } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+  Dimensions,
+  TextInput,
+  RefreshControl,
+  Animated,
+} from "react-native";
+import { colors } from "../constants/colors";
+import CustomStatusBar from "../components/CustomStatusBar";
+import { Feather } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
+import api from "../services/api";
+import { API_URL } from "../services/config";
 
-const { width, height } = Dimensions.get("window")
+const { width, height } = Dimensions.get("window");
 
-// Simple background component without complex animations
-const SimpleBackground = () => {
+// Animated background component
+const AnimatedBackground = () => {
+  const animatedValue = useRef(new Animated.Value(0)).current;
+  
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(animatedValue, {
+          toValue: 1,
+          duration: 15000,
+          useNativeDriver: false,
+        }),
+        Animated.timing(animatedValue, {
+          toValue: 0,
+          duration: 15000,
+          useNativeDriver: false,
+        }),
+      ])
+    ).start();
+  }, []);
+
+  const interpolateColor = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['#6A4DE0', '#8B65FF'],
+  });
+
   return (
-    <View style={StyleSheet.absoluteFill}>
-      {/* Static background elements */}
-      {Array.from({ length: 20 }).map((_, i) => {
-        const size = Math.random() * 3 + 1
+    <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: interpolateColor }]}>
+      {/* Floating bubbles */}
+      {[...Array(15)].map((_, i) => {
+        const size = Math.random() * 100 + 50;
+        const left = Math.random() * width;
+        const top = Math.random() * height;
+        const opacity = Math.random() * 0.2 + 0.05;
+        
         return (
-          <View
+          <Animated.View
             key={i}
             style={{
-              position: "absolute",
+              position: 'absolute',
               width: size,
               height: size,
-              backgroundColor: "#fff",
-              borderRadius: 10,
-              opacity: Math.random() * 0.5 + 0.1,
-              top: Math.random() * height,
-              left: Math.random() * width,
+              borderRadius: size / 2,
+              backgroundColor: 'rgba(255,255,255,0.15)',
+              left,
+              top,
+              opacity,
+              transform: [
+                {
+                  translateY: animatedValue.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, i % 2 === 0 ? 20 : -20],
+                  }),
+                },
+              ],
             }}
           />
-        )
+        );
       })}
-    </View>
-  )
-}
+    </Animated.View>
+  );
+};
 
-const HistoryQuizCard = ({ item, onPress }) => {
+const getQuizIcon = (title) => {
+  const subject = title?.toLowerCase() || '';
+  
+  if (/math|algebra|calculus/.test(subject)) return '🧮'; // Math icon
+  if (/science|physics|chemistry/.test(subject)) return '🔬'; // Science icon
+  if (/english|literature|writing/.test(subject)) return '📝'; // English icon
+  if (/history|social studies/.test(subject)) return '🏛️'; // History icon
+  if (/geography/.test(subject)) return '🌍'; // Geography icon
+  if (/computer|programming|coding/.test(subject)) return '💻'; // Computer icon
+  if (/biology|anatomy/.test(subject)) return '🧬'; // Biology icon
+  if (/art/.test(subject)) return '🎨'; // Art icon
+  if (/music/.test(subject)) return '🎵'; // Music icon
+  
+  // Partial matches
+  if (subject.includes('math')) return '🧮';
+  if (subject.includes('science')) return '🔬';
+  if (subject.includes('physics')) return '⚛️';
+  if (subject.includes('english')) return '📖';
+  if (subject.includes('history')) return '🏛️';
+  if (subject.includes('geo')) return '🌍';
+  if (subject.includes('comp')) return '💻';
+  
+  return '📚'; // Default book icon
+};
+
+/*const HistoryCard = ({ title, date, onPress, isPressed }) => {
+  // Add a pressed state for animation
+  const [pressed, setPressed] = useState(false);
+  
+  const handlePress = () => {
+    setPressed(true);
+    setTimeout(() => {
+      setPressed(false);
+      onPress();
+    }, 150);
+  };
+  
   return (
-    <TouchableOpacity style={styles.historyCard} onPress={() => onPress(item)} activeOpacity={0.8}>
+    <TouchableOpacity 
+      style={[
+        styles.historyCard, 
+        (pressed || isPressed) && styles.historyCardPressed
+      ]} 
+      onPress={handlePress}
+      activeOpacity={0.9}
+    >
+      <View style={styles.historyCardContent}>
+        {/* Gradient Icon *}
+        <View style={styles.iconOuter}>
+          <LinearGradient 
+            colors={["#A42FC1", "#7B5CFF"]}
+            style={styles.historyIconContainer}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <Text style={styles.emojiIconSmall}>
+              {getQuizIcon(title)}
+            </Text>
+          </LinearGradient>
+        </View>
+
+        <View style={styles.historyCardTextContainer}>
+          <Text style={styles.historyCardTitle} numberOfLines={1}>{title}</Text>
+          <Text style={styles.historyCardDate}>{date}</Text>
+        </View>
+        
+        <Feather name="chevron-right" size={20} color="#7B5CFF" />
+      </View>
+    </TouchableOpacity>
+  );
+}; */
+
+const HistoryCard = ({ item, onPress, isPressed }) => {
+  const [pressed, setPressed] = useState(false);
+  
+  const handlePress = () => {
+    setPressed(true);
+    setTimeout(() => {
+      setPressed(false);
+      onPress(item);
+    }, 150);
+  };
+  
+  return (
+    <TouchableOpacity 
+      style={[
+        styles.historyCard, 
+        (pressed || isPressed) && styles.historyCardPressed
+      ]} 
+      onPress={handlePress}
+      activeOpacity={0.8}
+    >
       <View style={styles.historyCardContent}>
         <View style={styles.historyCardIconContainer}>
           <View
             style={[
               styles.historyCardIcon,
-              { backgroundColor: item.icon === "math" ? "rgba(123, 92, 255, 0.1)" : "rgba(255, 157, 157, 0.1)" },
+              { backgroundColor: "rgba(123, 92, 255, 0.1)" },
             ]}
           >
-            <Text style={styles.historyCardIconText}>{item.icon === "math" ? "📊" : "📚"}</Text>
+            <Text style={styles.historyCardIconText}>
+              {getQuizIcon(item.title)}
+            </Text>
           </View>
         </View>
 
         <View style={styles.historyCardTextContainer}>
-          <Text style={styles.historyCardTitle}>{item.title}</Text>
-          <Text style={styles.historyCardDate}>{item.date}</Text>
+          <Text style={styles.historyCardTitle} numberOfLines={1}>{item.title}</Text>
+          <Text style={styles.historyCardDate}>{item.created_at}</Text>
           <View style={styles.quizStats}>
             <View style={styles.statItem}>
               <Feather name="clock" size={14} color={colors.primary} />
-              <Text style={styles.statText}>{item.timeSpent ? `${Math.floor(item.timeSpent / 60)}m` : "N/A"}</Text>
+              <Text style={styles.statText}>{item.duration ? `${item.duration}m` : "N/A"}</Text>
             </View>
             <View style={styles.statItem}>
               <Feather name="help-circle" size={14} color={colors.primary} />
@@ -66,303 +209,391 @@ const HistoryQuizCard = ({ item, onPress }) => {
         </View>
 
         <View style={styles.historyCardScoreContainer}>
-          <Text style={styles.historyCardScore}>{item.score}%</Text>
+          <Text style={styles.historyCardScore}>{Math.round(item.score)}%</Text>
         </View>
       </View>
     </TouchableOpacity>
-  )
-}
+  );
+};
+export default function FullHistory({ navigation, route }) {
+  const [historyData, setHistoryData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [refreshing, setRefreshing] = useState(false);
+  const [isSearchActive, setIsSearchActive] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const searchInputRef = useRef(null);
+  const [pressedItem, setPressedItem] = useState(null);
 
-export default function FullHistory({ navigation }) {
-  const [isSearchActive, setIsSearchActive] = useState(false)
-  const [searchText, setSearchText] = useState("")
-  const searchInputRef = useRef(null)
+  // Format date helper function
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
 
-  const [loading, setLoading] = useState(false)
-  const [page, setPage] = useState(1)
-  const ITEMS_PER_PAGE = 10
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString("en-US", { 
+        month: "short",
+        day: "numeric", 
+        year: "numeric"
+      });
+    } catch (error) {
+      return "N/A";
+    }
+  };
 
-  // History data - expanded with more entries
-  const historyData = [
-    { id: "1", title: "Math Quiz", date: "JAN 15, 2023", icon: "math", score: 85, totalQuestions: 10, timeSpent: 450 },
-    {
-      id: "2",
-      title: "English Quiz",
-      date: "FEB 22, 2023",
-      icon: "language",
-      score: 92,
-      totalQuestions: 15,
-      timeSpent: 720,
-    },
-    {
-      id: "3",
-      title: "Science Quiz",
-      date: "MAR 10, 2023",
-      icon: "math",
-      score: 78,
-      totalQuestions: 12,
-      timeSpent: 540,
-    },
-    {
-      id: "4",
-      title: "History Quiz",
-      date: "APR 05, 2023",
-      icon: "language",
-      score: 88,
-      totalQuestions: 8,
-      timeSpent: 380,
-    },
-    {
-      id: "5",
-      title: "Physics Quiz",
-      date: "MAY 18, 2023",
-      icon: "math",
-      score: 75,
-      totalQuestions: 20,
-      timeSpent: 900,
-    },
-    {
-      id: "6",
-      title: "Chemistry Quiz",
-      date: "JUN 07, 2023",
-      icon: "language",
-      score: 82,
-      totalQuestions: 15,
-      timeSpent: 650,
-    },
-    {
-      id: "7",
-      title: "Biology Quiz",
-      date: "JUL 22, 2023",
-      icon: "math",
-      score: 90,
-      totalQuestions: 18,
-      timeSpent: 780,
-    },
-    {
-      id: "8",
-      title: "Geography Quiz",
-      date: "AUG 14, 2023",
-      icon: "language",
-      score: 79,
-      totalQuestions: 12,
-      timeSpent: 520,
-    },
-    {
-      id: "9",
-      title: "Computer Science",
-      date: "SEP 03, 2023",
-      icon: "math",
-      score: 95,
-      totalQuestions: 10,
-      timeSpent: 430,
-    },
-    {
-      id: "10",
-      title: "Art History",
-      date: "OCT 19, 2023",
-      icon: "language",
-      score: 87,
-      totalQuestions: 14,
-      timeSpent: 600,
-    },
-  ]
+  // Fetch history data from API
+  /*const fetchHistoryData = async (currentPage = page) => {
+    try {
+      setLoading(true);
+      const studentID = await AsyncStorage.getItem("userId");
+      const token = await AsyncStorage.getItem("token");
 
-  // Filter history data based on search text
-  const filteredHistoryData = historyData.filter(
-    (item) =>
-      item.title.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.date.toLowerCase().includes(searchText.toLowerCase()),
-  )
+      if (!studentID || !token) {
+        alert("Please log in again.");
+        navigation.navigate("Login");
+        return;
+      }
+
+      const response = await api.post(
+        `${API_URL}/students/history`,
+        { id_student: parseInt(studentID), page: currentPage, limit: 20 },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data && response.data.data) {
+        setHistoryData(
+          response.data.data.map((quiz) => ({
+            id_quiz: quiz.id_quiz,
+            title: quiz.title,
+            quizScore: quiz.score,
+            created_at: formatDate(quiz.created_at),
+            image: quiz.image || "📚", // Default icon if none provided
+            score:
+              quiz.attempts && quiz.attempts.length > 0
+                ? (quiz.attempts.reduce((total, item) => total + item.score, 0) / quiz.score) * 100
+                : 0,
+            description: quiz.description,
+            duration: quiz.duration,
+            totalQuestions: quiz.totalQuestions || 0,
+          }))
+        );
+      } else {
+        setHistoryData([]);
+      }
+    } catch (error) {
+      console.error("Error fetching history data:", error);
+      setError("Failed to load quiz history. Please try again.");
+      setHistoryData([]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }; */
+
+
+  const fetchHistoryData = async (currentPage = page) => {
+    try {
+      setLoading(true);
+      const studentID = await AsyncStorage.getItem("userId");
+      const token = await AsyncStorage.getItem("token");
+  
+      if (!studentID || !token) {
+        alert("Please log in again.");
+        navigation.navigate("Login");
+        return;
+      }
+  
+      const response = await api.post(
+        `${API_URL}/students/history`,
+        { id_student: parseInt(studentID), page: currentPage, limit: 20 },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+  
+      if (response.data && response.data.data) {
+        setHistoryData(
+          response.data.data.map((quiz) => {
+            // Filter out attempts with score 0 (assuming 0 means not completed)
+            const validAttempts = quiz.attempts.filter(attempt => attempt.score > 0);
+            const totalValidAttempts = validAttempts.length;
+            
+            // Calculate average score only from valid attempts
+            const avgScore = totalValidAttempts > 0 
+              ? (validAttempts.reduce((total, item) => total + item.score, 0) / totalValidAttempts) 
+              : 0;
+              
+            // Calculate percentage based on quiz's total score
+            const scorePercentage = quiz.score > 0 
+              ? (avgScore / quiz.score) * 100 
+              : 0;
+  
+            return {
+              id_quiz: quiz.id_quiz,
+              title: quiz.title,
+              quizScore: quiz.score,
+              created_at: formatDate(quiz.created_at),
+              image: quiz.image || "📚",
+              score: Math.round(scorePercentage), // Round to nearest integer
+              description: quiz.description,
+              duration: quiz.duration,
+              totalQuestions: quiz.totalQuestions || 0,
+              // Add attempts count for display if needed
+              attemptsCount: totalValidAttempts,
+            };
+          })
+        );
+      } else {
+        setHistoryData([]);
+      }
+    } catch (error) {
+      console.error("Error fetching history data:", error);
+      setError("Failed to load quiz history. Please try again.");
+      setHistoryData([]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  // Load history data on component mount
+  useEffect(() => {
+    fetchHistoryData();
+  }, []);
+
+  // Handle refresh
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchHistoryData(1); // Reset to first page
+  };
+
+  // Load more data when scrolling to bottom
+  const loadMoreHistory = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchHistoryData(nextPage);
+  };
 
   // Toggle search input
   const toggleSearch = () => {
-    setIsSearchActive(!isSearchActive)
+    setIsSearchActive(!isSearchActive);
     if (!isSearchActive) {
-      // Focus the input when search is activated
       setTimeout(() => {
-        searchInputRef.current?.focus()
-      }, 100)
+        searchInputRef.current?.focus();
+      }, 100);
     } else {
-      // Clear search when deactivated
-      setSearchText("")
+      setSearchText("");
     }
-  }
+  };
 
-  const handleHistoryQuizPress = (item) => {
-    navigation.navigate("QuizHistoryScreen", {
-      quiz: {
-        id: item.id,
-        title: item.title,
-        description: "Your previous quiz attempt. View your results.",
-        time: "30 minutes",
-        attempts: 1,
-        questions: item.totalQuestions || 10,
-      },
-      score: item.score,
-      totalQuestions: item.totalQuestions,
-      timeSpent: item.timeSpent,
-    })
-  }
+  // Filter history items based on search text
+  const filteredHistory = historyData.filter(item => 
+    searchText === "" || 
+    item.title.toLowerCase().includes(searchText.toLowerCase())
+  );
 
-  const loadMoreQuizzes = () => {
-    if (!loading) {
-      setLoading(true)
-      // Simulate API call delay
+  // Handle pressing a history item
+  const handleHistoryQuizPress = async (quiz) => {
+    try {
+      setPressedItem(quiz.id_quiz);
+      const token = await AsyncStorage.getItem("token");
+      
+      const quizDetails = await axios.post(
+        `${API_URL}/students/getQuizDetails`,
+        {
+          id_quiz: quiz.id_quiz,
+          page: 1,
+          limit: 1,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
       setTimeout(() => {
-        setPage((prevPage) => prevPage + 1)
-        setLoading(false)
-      }, 1000)
+        setPressedItem(null);
+        navigation.navigate("QuizHistoryScreen", {
+          quiz: {
+            id: quizDetails.data.id,
+            title: quizDetails.data.title,
+            description:
+              quizDetails.data.description ||
+              "View your previous quiz attempt results.",
+            time: quizDetails.data.duration,
+            nb_attempts: quizDetails.data.nb_attempts || 1,
+            questions: quizDetails.data.totalQuestions || 10,
+          },
+          score: quizDetails.data.score,
+          totalQuestions: quizDetails.data.totalQuestions,
+          timeSpent: quizDetails.data.timeSpent || quizDetails.data.duration * 60,
+          id_quiz: quizDetails.data.id_quiz,
+          id_student: quizDetails.data.id_student,
+        });
+      }, 200);
+    } catch (error) {
+      console.error("Error fetching quiz details:", error);
+      setPressedItem(null);
+      alert("Failed to load quiz details. Please try again.");
     }
-  }
+  };
 
   return (
     <View style={styles.container}>
-      {/* Set status bar to transparent */}
-      <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
+      <AnimatedBackground />
+      <CustomStatusBar time="9:41" />
 
-      <LinearGradient
-        colors={["#6A4DE0", "#7B5CFF", "#8B65FF"]}
-        style={styles.background}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      >
-        <SimpleBackground />
-
-        {/* Quiz History Title with Back Button */}
-        <View style={styles.titleContainer}>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Feather name="arrow-left" size={24} color="white" />
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity 
+          style={styles.backButton} 
+          onPress={() => navigation.goBack()}
+        >
+          <Feather name="arrow-left" size={24} color="white" />
+        </TouchableOpacity>
+        
+        <Text style={styles.headerTitle}>Quiz History</Text>
+        
+        <View style={styles.headerActions}>
+          <TouchableOpacity style={styles.refreshButton} onPress={onRefresh}>
+            <Feather name="refresh-cw" size={20} color="white" />
           </TouchableOpacity>
-          <Text style={styles.titleText}>Quiz History</Text>
-          <View style={{ width: 40 }} />
+          
+          <TouchableOpacity style={styles.searchButton} onPress={toggleSearch}>
+            <Feather name={isSearchActive ? "x" : "search"} size={20} color="white" />
+          </TouchableOpacity>
         </View>
+      </View>
 
-        {/* Main Content - History Quizzes */}
-        <View style={styles.sectionTitleContainer}>
-          <View style={styles.sectionTitleDecoration} />
-          <Text style={styles.sectionTitle}>HISTORY QUIZZES</Text>
-
-          {/* Search Input */}
-          {isSearchActive ? (
-            <View style={styles.searchInputContainer}>
-              <TextInput
-                ref={searchInputRef}
-                style={styles.searchInput}
-                placeholder="Search history..."
-                placeholderTextColor="rgba(255, 255, 255, 0.6)"
-                value={searchText}
-                onChangeText={setSearchText}
-                autoCapitalize="none"
-              />
-              <TouchableOpacity onPress={toggleSearch} style={styles.searchCloseButton}>
-                <Feather name="x" size={18} color="white" />
+      {/* Search bar that appears when search is active */}
+      {isSearchActive && (
+        <View style={styles.searchContainer}>
+          <View style={styles.searchInputContainer}>
+            <Feather name="search" size={16} color="rgba(255,255,255,0.7)" style={styles.searchIcon} />
+            <TextInput
+              ref={searchInputRef}
+              style={styles.searchInput}
+              placeholder="Search your quiz history..."
+              placeholderTextColor="rgba(255, 255, 255, 0.6)"
+              value={searchText}
+              onChangeText={setSearchText}
+              autoCapitalize="none"
+            />
+            {searchText.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchText("")}>
+                <Feather name="x" size={16} color="rgba(255,255,255,0.7)" />
               </TouchableOpacity>
-            </View>
-          ) : (
-            <TouchableOpacity onPress={toggleSearch} style={styles.searchButton}>
-              <Feather name="search" size={18} color="white" />
-            </TouchableOpacity>
-          )}
+            )}
+          </View>
         </View>
+      )}
 
-        <View style={styles.historyQuizzes}>
-          <FlatList
-            data={filteredHistoryData.slice(0, page * ITEMS_PER_PAGE)}
-            renderItem={({ item }) => <HistoryQuizCard item={item} onPress={handleHistoryQuizPress} />}
-            keyExtractor={(item) => item.id}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{
-              paddingVertical: 24,
-              paddingHorizontal: 24,
-              paddingBottom: 120,
-              gap: 16,
-            }}
-            style={{
-              width: "100%",
-              height: "100%",
-            }}
-            onEndReached={loadMoreQuizzes}
-            onEndReachedThreshold={0.5}
-            ListFooterComponent={() =>
-              loading ? (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="large" color="#ffffff" />
-                  <Text style={styles.loadingText}>Loading more quizzes...</Text>
-                </View>
-              ) : null
-            }
-            scrollEnabled={true}
-            bounces={true}
-            overScrollMode="never"
-            initialNumToRender={ITEMS_PER_PAGE}
-            maxToRenderPerBatch={5}
-            windowSize={5}
-            removeClippedSubviews={true}
-            ListEmptyComponent={
-              <View style={styles.noResultsContainer}>
-                <Feather name="search" size={48} color="rgba(255, 255, 255, 0.5)" />
-                <Text style={styles.noResultsText}>No quizzes found</Text>
-                <Text style={styles.noResultsSubtext}>Try a different search term</Text>
-              </View>
-            }
-          />
+      {/* Main content */}
+      {loading && !refreshing ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="white" />
+          <Text style={styles.loadingText}>Loading quiz history...</Text>
         </View>
-      </LinearGradient>
+      ) : error ? (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={() => fetchHistoryData(1)}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['white']}
+              tintColor="white"
+            />
+          }
+        >
+          {filteredHistory.length > 0 ? (
+            <>
+              {filteredHistory.map((item) => (
+  <HistoryCard
+    key={item.id_quiz}
+    item={item}
+    onPress={handleHistoryQuizPress}
+    isPressed={pressedItem === item.id_quiz}
+  />
+))}
+              
+              {/* Load more button shown when there are items */}
+              
+            </>
+          ) : (
+            <View style={styles.emptyContainer}>
+              <Feather name="clipboard" size={64} color="rgba(255,255,255,0.5)" />
+              <Text style={styles.emptyTitle}>
+                {searchText ? "No matching quizzes found" : "No quiz history yet"}
+              </Text>
+              <Text style={styles.emptySubtitle}>
+                {searchText 
+                  ? "Try adjusting your search" 
+                  : "Complete some quizzes to see your history here"}
+              </Text>
+            </View>
+          )}
+        </ScrollView>
+      )}
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background,
   },
-  background: {
-    flex: 1,
-    width: "100%",
-    height: "100%",
-    paddingTop: StatusBar.currentHeight || 40, // Add padding for status bar
-  },
-  titleContainer: {
+  header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 24,
-    paddingVertical: 20,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 16,
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    backgroundColor: "rgba(255,255,255,0.15)",
     justifyContent: "center",
     alignItems: "center",
   },
-  titleText: {
-    fontSize: 24,
+  headerTitle: {
+    fontSize: 20,
     fontWeight: "bold",
     color: "white",
-    textAlign: "center",
   },
-  sectionTitleContainer: {
+  headerActions: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 20,
-    paddingHorizontal: 24,
   },
-  sectionTitleDecoration: {
-    width: 4,
-    height: 20,
-    backgroundColor: "#FFD700",
-    borderRadius: 2,
+  refreshButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 8,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: colors.white,
-    letterSpacing: 1,
-    flex: 1,
   },
   searchButton: {
     width: 36,
@@ -372,130 +603,203 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  searchContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+  },
   searchInputContainer: {
-    flex: 1,
-    height: 36,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    borderRadius: 18,
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
-    marginLeft: 10,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    height: 46,
+  },
+  searchIcon: {
+    marginRight: 10,
   },
   searchInput: {
     flex: 1,
-    height: "100%",
     color: "white",
-    fontSize: 14,
+    fontSize: 16,
+    height: 46,
   },
-  searchCloseButton: {
-    width: 24,
-    height: 24,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  noResultsContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 40,
-  },
-  noResultsText: {
-    color: "white",
-    fontSize: 18,
-    fontWeight: "bold",
-    marginTop: 16,
-  },
-  noResultsSubtext: {
-    color: "rgba(255, 255, 255, 0.7)",
-    fontSize: 14,
-    marginTop: 8,
-  },
-  historyQuizzes: {
+  scrollView: {
     flex: 1,
   },
-  // History card styles
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 40,
+  },
   historyCard: {
     backgroundColor: "rgba(255, 255, 255, 0.9)",
     borderRadius: 15,
     padding: 15,
     marginBottom: 15,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowColor: "#7B5CFF",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
     elevation: 3,
+    transform: [{ scale: 1 }],
+    transition: 'transform 0.3s ease',
+  },
+  historyCardPressed: {
+    transform: [{ scale: 0.98 }],
+    backgroundColor: "rgba(255, 255, 255, 0.75)",
   },
   historyCardContent: {
     flexDirection: "row",
     alignItems: "center",
   },
+  iconOuter: {
+    borderRadius: 18,
+    padding: 2,
+    backgroundColor: 'white',
+    shadowColor: '#7B5CFF',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  historyIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emojiIconSmall: {
+    fontSize: 20,
+  },
+  historyCardTextContainer: {
+    flex: 1,
+    paddingHorizontal: 15,
+  },
+  historyCardTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+  },
+  historyCardDate: {
+    fontSize: 12,
+    color: "#888",
+    marginTop: 4,
+  },
+  loadMoreButton: {
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: "center",
+    marginTop: 15,
+    marginBottom: 30,
+  },
+  loadMoreText: {
+    color: "white",
+    fontWeight: "600",
+    fontSize: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  loadingText: {
+    color: "white",
+    marginTop: 16,
+    fontSize: 16,
+  },
+  errorContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 30,
+  },
+  errorText: {
+    color: "white",
+    textAlign: "center",
+    marginBottom: 20,
+    fontSize: 16,
+  },
+  retryButton: {
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+  },
+  retryButtonText: {
+    color: "white",
+    fontWeight: "600",
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: height * 0.15,
+  },
+  emptyTitle: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "bold",
+    marginTop: 16,
+  },
+  emptySubtitle: {
+    color: "rgba(255, 255, 255, 0.7)",
+    fontSize: 14,
+    marginTop: 8,
+    textAlign: "center",
+  },
+
   historyCardIconContainer: {
     marginRight: 12,
   },
   historyCardIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 15,
-    justifyContent: "center",
-    alignItems: "center",
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   historyCardIconText: {
-    fontSize: 24,
+    fontSize: 20,
   },
   historyCardTextContainer: {
     flex: 1,
   },
   historyCardTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#333",
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
     marginBottom: 4,
   },
   historyCardDate: {
-    fontSize: 14,
-    color: "#666",
+    fontSize: 12,
+    color: '#888',
     marginBottom: 8,
   },
-  historyCardScoreContainer: {
-    backgroundColor: "rgba(74, 222, 128, 0.1)",
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 12,
-    alignSelf: "flex-start",
-  },
-  historyCardScore: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#4ADE80",
-  },
   quizStats: {
-    flexDirection: "row",
-    gap: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   statItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "rgba(164, 47, 193, 0.3)",
-    backgroundColor: "transparent",
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 16,
   },
   statText: {
     fontSize: 12,
-    fontWeight: "500",
+    color: colors.primary,
+    marginLeft: 4,
+  },
+  historyCardScoreContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: 60,
+  },
+  historyCardScore: {
+    fontSize: 16,
+    fontWeight: 'bold',
     color: colors.primary,
   },
-  loadingContainer: {
-    padding: 20,
-    alignItems: 'center',
-  },
-  loadingText: {
-    color: '#ffffff',
-    marginTop: 8,
-    fontSize: 14,
-    opacity: 0.8,
-  },
-})
+});

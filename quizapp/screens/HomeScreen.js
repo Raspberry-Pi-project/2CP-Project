@@ -121,28 +121,27 @@ const AnimatedBackground = () => {
 const getQuizIcon = (title) => {
   const subject = title?.toLowerCase() || '';
   
-  // First try to match exact words
-  if (/math|algebra|calculus/.test(subject)) return 'calculator';
-  if (/science|physics|chemistry/.test(subject)) return 'atom';
-  if (/english|literature|writing/.test(subject)) return 'book-open';
-  if (/history|social studies/.test(subject)) return 'clock';
-  if (/geography/.test(subject)) return 'map';
-  if (/computer|programming|coding/.test(subject)) return 'code';
-  if (/biology|anatomy/.test(subject)) return 'activity';
-  if (/art|music/.test(subject)) return 'music';
+  if (/math|algebra|calculus/.test(subject)) return '🧮'; // Math icon
+  if (/science|physics|chemistry/.test(subject)) return '🔬'; // Science icon
+  if (/english|literature|writing/.test(subject)) return '📝'; // English icon
+  if (/history|social studies/.test(subject)) return '🏛️'; // History icon
+  if (/geography/.test(subject)) return '🌍'; // Geography icon
+  if (/computer|programming|coding/.test(subject)) return '💻'; // Computer icon
+  if (/biology|anatomy/.test(subject)) return '🧬'; // Biology icon
+  if (/art/.test(subject)) return '🎨'; // Art icon
+  if (/music/.test(subject)) return '🎵'; // Music icon
   
-  // Then try partial matches
-  if (subject.includes('math')) return 'percent';
-  if (subject.includes('science')) return 'flask';
-  if (subject.includes('physics')) return 'zap';
-  if (subject.includes('english')) return 'book';
-  if (subject.includes('history')) return 'clock';
-  if (subject.includes('geo')) return 'globe';
-  if (subject.includes('comp')) return 'cpu';
+  // Partial matches
+  if (subject.includes('math')) return '🧮';
+  if (subject.includes('science')) return '🔬';
+  if (subject.includes('physics')) return '⚛️';
+  if (subject.includes('english')) return '📖';
+  if (subject.includes('history')) return '🏛️';
+  if (subject.includes('geo')) return '🌍';
+  if (subject.includes('comp')) return '💻';
   
-  return 'help-circle'; // Default icon
+  return '📚'; // Default book icon
 };
-
 
 
 const SimpleBackground = React.memo(() => {
@@ -169,6 +168,7 @@ const SimpleBackground = React.memo(() => {
     </View>
   );
 });
+
 
 // Enhanced quiz card component with fade animation and new purple question mark background
 const QuizCard = ({ quiz, onPress, index = 0 }) => {
@@ -230,12 +230,12 @@ const QuizCard = ({ quiz, onPress, index = 0 }) => {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
-                <Feather
-                  name={getQuizIcon(quiz.title)} // Use quiz title for more accurate icons
-                  size={28}
-                  color="white"
-                />
-              </LinearGradient>
+
+              <Text style={styles.emojiIcon}>
+                {getQuizIcon(quiz.title)}
+              </Text>
+            </LinearGradient>
+          
             </View>
   
             <View style={styles.titleBand} />
@@ -249,7 +249,7 @@ const QuizCard = ({ quiz, onPress, index = 0 }) => {
                 <View style={styles.statIcon}>
                   <Feather name="clock" size={16} color={colors.primary} />
                 </View>
-                <Text style={styles.statText}>{quiz.duration} min |</Text>
+                <Text style={styles.statText}>{quiz.duration} min</Text>
               </View>
               
               <View style={styles.statItem}>
@@ -257,7 +257,7 @@ const QuizCard = ({ quiz, onPress, index = 0 }) => {
                   <Feather name="help-circle" size={16} color={colors.primary} />
                 </View>
                 <Text style={styles.statText}>
-                  {quiz.totalQuestions} Qsts |
+                  {quiz.totalQuestions} Qs
                 </Text>
               </View>
               
@@ -320,11 +320,9 @@ const SimpleHistoryCard = ({ title, date, onPress }) => {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           >
-            <Feather
-              name={getQuizIcon(title)}
-              size={20}
-              color="white"
-            />
+            <Text style={styles.emojiIconSmall}>
+              {getQuizIcon(title)}
+            </Text>
           </LinearGradient>
         </View>
 
@@ -597,7 +595,7 @@ export default function HomeScreen({ navigation }) {
 
     Animated.spring(panelAnimation, {
       toValue,
-      friction: 7,
+      friction: 8,
       tension: 40,
       useNativeDriver: false,
     }).start();
@@ -966,7 +964,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 24,
-    paddingTop: 50,
+    paddingTop: 16,
     paddingBottom: 24,
     flexDirection: "row",
     justifyContent: "space-between",
@@ -1128,7 +1126,6 @@ const styles = StyleSheet.create({
   },
   // Enhanced Quiz card styles
   quizCardContainer: {
-    textAlign : "center",
     width: width * 0.85,
     alignSelf: "center",
     justifyContent: "center",
@@ -1143,7 +1140,6 @@ const styles = StyleSheet.create({
     elevation: 25, // Increased for Android
   },
   quizCard: {
-    alignItems : "center",
     borderRadius: 20,
     overflow: "hidden",
     // Removed padding to allow background to extend to borders
@@ -1160,7 +1156,7 @@ const styles = StyleSheet.create({
     elevation: 25,
   },
   cardBackground: {
-    width: "110%",
+    width: "107%",
     alignItems: "center",
     padding: 20, // Moved padding here from quizCard
     backgroundColor: "white", // Ensure white background under the image
@@ -1181,6 +1177,15 @@ const styles = StyleSheet.create({
     // Completely transparent background
     backgroundColor: "transparent",
   },
+
+  emojiIcon: {
+    fontSize: 28,
+  },
+
+  emojiIconSmall: {
+    fontSize: 20,
+  },
+
   titleBand: {
     width: 40,
     height: 4,
