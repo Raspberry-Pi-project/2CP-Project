@@ -23,7 +23,7 @@ router.post("/getQuizDetails" , getQuizDetails);
 
 //students functions
 router.post("/getStudents" , getStudents)
-router.post("countParticipants",countParticipants)
+router.post("/countParticipants",countParticipants)
 router.post("/getStudentResults", getQuizResults);
 router.post("/getStudentHistory", getHistory);
 
