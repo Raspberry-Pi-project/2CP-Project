@@ -2,7 +2,7 @@ import { View, StyleSheet, TouchableOpacity, Animated } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { colors } from "../constants/colors";
 import Svg, { Path, Circle } from "react-native-svg";
-import { useNavigation } from "../node_modules/@react-navigation/native/lib/typescript/src";
+import { useNavigation } from "@react-navigation/native";
 
 // Update the component props to include onFeedbackPress
 export default function BottomNavigation({

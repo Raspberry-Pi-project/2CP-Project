@@ -320,8 +320,9 @@ export default function QuizScoreScreen({ navigation, route }) {
       const token = await AsyncStorage.getItem("token");
 
       const studentID = await AsyncStorage.getItem("userId");
+      console.log("student id " , studentID)
       
-      const response = await axios.get(`${API_URL}/students/getQuizAttempts/${quizId}`,
+      const response = await axios.post(`${API_URL}/students/getQuizAttempts/${quizId}`,
         {id_student: parseInt(studentID)},
       
       {
