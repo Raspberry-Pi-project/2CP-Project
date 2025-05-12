@@ -16,15 +16,49 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_URL } from "../../config";
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 const Results = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { quizData, setQuizData } = useQuiz();
+  const [studentsList, setStudentsList] = useState([]);
+  useEffect(()=>{
+    console.log("Student List : ", studentsList)
+  },[studentsList])
 
   useEffect(() => {
+    const getStudentsList = async () => {
+      try {
+        const response = await axios.post(
+          `http://${API_URL}:3000/teachers/countParticipants`,
+          {
+            id_quiz: quizData.id_quiz,
+          },
+          {
+            headers: { Authorization: `Bearer ${user.token}` },
+            withCredentials: true,
+          }
+        );
+
+        if (response.status !== 200) {
+          throw new Error("Failed to fetch students list");
+        }
+        console.log("response ",response)
+        setStudentsList(response.data.totalStudents)
+      } catch (error) {
+        console.error("Error fetching students list:", error);
+      }
+    };
+
     const calculatePercetage = async () => {
       try {
         const response = await axios.put(
@@ -60,6 +94,8 @@ const Results = () => {
       }
     };
     calculatePercetage();
+    getStudentsList(); 
+
   }, []);
 
   useEffect(() => {
@@ -103,7 +139,8 @@ const Results = () => {
     setTimeout(() => {
       const chartCanvas = document.querySelector(".chart-container canvas");
       if (chartCanvas) {
-        chartCanvas.style.filter = "drop-shadow(0 5px 15px rgba(123, 104, 238, 0.2))";
+        chartCanvas.style.filter =
+          "drop-shadow(0 5px 15px rgba(123, 104, 238, 0.2))";
       }
     }, 1000);
   }, []);
@@ -157,15 +194,17 @@ const Results = () => {
     { id: 90, name: "Amri Asmaa", score: 70, percentage: "70%" },
     { id: 46, name: "Amri Asmaa", score: 56, percentage: "56%" },
     { id: 10, name: "Mostefaoui lyna", score: 45, percentage: "45%" },
-
   ];
 
   const chartData = {
-    labels: quizData?.questions?.map((item) => "Question" + item.question_number) || [],
+    labels:
+      quizData?.questions?.map((item) => "Question" + item.question_number) ||
+      [],
     datasets: [
       {
         label: "Success Rate (%)",
-        data: quizData?.questions?.map((item) => item.question_percentage) || [],
+        data:
+          quizData?.questions?.map((item) => item.question_percentage) || [],
         backgroundColor: "rgba(123, 104, 238, 0.4)",
         borderColor: "rgba(123, 104, 238, 1)",
         borderWidth: 1,
@@ -223,16 +262,18 @@ const Results = () => {
               <div className="participants-card">
                 <h3 className="card-title">Participants List</h3>
                 <div className="participants-list">
-                  {participants.map((participant) => (
+                  {studentsList.map((attempt) => (
                     <div
-                      key={participant.id}
+                      key={attempt?.students?.id_student}
                       className={`participant-item ${
-                        participant.percentage === "100%" ? "perfect-score" : ""
+                        (attempt?.score / quizData?.score ) * 100 === 100 ? "perfect-score" : ""
                       }`}
                     >
-                      <div className="participant-id">{participant.id}</div>
-                      <div className="participant-name">{participant.name}</div>
-                      <div className="participant-score">{participant.percentage}</div>
+                      <div className="participant-id">{attempt?.students?.id_student}</div>
+                      <div className="participant-name">{attempt?.students?.last_name + " " + attempt?.students?.first_name}</div>
+                      <div className="participant-score">
+                        {(attempt?.score / quizData?.score ) * 100}%
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -248,46 +289,73 @@ const Results = () => {
                 <div className="chart-notice-content">
                   <h4>Quiz Performance Analysis</h4>
                   <p>
-                    {quizData?.questions?.reduce((avg, q) => avg + (q.question_percentage || 0), 0) /
-                      (quizData?.questions?.length || 1) > 85
+                    {quizData?.questions?.reduce(
+                      (avg, q) => avg + (q.question_percentage || 0),
+                      0
+                    ) /
+                      (quizData?.questions?.length || 1) >
+                    85
                       ? "Excellent understanding! Students have mastered this topic."
-                      : quizData?.questions?.reduce((avg, q) => avg + (q.question_percentage || 0), 0) /
-                          (quizData?.questions?.length || 1) > 70
+                      : quizData?.questions?.reduce(
+                          (avg, q) => avg + (q.question_percentage || 0),
+                          0
+                        ) /
+                          (quizData?.questions?.length || 1) >
+                        70
                       ? "Good progress! Most students understand the core concepts."
                       : "Needs review. Consider revisiting these topics in class."}
                   </p>
                   <div>
-                    <span className="chart-notice-badge badge-excellent">Excellent: 90-100%</span>
-                    <span className="chart-notice-badge badge-good">Good: 70-89%</span>
-                    <span className="chart-notice-badge badge-needs-improvement">Needs Review: &lt;70%</span>
+                    <span className="chart-notice-badge badge-excellent">
+                      Excellent: 90-100%
+                    </span>
+                    <span className="chart-notice-badge badge-good">
+                      Good: 70-89%
+                    </span>
+                    <span className="chart-notice-badge badge-needs-improvement">
+                      Needs Review: &lt;70%
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
             <div className="results-right-column">
               <div className="questions-card">
-                <h3 className="card-title">{quizData?.questions?.length || 0} Questions</h3>
+                <h3 className="card-title">
+                  {quizData?.questions?.length || 0} Questions
+                </h3>
                 <div className="questions-list">
                   {quizData?.questions?.map((question) => (
                     <div key={question.id_question} className="question-item">
                       <div className="question-header">
-                        <div className="question-number">{question.question_number}.</div>
-                        <div className="question-type">{question.question_type}</div>
+                        <div className="question-number">
+                          {question.question_number}.
+                        </div>
+                        <div className="question-type">
+                          {question.question_type}
+                        </div>
                         <div className="question-meta">
-                          <span className="question-time">{question.duration}s</span>
+                          <span className="question-time">
+                            {question.duration}s
+                          </span>
                           <span className="question-points">
-                            {question.points} point{question.points !== 1 ? "s" : ""}
+                            {question.points} point
+                            {question.points !== 1 ? "s" : ""}
                           </span>
                         </div>
                       </div>
-                      <div className="question-text">{question.question_text}</div>
+                      <div className="question-text">
+                        {question.question_text}
+                      </div>
                       <div className="question-answers">
                         {question.question_type === "Muliple choice" ? (
                           <div className="multiple-choice-answers">
                             {question.answers?.map((option, optIndex) => (
                               <div
                                 key={optIndex}
-                                className={`answer-option ${option.correct === 1 ? "correct" : ""}`}
+                                className={`answer-option ${
+                                  option.correct === 1 ? "correct" : ""
+                                }`}
                               >
                                 {option.answer_text || option}
                                 {option.correct === 1 && (
@@ -300,7 +368,11 @@ const Results = () => {
                           <div className="true-false-answers">
                             {question.answers?.map((option, optIndex) => (
                               <div key={optIndex} className="answer-option">
-                                <div className={`answer-option ${option.correct === 1 ? "correct" : ""}`}>
+                                <div
+                                  className={`answer-option ${
+                                    option.correct === 1 ? "correct" : ""
+                                  }`}
+                                >
                                   {option.answer_text}
                                   {option.correct === 1 && (
                                     <span className="correct-indicator">✓</span>
@@ -324,4 +396,3 @@ const Results = () => {
 };
 
 export default Results;
-
