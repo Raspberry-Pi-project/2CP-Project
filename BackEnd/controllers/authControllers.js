@@ -31,7 +31,7 @@ const register = async (req, res) => {
         let newUser;
         if (role === "student") {
             newUser = await prisma.students.create({
-                data: { first_name, last_name, email, password: hashedPassword, annee: 1, groupe_student: 1 , groupe_student , annee }
+                data: { first_name, last_name, email, password: hashedPassword,  groupe_student , annee }
             });
         } else if (role === "teacher") {
             newUser = await prisma.teachers.create({

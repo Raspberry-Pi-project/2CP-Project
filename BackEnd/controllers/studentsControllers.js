@@ -90,11 +90,10 @@ const getQuizResults = async (req, res) => {
           },
         });
 
-        for (const qst of attempt.questions){
+        for (const qst of attempt.questions) {
           qst.studentAnswers = groupedAnswers[qst.id_question] || [];
-        } 
+        }
       }
-      
 
       res.json(existingAttempt);
     }
@@ -127,7 +126,7 @@ const getHistory = async (req, res) => {
         id_quiz: {
           in: quizIds,
         },
-        status : "published",
+        status: "published",
       },
       include: {
         attempts: {
@@ -164,11 +163,13 @@ const getHistory = async (req, res) => {
 const countParticipants = async (req, res) => {
   try {
     const { id_quiz } = req.body;
-    const count = await prisma.attempts.count({
+    const count = await prisma.attempts.findMany({
       where: {
         id_quiz,
       },
-      distinct: ["id_student"], // Ensure unique students
+      include: {
+        students: true,
+      },
     });
 
     res.status(200).json({ totalStudents: count });

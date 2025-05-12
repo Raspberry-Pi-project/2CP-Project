@@ -72,6 +72,7 @@ const startAttempt = async (req, res) => {
 const getQuizAttempts = async (req, res) => {
   
   const { id_quiz } = req.params;
+  const {id_student}  = req.body
   console.log(`Fetching attempts for quizId: ${id_quiz}`);  // Debug log
 
   if ( !id_quiz || isNaN(id_quiz)) {
@@ -80,7 +81,7 @@ const getQuizAttempts = async (req, res) => {
 
   try {
     const attempts = await prisma.attempts.findMany({
-      where: { id_quiz: parseInt(id_quiz) },
+      where: { id_quiz: parseInt(id_quiz) , id_student },
       orderBy: { attempt_at: 'asc' },
       include: {
         student_answers: true,  // Include student_answers related to each attempt
