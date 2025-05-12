@@ -22,7 +22,7 @@ router.post("/submitAnswers", submitAnswers);
 
 router.post("/getAttemptById", getAttemptById);
 
-router.get("/getQuizAttempts/:id_quiz", getQuizAttempts);
+router.post("/getQuizAttempts/:id_quiz", getQuizAttempts);
 
 router.post("/getAttemptAnswers", getAttemptAnswers);
 
