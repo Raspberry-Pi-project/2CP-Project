@@ -996,7 +996,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
-    marginTop: -20,
+    marginTop: 0,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     backgroundColor: "#F8F9FA",
@@ -1063,15 +1063,17 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingHorizontal: 20,
     marginBottom: 20, // Added to give more space at the bottom of the header
-
+    
   },
   scoreItem: {
     alignItems: "center",
+    
   },
   scoreItemValue: {
     color: "#4ADE80",
     fontSize: 20,
     fontWeight: "bold",
+    
   },
   incorrectValue: {
     color: "#FF5252",
