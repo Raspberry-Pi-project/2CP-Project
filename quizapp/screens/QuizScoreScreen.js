@@ -322,6 +322,7 @@ export default function QuizScoreScreen({ navigation, route }) {
       const studentID = await AsyncStorage.getItem("userId");
       
       const response = await axios.get(`${API_URL}/students/getQuizAttempts/${quizId}`,
+        {id_student: parseInt(studentID)},
       
       {
 

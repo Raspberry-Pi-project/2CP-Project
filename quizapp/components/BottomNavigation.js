@@ -1,8 +1,8 @@
-import { View, StyleSheet, TouchableOpacity, Animated } from "react-native"
-import { Feather } from "@expo/vector-icons"
-import { colors } from "../constants/colors"
-import Svg, { Path, Circle } from "react-native-svg"
-import { useNavigation } from "@react-navigation/native"
+import { View, StyleSheet, TouchableOpacity, Animated } from "react-native";
+import { Feather } from "@expo/vector-icons";
+import { colors } from "../constants/colors";
+import Svg, { Path, Circle } from "react-native-svg";
+import { useNavigation } from "../node_modules/@react-navigation/native/lib/typescript/src";
 
 // Update the component props to include onFeedbackPress
 export default function BottomNavigation({
@@ -12,7 +12,7 @@ export default function BottomNavigation({
   onFeedbackPress,
   onSearchPress,
 }) {
-  const navigation = useNavigation()
+  const navigation = useNavigation();
 
   return (
     <View style={styles.container}>
@@ -23,7 +23,11 @@ export default function BottomNavigation({
       {/* Empty space to maintain layout */}
       <View style={styles.emptySpace} />
 
-      <TouchableOpacity style={styles.addButton} onPress={onArrowPress} activeOpacity={0.7}>
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={onArrowPress}
+        activeOpacity={0.7}
+      >
         <View style={styles.addButtonInner}>
           <Animated.View
             style={{
@@ -46,13 +50,18 @@ export default function BottomNavigation({
         <Feather name="user" size={24} color={colors.primary} />
       </TouchableOpacity>
     </View>
-  )
+  );
 }
 
 function HexagonIcon({ size = 30 }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 512 512">
-      <Path d="M256 20L67 140v232l189 120 189-120V140L256 20z" stroke="#46348A" strokeWidth="24" fill="none" />
+      <Path
+        d="M256 20L67 140v232l189 120 189-120V140L256 20z"
+        stroke="#46348A"
+        strokeWidth="24"
+        fill="none"
+      />
       <Circle cx="256" cy="140" r="18" fill="#F9CE18" />
       <Circle cx="256" cy="190" r="18" fill="#F9CE18" />
       <Circle cx="149" cy="171" r="18" fill="#69B657" />
@@ -65,14 +74,48 @@ function HexagonIcon({ size = 30 }) {
       <Circle cx="363" cy="341" r="18" fill="#2DB6E5" />
       <Circle cx="256" cy="372" r="18" fill="#E63535" />
       <Circle cx="256" cy="422" r="18" fill="#E63535" />
-      <Circle cx="256" cy="256" r="70" stroke="#46348A" strokeWidth="18" fill="none" />
-      <Circle cx="256" cy="256" r="40" stroke="#46348A" strokeWidth="18" fill="none" />
-      <Path d="M256 186v40" stroke="#46348A" strokeWidth="18" strokeLinecap="round" />
-      <Path d="M256 286v40" stroke="#46348A" strokeWidth="18" strokeLinecap="round" />
-      <Path d="M186 256h40" stroke="#46348A" strokeWidth="18" strokeLinecap="round" />
-      <Path d="M286 256h40" stroke="#46348A" strokeWidth="18" strokeLinecap="round" />
+      <Circle
+        cx="256"
+        cy="256"
+        r="70"
+        stroke="#46348A"
+        strokeWidth="18"
+        fill="none"
+      />
+      <Circle
+        cx="256"
+        cy="256"
+        r="40"
+        stroke="#46348A"
+        strokeWidth="18"
+        fill="none"
+      />
+      <Path
+        d="M256 186v40"
+        stroke="#46348A"
+        strokeWidth="18"
+        strokeLinecap="round"
+      />
+      <Path
+        d="M256 286v40"
+        stroke="#46348A"
+        strokeWidth="18"
+        strokeLinecap="round"
+      />
+      <Path
+        d="M186 256h40"
+        stroke="#46348A"
+        strokeWidth="18"
+        strokeLinecap="round"
+      />
+      <Path
+        d="M286 256h40"
+        stroke="#46348A"
+        strokeWidth="18"
+        strokeLinecap="round"
+      />
     </Svg>
-  )
+  );
 }
 
 // Custom Feedback Icon component based on the provided image
@@ -93,7 +136,7 @@ function FeedbackIcon({ size = 24, color = "#000" }) {
       <Circle cx="15.5" cy="18.5" r="2.5" />
       <Path d="M9 18.5h6" />
     </Svg>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -149,4 +192,4 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
   },
-})
+});
