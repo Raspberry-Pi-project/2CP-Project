@@ -281,6 +281,7 @@ export default function QuizInfoScreen({ navigation, route }) {
 
 const styles = StyleSheet.create({
   container: {
+    paddingTop : 45,
     flex: 1,
   },
   backgroundDecoration: {
@@ -362,6 +363,7 @@ const styles = StyleSheet.create({
   },
   scrollViewContent: {
     flexGrow: 1,
+    paddingTop : 45,
     paddingBottom: 30,
   },
   imageContainerWrapper: {

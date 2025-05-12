@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import {
   View,
@@ -27,6 +27,8 @@ export default function LoginScreen({ navigation }) {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
 
+
+
   const handleLogin = async () => {
     if (email.trim() === "" || password.trim() === "") {
       alert("Please enter both email and password");
@@ -35,7 +37,7 @@ export default function LoginScreen({ navigation }) {
 
     try {
       
-
+      
       // Step 1: Login and get userId
       const response = await axios.post(`${API_URL}/auth/login`, {
         email,
