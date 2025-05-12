@@ -79,6 +79,7 @@ function MainLayout() {
     "/quizdetails",
     "/results",
     "/draftquiz",
+    "/signup"
   ];
 
   const isNoBannerOrNavbar = noBannerOrNavbarPages.some(
