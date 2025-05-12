@@ -10,16 +10,17 @@ export default function BottomNavigation({
   isPanelExpanded,
   onProfilePress,
   onFeedbackPress,
-  onSearchPress,
+  onHistoryPress,
 }) {
   const navigation = useNavigation();
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.navItem} onPress={onSearchPress}>
-        <Feather name="search" size={24} color={colors.primary} />
-      </TouchableOpacity>
+    <TouchableOpacity style={styles.navItem} onPress={onHistoryPress}>
+          <Feather name="clock" size={24} color={colors.primary} />
+        </TouchableOpacity>
 
+        
       {/* Empty space to maintain layout */}
       <View style={styles.emptySpace} />
 
@@ -49,6 +50,8 @@ export default function BottomNavigation({
       <TouchableOpacity style={styles.navItem} onPress={onProfilePress}>
         <Feather name="user" size={24} color={colors.primary} />
       </TouchableOpacity>
+
+      
     </View>
   );
 }

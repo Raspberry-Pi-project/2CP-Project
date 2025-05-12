@@ -390,6 +390,14 @@ export default function HomeScreen({ navigation }) {
       historyData: historyData // Pass the history data as a parameter
     });
   };
+
+  const goToFullHistory = () => {
+    navigation.navigate('FullHistory', {
+      historyData: historyData 
+    });
+  };
+
+
   const fetchHistoryData = async (page) => {
     try {
       const studentID = await AsyncStorage.getItem("userId");
@@ -945,7 +953,7 @@ export default function HomeScreen({ navigation }) {
           onArrowPress={togglePanel}
           isPanelExpanded={isExpanded}
           onProfilePress={goToProfile}
-          onSearchPress={toggleSearch}
+          onHistoryPress={goToFullHistory} 
         />
       
     </View>
