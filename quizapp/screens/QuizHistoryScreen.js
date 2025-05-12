@@ -8,7 +8,6 @@ import React, { useEffect, useState, useContext } from "react"
 import axios from "axios"
 import { API_URL } from "../services/config" 
 import AsyncStorage from "@react-native-async-storage/async-storage"
-// Removed BlurView import as it might not be installed
 
 const { width, height } = Dimensions.get("window")
 
