@@ -1,0 +1,34 @@
+services:
+  db:
+    image: meroooo/trivio2:arm64
+    container_name: trivio_db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootPassword
+      MYSQL_DATABASE: trivio
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./db-data:/var/lib/mysql
+      - ./trivio.sql:/docker-entrypoint-initdb.d/trivio.sql
+    restart: unless-stopped
+
+  server:
+    image: meroooo/trivio-server19:latest
+    container_name: trivio_server
+    restart: unless-stopped
+    depends_on:
+      - db
+   ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      DATABASE_URL: mysql://root:rootPassword@db:3306/trivio
+
+   client:
+    image: meroooo/trivio-webapp8
+    container_name: trivio_client
+    restart: unless-stopped
+    ports:
+      - "3001:80" # React app exposed on Raspberry Pi's port 80
